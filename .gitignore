@@ -1,0 +1,40 @@
+# Java / Gradle
+.gradle/
+**/.gradle/
+build/
+**/build/
+*.class
+out/
+
+# Node / TypeScript
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+.vite/
+
+# 환경변수
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 로그
+*.log
+npm-debug.log*
+logs/
