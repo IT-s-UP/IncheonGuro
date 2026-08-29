@@ -1,0 +1,17 @@
+.line-tab {
+  display: flex;
+  gap: 13px;
+}
+
+.line-tab__item {
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  border-bottom: 5px solid transparent;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.line-tab__item--active {
+  border-bottom-color: #f5a281;
+}

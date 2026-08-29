@@ -1,0 +1,273 @@
+.main-page {
+  position: relative;
+  width: 393px;
+  min-height: 1247px;
+  margin: 0 auto;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.main-page ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.main-page h1,
+.main-page h2 {
+  margin: 0;
+}
+
+/* Header */
+
+.main-page__header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 393px;
+  height: 80px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 21px 20px 21px 10px;
+  background: #ffffff;
+}
+
+.main-page__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 24px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #999999;
+  background: #f2f2f2;
+  border-radius: 4px;
+}
+
+.main-page__nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.main-page__nav-icon {
+  display: block;
+  width: 20px;
+  height: 22px;
+  border: 2.5px solid #000000;
+}
+
+.main-page__menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Hero */
+
+.main-page__hero {
+  position: absolute;
+  left: 0;
+  top: 80px;
+  width: 393px;
+  height: 222px;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+.main-page__title {
+  position: absolute;
+  left: 27px;
+  top: 60px;
+  width: 208px;
+}
+
+.main-page__hero-image {
+  position: absolute;
+  left: 212px;
+  top: 33px;
+  width: 157px;
+  height: 157px;
+  background: #d9d9d9;
+}
+
+/* Section title (shared) */
+
+.main-page__section-title {
+  position: absolute;
+}
+
+.main-page__section-title--spots {
+  left: 27px;
+  top: 337px;
+}
+
+/* 인기 관광지 */
+
+.main-page__region-tabs {
+  position: absolute;
+  left: 27px;
+  top: 380px;
+  display: flex;
+  gap: 12px;
+}
+
+.main-page__region-tab {
+  width: 80px;
+  height: 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 30px;
+  background: rgba(120, 170, 195, 0.25);
+  border: 1px solid #78aac3;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.main-page__region-tab--active {
+  background: #ffffff;
+  border-color: transparent;
+}
+
+.main-page__region-tab--active .typography {
+  font-weight: 700;
+}
+
+.main-page__spot-list {
+  position: absolute;
+  left: 26px;
+  top: 427px;
+  display: flex;
+  gap: 10px;
+}
+
+.main-page__spot-card {
+  position: relative;
+  width: 130px;
+  height: 160px;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.main-page__spot-tag {
+  position: absolute;
+  left: 15px;
+  top: 124px;
+  height: 24px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #78aac3;
+  border-radius: 12px;
+}
+
+.main-page__spot-name {
+  position: absolute;
+  left: 15px;
+  top: 97px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* 핫플레이스 */
+
+.main-page__hot {
+  position: absolute;
+  left: 0;
+  top: 622px;
+  width: 393px;
+  height: 232px;
+  box-sizing: border-box;
+  background: rgba(217, 217, 217, 0.3);
+}
+
+.main-page__section-title--hot {
+  left: 27px;
+  top: 25px;
+}
+
+.main-page__hot-list {
+  position: absolute;
+  left: 26px;
+  top: 72px;
+  display: flex;
+  gap: 10px;
+}
+
+.main-page__hot-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100px;
+}
+
+.main-page__hot-card {
+  width: 100px;
+  height: 130px;
+  border-radius: 20px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  background-size: cover;
+  background-position: center;
+}
+
+
+/* 인천 대표 명소 */
+
+.main-page__landmarks {
+  position: absolute;
+  left: 0;
+  top: 889px;
+  width: 393px;
+}
+
+.main-page__section-title--landmarks {
+  left: 27px;
+  top: 0;
+}
+
+.main-page__landmark-list {
+  position: absolute;
+  left: 26px;
+  top: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.main-page__landmark-card {
+  position: relative;
+  width: 340px;
+  height: 85px;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.main-page__landmark-name {
+  position: absolute;
+  left: 16px;
+  bottom: 12px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}

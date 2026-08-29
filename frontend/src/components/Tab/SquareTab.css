@@ -1,0 +1,21 @@
+.square-tab {
+  display: flex;
+  gap: 8px;
+}
+
+.square-tab__item {
+  box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  background: #ffffff;
+  border: 1px solid #f5a281;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.square-tab__item--active {
+  background: #f5a281;
+}

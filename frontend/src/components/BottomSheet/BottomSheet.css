@@ -1,0 +1,32 @@
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.bottom-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 393px;
+  padding-bottom: 18px;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+}
+
+.bottom-sheet__handle {
+  display: block;
+  width: 86px;
+  height: 5px;
+  margin: 16px auto;
+  background: #000000;
+  border-radius: 3px;
+}
+
+.bottom-sheet__content {
+  padding: 0 46px;
+}

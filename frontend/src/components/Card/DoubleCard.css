@@ -1,0 +1,22 @@
+.double-card {
+  box-sizing: border-box;
+  width: 335px;
+  height: 60px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+}
+
+.double-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.double-card__right {
+  text-align: right;
+}
