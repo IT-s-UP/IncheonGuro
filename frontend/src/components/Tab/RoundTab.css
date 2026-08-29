@@ -1,0 +1,31 @@
+.round-tab {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 38px;
+  background: #eeab73;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.round-tab__thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: #f3cd86;
+  transition: transform 0.2s ease;
+}
+
+.round-tab__option {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}

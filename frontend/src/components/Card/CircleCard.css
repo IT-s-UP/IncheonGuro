@@ -1,0 +1,27 @@
+.circle-card {
+  box-sizing: border-box;
+  width: 335px;
+  height: 73px;
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #ffffff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+}
+
+.circle-card__avatar {
+  flex-shrink: 0;
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  background-color: #d9d9d9;
+  background-size: cover;
+  background-position: center;
+}
+
+.circle-card__text {
+  display: flex;
+  flex-direction: column;
+}

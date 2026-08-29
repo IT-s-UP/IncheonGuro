@@ -1,0 +1,31 @@
+.option-tab {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(120, 170, 195, 0.25);
+  border: 1px solid #78aac3;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.option-tab--active {
+  background: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+}
+
+.option-tab--compact {
+  height: 20px;
+  padding: 0 10px;
+}
+
+.option-tab--small {
+  height: 44px;
+  padding: 0 20px;
+}
+
+.option-tab--large {
+  height: 44px;
+  padding: 0 40px;
+}

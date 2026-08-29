@@ -1,0 +1,69 @@
+.bottom-nav-bar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 393px;
+  height: 80px;
+  margin: 0 auto;
+  padding: 14px 27px;
+  gap: 68px;
+  background: #ffffff;
+  box-shadow: 0 0 4px #1e1e1e;
+}
+
+.bottom-nav-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.bottom-nav-bar__icon {
+  box-sizing: border-box;
+  background: #b1b1b1;
+  border: 0.5px solid #ffffff;
+  border-radius: 6px;
+}
+
+.bottom-nav-bar__icon--active {
+  background: #354e73;
+}
+
+.bottom-nav-bar__icon--home {
+  width: 27px;
+  height: 30px;
+}
+
+.bottom-nav-bar__icon--exchange {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.bottom-nav-bar__icon--smart-map {
+  width: 28px;
+  height: 32px;
+}
+
+.bottom-nav-bar__icon--group-pay {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+}
+
+.bottom-nav-bar__label {
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 400;
+  color: #b1b1b1;
+}
+
+.bottom-nav-bar__item:first-child .bottom-nav-bar__label {
+  font-weight: 500;
+}

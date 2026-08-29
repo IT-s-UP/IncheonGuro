@@ -1,0 +1,74 @@
+.typography {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-style: normal;
+  color: #000000;
+}
+
+.typography--head1 {
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 36px;
+}
+
+.typography--head2 {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+}
+
+.typography--head3 {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 18px;
+}
+
+.typography--subtitle1 {
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 24px;
+}
+
+.typography--subtitle2 {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 18px;
+}
+
+.typography--subtitle3 {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.typography--p1 {
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 24px;
+}
+
+.typography--p2 {
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 18px;
+}
+
+.typography--p3 {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.typography--caption1 {
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.typography--caption2 {
+  font-weight: 300;
+  font-size: 10px;
+  line-height: 12px;
+}
