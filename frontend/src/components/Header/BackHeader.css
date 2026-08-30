@@ -1,0 +1,39 @@
+.back-header {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  width: 260px;
+  height: 30px;
+}
+
+.back-header__back-btn {
+  flex: none;
+  order: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.back-header__vector {
+  box-sizing: border-box;
+  width: 16px;
+  height: 12px;
+  background: #121a26;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  transform: rotate(-90deg);
+}
+
+.back-header__title {
+  flex: none;
+  order: 1;
+  width: 232px;
+  height: 30px;
+}

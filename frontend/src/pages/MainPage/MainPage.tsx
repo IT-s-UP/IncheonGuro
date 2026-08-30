@@ -1,3 +1,4 @@
+import Header from '@/components/Header/Header';
 import Typography from '@/components/Typography/Typography';
 import './MainPage.css';
 
@@ -39,22 +40,7 @@ const LANDMARK_CARDS: LandmarkCard[] = [
 function MainPage() {
   return (
     <div className="main-page">
-      <header className="main-page__header">
-        <div className="main-page__logo">LOGO</div>
-        <nav className="main-page__nav">
-          <span className="main-page__nav-icon" aria-hidden="true" />
-          <button type="button" className="main-page__menu-btn" aria-label="메뉴 열기">
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path
-                d="M3 6h18M3 12h18M3 18h18"
-                stroke="#000"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </nav>
-      </header>
+      <Header />
 
       <section className="main-page__hero">
         <Typography as="h1" variant="head1" className="main-page__title">
