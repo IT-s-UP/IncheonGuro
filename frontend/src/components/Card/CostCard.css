@@ -1,20 +1,59 @@
 .cost-card {
   box-sizing: border-box;
-  width: 335px;
-  height: 196px;
+
+  width: 100%;
+  min-height: 196px;
+
   padding: 20px;
+
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+
   background: #ffffff;
+
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+
   border-radius: 5px;
 }
 
+/* 제목 아래 비용 항목 영역 */
+.cost-card__items {
+  width: 100%;
+
+  margin-top: 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+/* 비용 한 줄 */
 .cost-card__row {
+  width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  gap: 16px;
+}
+
+.cost-card__value {
+  text-align: right;
+}
+
+/* 총 예상 비용 */
+.cost-card__total {
+  width: 100%;
+
+  margin-top: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
 }
 
 .cost-card__total-value {
