@@ -1,3 +1,4 @@
+import backIcon from '@/assets/back.svg';
 import Typography from '@/components/Typography/Typography';
 import './BackHeader.css';
 
@@ -15,8 +16,9 @@ function BackHeader({ title, onBack }: BackHeaderProps) {
         onClick={onBack}
         aria-label="뒤로 가기"
       >
-        <span className="back-header__vector" aria-hidden="true" />
+        <img src={backIcon} alt="" className="back-header__icon" aria-hidden="true" />
       </button>
+
       <Typography as="h2" variant="head2" className="back-header__title">
         {title}
       </Typography>
