@@ -1,0 +1,66 @@
+.header {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 393px;
+  height: 80px;
+  padding: 21px 20px 21px 10px;
+  background: #ffffff;
+}
+
+.header__logo {
+  flex: none;
+  order: 0;
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header__actions {
+  flex: none;
+  order: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 30px;
+}
+
+.header__notification-btn {
+  flex: none;
+  order: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.header__vector {
+  width: 26px;
+  height: 28.89px;
+}
+
+.header__menu-btn {
+  flex: none;
+  order: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 41.3px;
+  height: 41.3px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.header__menu-icon {
+  width: 78.13%;
+  height: 68.75%;
+}
