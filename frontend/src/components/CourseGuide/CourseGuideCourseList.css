@@ -29,6 +29,9 @@
   border-radius: 10px;
   box-sizing: border-box;
   overflow: hidden;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* 코스 이름 텍스트 */
