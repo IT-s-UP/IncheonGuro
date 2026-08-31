@@ -12,6 +12,7 @@ import MyCoursesPage from '@/pages/MyCourses/MyCoursesPage';
 import RegionRecommendPage from './pages/RegionRecommendPage/RegionRecommendPage';
 import FestivalListPage from './pages/FestivalPage/FestivalListPage';
 import FestivalDetailPage from './pages/FestivalPage/FestivalDetailPage';
+import StampTourPage from './pages/StampTourPage/StampTourPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
       <Route path="/region-recommend" element={<RegionRecommendPage />} />
       <Route path="/festivals" element={<FestivalListPage />} />
       <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
+      <Route path="/stamp-tour" element={<StampTourPage />} />
     </Routes>
   );
 }
