@@ -27,13 +27,25 @@ function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const classNames = ['button', `button--${size}`, `button--${variant}`, className]
+  const textLength = typeof children === 'string' ? children.replace(/\s/g, '').length : 0;
+
+  const isLongSmallButton = size === 'small' && textLength >= 4;
+
+  const textVariant: TypographyVariant = isLongSmallButton ? 'p3' : TEXT_VARIANT[size];
+
+  const classNames = [
+    'button',
+    `button--${size}`,
+    `button--${variant}`,
+    isLongSmallButton ? 'button--long-text' : '',
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 
   return (
     <button type={type} className={classNames} {...rest}>
-      <Typography variant={TEXT_VARIANT[size]} color="inherit">
+      <Typography variant={textVariant} color="inherit">
         {children}
       </Typography>
     </button>
