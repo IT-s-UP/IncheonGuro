@@ -1,7 +1,8 @@
 // 코스 안내 페이지 - 코스 추천 탭
 import { useState } from 'react';
-import { mockCourses } from '@/mocks/courseguide';
+import { mockRecommendedCourses } from '@/mocks/courseguide';
 import './CourseGuideListPage.css';
+import CourseGuideCourseList from '@/components/CourseGuide/CourseGuideCourseList';
 import Button from '@/components/Button/Button';
 import CourseGuideTab from '@/components/CourseGuide/CourseGuideTab';
 import type { CourseGuideTabType } from '@/components/CourseGuide/CourseGuideTab';
@@ -16,9 +17,9 @@ function CourseGuideListPage() {
   const [recommendIndex, setRecommendIndex] = useState(0);
 
   // 전체 추천 코스 개수
-  const totalRecommend = mockCourses.length;
+  const totalRecommend = mockRecommendedCourses.length;
   // 현재 인덱스에 해당하는 코스 MOCK 데이터 (이름, 설명, 장소 목록)
-  const currentCourse = mockCourses[recommendIndex];
+  const currentCourse = mockRecommendedCourses[recommendIndex];
 
   // 버튼 클릭 시 다음 추천 코스로 이동, 마지막 다음엔 다시 처음으로 복귀
   const handleNextRecommend = () => {
@@ -58,7 +59,7 @@ function CourseGuideListPage() {
           </div>
         </div>
       ) : (
-        <div className="course-list-placeholder">코스목록</div>
+        <CourseGuideCourseList />
       )}
     </div>
   );

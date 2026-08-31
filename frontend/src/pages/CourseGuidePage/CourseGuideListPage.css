@@ -57,11 +57,3 @@
   height: 46px;
   font-size: 14px;
 }
-
-/* 코스 목록 탭 */
-.course-list-placeholder {
-  padding: 60px 16px;
-  text-align: center;
-  color: #999999;
-  font-size: 16px;
-}
