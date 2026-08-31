@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import MainPage from '@/pages/MainPage/MainPage';
 
 import LoginPage from './pages/LoginPage/LoginPage';
+import SignupPage from './pages/SignupPage/SignupPage';
 
 import CourseGuideListPage from '@/pages/CourseGuidePage/CourseGuideListPage';
 import CourseGuideDetailPage from '@/pages/CourseGuidePage/CourseGuideDetailPage';
@@ -15,6 +16,7 @@ function App() {
     <Routes>
       <Route path="/" element={<MainPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route path="/course-recommend" element={<CourseRecommendPage />} />
       <Route path="/course-guide" element={<CourseGuideListPage />} />
       <Route path="/course-guide/:courseId" element={<CourseGuideDetailPage />} />

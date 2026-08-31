@@ -1,0 +1,428 @@
+/* =========================
+   전체 페이지
+========================= */
+
+.signup-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  background-color: #ffffff;
+}
+
+.signup-page__content {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - 80px);
+
+  padding: 47px 47px 28px;
+}
+
+/* =========================
+   공통 STEP
+========================= */
+
+.signup-step {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-height: calc(100vh - 160px);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-title {
+  margin: 0;
+}
+
+.signup-description {
+  margin: 6px 0 0;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   공통 FORM
+========================= */
+
+.signup-form {
+  width: 100%;
+
+  margin-top: 42px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 26px;
+}
+
+.signup-form--account {
+  margin-top: 54px;
+}
+
+.signup-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+}
+
+/* =========================
+   ID + 중복 확인
+========================= */
+
+.signup-inline {
+  display: flex;
+
+  align-items: center;
+
+  gap: 30px;
+}
+
+.signup-inline .input {
+  flex-shrink: 1;
+
+  min-width: 0;
+}
+
+.signup-small-button {
+  flex: 0 0 auto;
+
+  white-space: nowrap;
+}
+
+.signup-small-button .typography {
+  white-space: nowrap;
+}
+
+/* =========================
+   생년월일 + 성별
+========================= */
+
+.signup-detail-row {
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 16px;
+}
+
+.signup-detail-row .signup-field {
+  width: auto;
+}
+
+.signup-birth-field {
+  flex: 0 1 auto;
+
+  min-width: 0;
+}
+
+.signup-gender-field {
+  flex: 0 0 auto;
+}
+
+.signup-gender-options {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+.signup-gender-button {
+  opacity: 0.55;
+}
+
+.signup-gender-button--active {
+  opacity: 1;
+}
+
+/* =========================
+   전화번호
+========================= */
+
+.signup-phone-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+}
+
+.signup-phone-row > span {
+  flex: 0 0 auto;
+
+  font-family: 'Pretendard', sans-serif;
+
+  font-size: 16px;
+
+  color: #111111;
+}
+
+.signup-phone-row .input {
+  flex-shrink: 1;
+
+  min-width: 0;
+}
+
+/* =========================
+   이메일
+========================= */
+
+.signup-email-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.signup-email-row > span {
+  flex: 0 0 auto;
+
+  font-family: 'Pretendard', sans-serif;
+
+  font-size: 12px;
+
+  color: #111111;
+}
+
+.signup-email-row .input {
+  flex-shrink: 1;
+
+  min-width: 0;
+}
+
+.signup-email-select {
+  box-sizing: border-box;
+
+  height: 40px;
+
+  padding: 0 10px;
+
+  flex: 0 0 auto;
+
+  border: 1px solid #dedede;
+
+  border-radius: 5px;
+
+  outline: none;
+
+  background-color: #ffffff;
+
+  font-family: 'Pretendard', sans-serif;
+
+  font-size: 12px;
+
+  color: #111111;
+
+  cursor: pointer;
+}
+
+.signup-email-select:focus {
+  border-color: #78aac3;
+}
+
+/* =========================
+   이메일 인증
+========================= */
+
+.signup-verify-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 30px;
+
+  margin-top: 4px;
+}
+
+.signup-verify-row .input {
+  flex-shrink: 1;
+
+  min-width: 0;
+}
+
+.signup-verify-button-area {
+  flex: 0 0 auto;
+}
+
+.signup-small-button--hidden {
+  visibility: hidden;
+
+  pointer-events: none;
+}
+
+/* =========================
+   닉네임
+========================= */
+
+.signup-nickname-area {
+  margin-top: 44px;
+}
+
+/* =========================
+   관심 지역
+========================= */
+
+.signup-region-grid {
+  width: 100%;
+
+  margin-top: 42px;
+
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  column-gap: 20px;
+  row-gap: 18px;
+}
+
+.signup-region-grid .option-tab {
+  width: 100%;
+}
+
+/* =========================
+   약관 동의
+========================= */
+
+.signup-terms {
+  width: 100%;
+
+  margin-top: 64px;
+}
+
+.signup-terms input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+.signup-all-agree,
+.signup-term-row {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  cursor: pointer;
+}
+
+.signup-all-agree {
+  gap: 12px;
+}
+
+.signup-term-row {
+  margin-top: 18px;
+
+  gap: 10px;
+}
+
+.signup-check {
+  box-sizing: border-box;
+
+  flex: 0 0 auto;
+
+  width: 18px;
+  height: 18px;
+
+  border: 1px solid #111111;
+
+  border-radius: 50%;
+
+  background-color: #ffffff;
+}
+
+.signup-all-agree input:checked + .signup-check,
+.signup-term-row input:checked + .signup-check {
+  border: 5px solid #78aac3;
+}
+
+.signup-terms-divider {
+  width: 100%;
+  height: 1px;
+
+  margin: 22px 0 4px;
+
+  background-color: #777777;
+}
+
+.signup-term-required {
+  flex: 0 0 auto;
+
+  margin-right: 4px;
+}
+
+/* =========================
+   가입 완료
+========================= */
+
+.signup-complete-images {
+  position: relative;
+
+  width: 100%;
+  height: 390px;
+
+  margin-top: 60px;
+}
+
+.signup-complete-image {
+  position: absolute;
+
+  overflow: hidden;
+}
+
+/* 실제 이미지 */
+.signup-complete-image img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+/* signup1.png */
+.signup-complete-image--back {
+  top: 0;
+  right: 0;
+
+  width: 70%;
+  height: 250px;
+}
+
+/* signup2.png */
+.signup-complete-image--front {
+  top: 210px;
+  left: 0;
+
+  width: 70%;
+  height: 250px;
+}
+
+/* =========================
+   하단 버튼
+========================= */
+
+.signup-bottom-button {
+  width: 100%;
+
+  margin-top: auto;
+
+  padding-top: 28px;
+
+  display: flex;
+
+  justify-content: center;
+}
