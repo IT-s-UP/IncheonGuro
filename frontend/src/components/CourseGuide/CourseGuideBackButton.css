@@ -1,0 +1,21 @@
+/* 아래 탭버튼과 20px 간격을 padding-bottom으로 처리 */
+.course-guide-back-button-wrap {
+  padding: 20px 20px 20px;
+  box-sizing: border-box;
+}
+
+.course-guide-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #000000;
+}
+
+.course-guide-back-button-text {
+  font-size: 18px;
+  font-weight: 700;
+}
