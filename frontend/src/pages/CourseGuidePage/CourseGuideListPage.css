@@ -1,0 +1,67 @@
+/* 페이지 전체 */
+.course-guide-list-page {
+  position: relative;
+  width: 393px;
+  margin: 0 auto;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+}
+
+/* 코스 추천 탭 */
+.course-name {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #000000;
+  margin: 32px 16px 16px;
+}
+
+/* 간략 지도 */
+.map-placeholder {
+  width: 320px;
+  height: 240px;
+  background: #d9d9d9;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: 16px;
+  margin: 20px auto 16px;
+}
+
+/* 새로고침 아이콘 + 텍스트 */
+.recommend-btn-content {
+  display: inline-flex;
+  align-items: center;
+}
+
+.refresh-icon {
+  flex-shrink: 0;
+  padding-right: 6px;
+}
+
+.recommend-button-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+
+  padding-top: 28px;
+  padding-bottom: 32px;
+
+  box-sizing: border-box;
+}
+
+.recommend-button-wrap > button {
+  width: 268px;
+  height: 46px;
+  font-size: 14px;
+}
+
+/* 코스 목록 탭 */
+.course-list-placeholder {
+  padding: 60px 16px;
+  text-align: center;
+  color: #999999;
+  font-size: 16px;
+}
