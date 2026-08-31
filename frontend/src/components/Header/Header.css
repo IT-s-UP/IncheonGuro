@@ -1,0 +1,102 @@
+.header {
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  max-width: 100%;
+
+  height: 80px;
+
+  padding: 21px 20px 21px 10px;
+
+  background: #ffffff;
+}
+
+/* 로고 클릭 버튼 */
+.header__logo-btn {
+  flex: 0 1 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  min-width: 0;
+
+  padding: 0;
+
+  background: none;
+  border: none;
+
+  cursor: pointer;
+}
+
+.header__logo {
+  display: block;
+
+  height: 40px;
+  width: auto;
+
+  max-width: 100%;
+
+  object-fit: contain;
+}
+
+.header__actions {
+  flex: 0 0 auto;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+
+  gap: 30px;
+}
+
+.header__notification-btn {
+  flex: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  background: none;
+  border: none;
+
+  cursor: pointer;
+}
+
+.header__vector {
+  width: 26px;
+  height: 28.89px;
+}
+
+.header__menu-btn {
+  flex: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 41.3px;
+  height: 41.3px;
+
+  padding: 0;
+
+  background: none;
+  border: none;
+
+  cursor: pointer;
+}
+
+.header__menu-icon {
+  width: 78.13%;
+  height: 68.75%;
+}

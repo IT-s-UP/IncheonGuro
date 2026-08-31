@@ -1,24 +1,41 @@
 import Typography from '@/components/Typography/Typography';
 import './CostCard.css';
 
+interface CostItem {
+  label: string;
+  value: string;
+}
+
 interface CostCardProps {
   title: string;
-  subLabel: string;
-  subValue: string;
+  items: CostItem[];
   totalLabel: string;
   totalValue: string;
 }
 
-function CostCard({ title, subLabel, subValue, totalLabel, totalValue }: CostCardProps) {
+function CostCard({ title, items, totalLabel, totalValue }: CostCardProps) {
   return (
     <div className="cost-card">
+      {/* 제목 */}
       <Typography variant="head3">{title}</Typography>
-      <div className="cost-card__row">
-        <Typography variant="p2">{subLabel}</Typography>
-        <Typography variant="p2">{subValue}</Typography>
+
+      {/* 비용 상세 */}
+      <div className="cost-card__items">
+        {items.map((item) => (
+          <div key={item.label} className="cost-card__row">
+            <Typography variant="p2">{item.label}</Typography>
+
+            <Typography variant="p2" className="cost-card__value">
+              {item.value}
+            </Typography>
+          </div>
+        ))}
       </div>
-      <div className="cost-card__row">
+
+      {/* 총 예상 비용 */}
+      <div className="cost-card__total">
         <Typography variant="head3">{totalLabel}</Typography>
+
         <Typography variant="head3" className="cost-card__total-value">
           {totalValue}
         </Typography>
@@ -28,3 +45,4 @@ function CostCard({ title, subLabel, subValue, totalLabel, totalValue }: CostCar
 }
 
 export default CostCard;
+export type { CostItem };
