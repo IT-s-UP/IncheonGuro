@@ -8,6 +8,7 @@ type TypographyVariant =
   | 'subtitle1'
   | 'subtitle2'
   | 'subtitle3'
+  | 'p0'
   | 'p1'
   | 'p2'
   | 'p3'
@@ -22,7 +23,13 @@ interface TypographyProps {
   children: ReactNode;
 }
 
-function Typography({ variant, as: Component = 'span', color, className, children }: TypographyProps) {
+function Typography({
+  variant,
+  as: Component = 'span',
+  color,
+  className,
+  children,
+}: TypographyProps) {
   const classNames = ['typography', `typography--${variant}`, className].filter(Boolean).join(' ');
 
   return (
