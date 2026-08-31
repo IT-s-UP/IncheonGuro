@@ -21,7 +21,7 @@ function RoundTab({ options, activeIndex, onChange }: RoundTabProps) {
           className="round-tab__option"
           onClick={() => onChange(index as 0 | 1)}
         >
-          <Typography variant="p2" color={index === activeIndex ? '#56504b' : '#000000'}>
+          <Typography variant="p2" color={index === activeIndex ? '#000000' : '#56504b'}>
             {label}
           </Typography>
         </button>
