@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
@@ -50,6 +51,7 @@ const STYLE_OPTIONS = [
 const COMPANION_OPTIONS = ['혼자', '가족', '친구', '연인', '아이', '부모님', '반려동물', '기타'];
 
 function CourseRecommendPage() {
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>(0);
 
   /* =========================
@@ -233,7 +235,15 @@ function CourseRecommendPage() {
   ========================= */
 
   const handleHome = () => {
-    window.location.href = '/';
+    navigate('/');
+  };
+
+  const handleSaveCourse = () => {
+    if (!courseResult) {
+      return;
+    }
+
+    navigate('/my-courses');
   };
 
   /* =========================
@@ -639,7 +649,7 @@ function CourseRecommendPage() {
                 홈으로
               </Button>
 
-              <Button size="main" variant="primary">
+              <Button size="main" variant="primary" onClick={handleSaveCourse}>
                 코스 저장하기
               </Button>
             </div>
