@@ -1,0 +1,22 @@
+.course-guide-transport-tab-bar {
+  display: flex;
+  padding: 0 20px;
+  box-sizing: border-box;
+  border-top: 1px solid #000000;
+}
+
+.course-guide-transport-tab-item {
+  flex: 1;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #6e6e6e;
+  cursor: pointer;
+}
+
+.course-guide-transport-tab-item.active {
+  color: #000000;
+  font-weight: bold;
+  border-bottom: 5px solid #f5a281;
+}
