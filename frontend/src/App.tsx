@@ -10,6 +10,8 @@ import CourseGuideDetailPage from '@/pages/CourseGuidePage/CourseGuideDetailPage
 import CourseRecommendPage from '@/pages/CourseRecommendPage/CourseRecommendPage';
 import MyCoursesPage from '@/pages/MyCourses/MyCoursesPage';
 import RegionRecommendPage from './pages/RegionRecommendPage/RegionRecommendPage';
+import FestivalListPage from './pages/FestivalPage/FestivalListPage';
+import FestivalDetailPage from './pages/FestivalPage/FestivalDetailPage';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
       <Route path="/course-guide/:courseId" element={<CourseGuideDetailPage />} />
       <Route path="/my-courses" element={<MyCoursesPage />} />
       <Route path="/region-recommend" element={<RegionRecommendPage />} />
+      <Route path="/festivals" element={<FestivalListPage />} />
+      <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
     </Routes>
   );
 }

@@ -1,0 +1,186 @@
+/* =========================
+   전체
+========================= */
+
+.festival-detail-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  background-color: #ffffff;
+}
+
+.festival-detail-content {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - 80px);
+
+  padding: 8px 24px 32px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   중앙 콘텐츠
+========================= */
+
+.festival-detail-main {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+}
+
+/* =========================
+   포스터
+========================= */
+
+.festival-detail-poster {
+  width: 190px;
+  height: 238px;
+
+  margin-top: 38px;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #d9d9d9;
+}
+
+.festival-detail-poster img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+/* =========================
+   축제 이름
+========================= */
+
+.festival-detail-title {
+  display: block;
+
+  width: 100%;
+
+  margin: 34px 0 0;
+
+  text-align: center;
+}
+
+/* =========================
+   상세정보
+========================= */
+
+.festival-detail-info {
+  box-sizing: border-box;
+
+  width: 100%;
+  max-width: 310px;
+
+  margin-top: 30px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: stretch;
+
+  gap: 12px;
+
+  /* 상세정보만 왼쪽 정렬 */
+  text-align: left;
+}
+
+/* 장소 / 연락처 */
+.festival-detail-info__line {
+  width: 100%;
+
+  line-height: 1.5;
+
+  text-align: left;
+}
+
+.festival-detail-info__line .typography {
+  display: inline;
+
+  text-align: left;
+}
+
+/* =========================
+   축제 소개
+========================= */
+
+.festival-detail-info__description {
+  width: 100%;
+
+  line-height: 1.6;
+
+  text-align: left;
+}
+
+.festival-detail-info__description .typography {
+  display: inline;
+
+  text-align: left;
+}
+
+/* =========================
+   내 코스 추가
+========================= */
+
+.festival-detail-bottom {
+  width: 100%;
+
+  margin-top: auto;
+
+  padding-top: 50px;
+
+  display: flex;
+
+  justify-content: center;
+}
+
+.festival-detail-add-button {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  white-space: nowrap;
+}
+
+.festival-detail-add-icon {
+  width: 18px;
+  height: 18px;
+
+  flex: 0 0 auto;
+}
+
+/* =========================
+   행사 없음
+========================= */
+
+.festival-detail-empty {
+  flex: 1;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
