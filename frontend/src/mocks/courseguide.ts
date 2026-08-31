@@ -20,6 +20,7 @@ export const mockCourses: Course[] = [
       { name: '청라호수공원', address: '인천 서구 청라동' },
       { name: '커널웨이', address: '인천 서구 청라커널로' },
       { name: '청라시티타워', address: '인천 서구 로봇랜드로' },
+      { name: '청라국제업무단지', address: '인천 서구 로봇랜드로' }, // 경유지 하나 추가
     ],
   },
   {
@@ -30,6 +31,8 @@ export const mockCourses: Course[] = [
       { name: '센트럴파크', address: '인천 연수구 컨벤시아대로' },
       { name: '트리플스트리트', address: '인천 연수구 송도과학로' },
       { name: '인천대교 전망대', address: '인천 연수구 아암대로' },
+      { name: '송도국제도시홍보관', address: '인천 연수구 컨벤시아대로' }, // 경유지 하나 추가
+      { name: '달빛축제공원', address: '인천 연수구 컨벤시아대로' }, // 하나 더 추가
     ],
   },
   {
