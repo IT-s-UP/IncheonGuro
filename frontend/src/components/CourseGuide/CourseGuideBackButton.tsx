@@ -2,11 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import './CourseGuideBackButton.css';
 
-function CourseGuideBackButton() {
+interface CourseGuideBackButtonProps {
+  to?: string; // 이동할 경로, 값 없으면 기본값으로 메인페이지('/')로 이동
+}
+
+function CourseGuideBackButton({ to = '/' }: CourseGuideBackButtonProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate('/');
+    navigate(to);
   };
 
   return (
