@@ -1,0 +1,60 @@
+.course-guide-course-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 520px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* 칸 하나를 감싸는 wrapper(li) */
+.course-guide-course-item-wrap {
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+}
+
+.course-guide-course-item-wrap:first-child {
+  padding-top: 20px;
+}
+
+.course-guide-course-item-wrap:last-child {
+  padding-bottom: 20px;
+}
+
+.course-guide-course-item {
+  width: 100%;
+  height: 100px;
+  padding: 20px;
+  border: 1px solid #78aac3;
+  border-radius: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 코스 이름 텍스트 */
+.course-guide-course-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 코스 설명 텍스트 */
+.course-guide-course-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: #000000;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

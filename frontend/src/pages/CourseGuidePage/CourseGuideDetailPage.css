@@ -1,0 +1,40 @@
+.course-guide-detail-page {
+  position: relative;
+  width: 393px;
+  margin: 0 auto;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+}
+
+.detail-map-placeholder {
+  margin-top: 40px;
+  height: calc(100vh - 200px);
+  background: #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #888888;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.detail-map-area {
+  position: relative;
+  padding-top: 20px;
+  height: calc(100vh - 200px);
+  overflow: hidden;
+}
+
+.detail-map-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #888888;
+  font-size: 16px;
+  line-height: 1.6;
+}
