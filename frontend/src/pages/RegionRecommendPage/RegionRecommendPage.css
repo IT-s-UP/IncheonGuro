@@ -1,0 +1,337 @@
+.region-recommend-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  background-color: #ffffff;
+}
+
+.region-recommend-content {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 8px 20px 32px;
+}
+
+/* =========================
+   시작 화면
+========================= */
+
+.region-intro-section {
+  margin-top: 22px;
+}
+
+.region-intro-title {
+  margin-left: 4px;
+}
+
+/* 시작 화면 이미지 */
+.region-intro-image {
+  width: 100%;
+  height: 260px;
+
+  margin-top: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background-color: #d9d9d9;
+}
+
+.region-intro-image__img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.region-intro-button {
+  width: 100%;
+
+  margin-top: 46px;
+}
+
+/* =========================
+   진행바
+========================= */
+
+.region-progress {
+  width: 100%;
+  height: 4px;
+
+  margin-top: 14px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background-color: #dedede;
+}
+
+.region-progress__active {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background-color: #111111;
+
+  transition: width 0.25s ease;
+}
+
+/* =========================
+   질문 화면
+========================= */
+
+.region-question-section {
+  position: relative;
+
+  min-height: calc(100vh - 145px);
+
+  padding-top: 30px;
+  padding-bottom: 76px;
+
+  box-sizing: border-box;
+}
+
+.region-question-title {
+  margin-bottom: 34px;
+}
+
+/* =========================
+   2열 OptionTab
+========================= */
+
+.region-option-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  column-gap: 16px;
+  row-gap: 18px;
+}
+
+.region-option-grid .option-tab {
+  width: 100%;
+  height: 34px;
+
+  padding: 0 8px;
+}
+
+/* =========================
+   1열 OptionTab
+========================= */
+
+.region-option-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+.region-option-list .option-tab {
+  width: 100%;
+  height: 34px;
+}
+
+/* =========================
+   하단 버튼
+========================= */
+
+.region-bottom-button {
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+}
+
+/* =========================
+   로딩
+========================= */
+
+.region-loading-section {
+  min-height: calc(100vh - 90px);
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.region-loading-image {
+  width: 180px;
+  height: auto;
+
+  margin-top: 24px;
+
+  object-fit: contain;
+}
+
+/* =========================
+   결과
+========================= */
+
+.region-result-section {
+  padding-top: 28px;
+}
+
+/* =========================
+   GUMBTI 결과 제목
+========================= */
+
+.region-result-heading {
+  display: flex;
+
+  align-items: baseline;
+  flex-wrap: wrap;
+
+  column-gap: 4px;
+}
+
+.region-result-name {
+  color: #1818b8;
+}
+
+/* =========================
+   결과 대표 이미지
+========================= */
+
+.region-result-image {
+  width: 100%;
+  height: 160px;
+
+  margin-top: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background-color: #d9d9d9;
+}
+
+.region-result-image img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+/* =========================
+   결과 설명
+========================= */
+
+.region-result-description {
+  margin-top: 22px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+/* =========================
+   추천 장소
+========================= */
+
+.region-recommended-section {
+  margin-top: 28px;
+}
+
+.region-recommended-title {
+  margin-bottom: 16px;
+
+  text-align: center;
+}
+
+.region-recommended-list {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.region-recommended-item {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 9px;
+
+  text-align: center;
+}
+
+/* 추천 장소 원형 이미지 */
+.region-recommended-image {
+  width: 56px;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background-color: #d9d9d9;
+}
+
+.region-recommended-image img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.region-recommended-image-placeholder {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  background-color: #d9d9d9;
+}
+
+/* =========================
+   결과 버튼
+========================= */
+
+.region-result-buttons {
+  width: 100%;
+
+  margin-top: 40px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.region-result-buttons .button {
+  width: 100%;
+}
