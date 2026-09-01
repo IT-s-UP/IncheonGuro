@@ -1,0 +1,249 @@
+.menu-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.menu-drawer-overlay--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 393px;
+  max-width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+}
+
+.menu-drawer-overlay--open .menu-drawer {
+  transform: translateX(0);
+}
+
+.menu-drawer ul,
+.menu-drawer nav {
+  list-style: none;
+}
+
+/* BackHeader */
+
+.menu-drawer__back-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.menu-drawer__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #121a26;
+  cursor: pointer;
+}
+
+/* 프로필 */
+
+.menu-drawer__profile {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 22px 24px;
+  gap: 20px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-drawer__avatar {
+  flex: none;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.menu-drawer__profile-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.menu-drawer__profile-arrow {
+  flex: none;
+  color: #cec9c7;
+}
+
+/* 스탬프 진행 카드 */
+
+.menu-drawer__progress-card {
+  margin: 20px 18px 0;
+  border-radius: 10px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
+  overflow: hidden;
+}
+
+.menu-drawer__progress-top {
+  position: relative;
+  box-sizing: border-box;
+  padding: 12px 24px;
+  background: #97c8d6;
+  border: 1px solid rgba(18, 48, 64, 0.1);
+  border-radius: 10px 10px 0 0;
+}
+
+.menu-drawer__progress-caption {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.menu-drawer__progress-percent {
+  position: absolute;
+  right: 24px;
+  top: 12px;
+}
+
+.menu-drawer__progress-track {
+  position: relative;
+  margin-top: 13px;
+  width: 100%;
+  height: 10px;
+  border-radius: 50px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.menu-drawer__progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 36%;
+  border-radius: 50px;
+  background: #2c2c6b;
+}
+
+.menu-drawer__progress-bottom {
+  box-sizing: border-box;
+  padding: 15px 15px 18px;
+  background: #ffffff;
+  border: 1px solid rgba(18, 48, 64, 0.1);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+.menu-drawer__stamp-row {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.menu-drawer__stamp {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.menu-drawer__stamp--filled {
+  background: #eeab73;
+}
+
+.menu-drawer__stamp--empty {
+  border: 1px dashed rgba(18, 48, 64, 0.22);
+}
+
+.menu-drawer__progress-places {
+  display: block;
+}
+
+/* 통계 3분할 */
+
+.menu-drawer__stats {
+  display: flex;
+  gap: 11px;
+  margin: 20px 18px 0;
+}
+
+.menu-drawer__stat {
+  flex: 1 1 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 70px;
+  background: #ffffff;
+  border: 1px solid rgba(18, 48, 64, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.menu-drawer__stat--active {
+  background: #fffdf8;
+  border-color: #eeab73;
+}
+
+/* 메뉴 리스트 */
+
+.menu-drawer__group {
+  margin: 20px 18px 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.menu-drawer__group:last-child {
+  margin-bottom: 20px;
+}
+
+.menu-drawer__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 20px;
+  background: #ffffff;
+  border: 1px solid rgba(18, 48, 64, 0.1);
+  border-top: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-drawer__group > .menu-drawer__row:first-child {
+  border-top: 1px solid rgba(18, 48, 64, 0.1);
+}
+
+.menu-drawer__row-icon {
+  flex: none;
+  color: #000000;
+}
+
+.menu-drawer__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
