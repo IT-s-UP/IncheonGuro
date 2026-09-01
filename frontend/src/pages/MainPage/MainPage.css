@@ -128,7 +128,7 @@
   font-weight: 700;
 }
 
-.main-page__spot-list {
+ul.main-page__spot-list {
   position: absolute;
   left: 0;
   top: 427px;
@@ -194,7 +194,7 @@
   top: 25px;
 }
 
-.main-page__region-list {
+ul.main-page__region-list {
   position: absolute;
   left: 0;
   top: 72px;
