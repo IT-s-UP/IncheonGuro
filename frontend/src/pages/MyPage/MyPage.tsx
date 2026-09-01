@@ -49,13 +49,12 @@ const INITIAL_PROFILE: ProfileState = {
   gender: '선택 안 함',
   phone: '',
   region: '없음',
-  email: { id: '', domain: 'gmail.com' },
+  email: { id: 'incheonguro', domain: 'gmail.com' },
 };
 
 function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
-  const [hasPassword, setHasPassword] = useState(false);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -75,9 +74,9 @@ function MyPage() {
       case 'region':
         return profile.region;
       case 'email':
-        return profile.email.id ? `${profile.email.id}@${profile.email.domain}` : '미입력';
+        return '변경하기';
       case 'password':
-        return hasPassword ? '••••••••' : '미설정';
+        return '변경하기';
       default:
         return '';
     }
@@ -242,12 +241,7 @@ function MyPage() {
       </BottomSheet>
 
       <BottomSheet open={openField === 'password'} onClose={closeSheet}>
-        <PasswordSheet
-          onSave={() => {
-            setHasPassword(true);
-            closeSheet();
-          }}
-        />
+        <PasswordSheet onSave={closeSheet} />
       </BottomSheet>
     </div>
   );
