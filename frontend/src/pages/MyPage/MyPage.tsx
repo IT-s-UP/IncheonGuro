@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Pencil } from 'lucide-react';
 
@@ -55,11 +56,22 @@ function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const closeSheet = () => setOpenField(null);
 
   const handleSave = () => {
     navigate(-1);
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setAvatarUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   };
 
   return (
@@ -72,8 +84,24 @@ function MyPage() {
 
       <section className="my-page__profile">
         <div className="my-page__avatar-wrap">
-          <span className="my-page__avatar" aria-hidden="true" />
-          <button type="button" className="my-page__avatar-edit-btn" aria-label="프로필 사진 변경">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="my-page__avatar" />
+          ) : (
+            <span className="my-page__avatar" aria-hidden="true" />
+          )}
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="my-page__avatar-input"
+            onChange={handleAvatarChange}
+          />
+          <button
+            type="button"
+            className="my-page__avatar-edit-btn"
+            aria-label="프로필 사진 변경"
+            onClick={() => avatarInputRef.current?.click()}
+          >
             <Camera size={14} color="#ffffff" />
           </button>
         </div>
