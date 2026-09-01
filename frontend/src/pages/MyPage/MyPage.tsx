@@ -55,11 +55,33 @@ const INITIAL_PROFILE: ProfileState = {
 function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
+  const [hasPassword, setHasPassword] = useState(false);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const closeSheet = () => setOpenField(null);
+
+  const getFieldValue = (key: FieldKey): string => {
+    switch (key) {
+      case 'name':
+        return profile.name;
+      case 'birthdate':
+        return `${profile.birthdate.year}년 ${profile.birthdate.month}월 ${profile.birthdate.day}일`;
+      case 'gender':
+        return profile.gender;
+      case 'phone':
+        return profile.phone || '미입력';
+      case 'region':
+        return profile.region;
+      case 'email':
+        return profile.email.id ? `${profile.email.id}@${profile.email.domain}` : '미입력';
+      case 'password':
+        return hasPassword ? '••••••••' : '미설정';
+      default:
+        return '';
+    }
+  };
 
   const handleSave = () => {
     navigate(-1);
@@ -128,6 +150,9 @@ function MyPage() {
             onClick={() => setOpenField(field.key)}
           >
             <Typography variant="head3">{field.label}</Typography>
+            <Typography variant="p2" color="#878787" className="my-page__row-value">
+              {getFieldValue(field.key)}
+            </Typography>
           </button>
         ))}
       </nav>
@@ -141,6 +166,9 @@ function MyPage() {
             onClick={() => setOpenField(field.key)}
           >
             <Typography variant="head3">{field.label}</Typography>
+            <Typography variant="p2" color="#878787" className="my-page__row-value">
+              {getFieldValue(field.key)}
+            </Typography>
           </button>
         ))}
       </nav>
@@ -214,7 +242,12 @@ function MyPage() {
       </BottomSheet>
 
       <BottomSheet open={openField === 'password'} onClose={closeSheet}>
-        <PasswordSheet onSave={closeSheet} />
+        <PasswordSheet
+          onSave={() => {
+            setHasPassword(true);
+            closeSheet();
+          }}
+        />
       </BottomSheet>
     </div>
   );

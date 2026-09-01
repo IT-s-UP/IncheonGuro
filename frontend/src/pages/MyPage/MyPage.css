@@ -119,6 +119,8 @@
 .my-page__row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
   height: 45px;
@@ -128,6 +130,13 @@
   border-top: none;
   cursor: pointer;
   text-align: left;
+}
+
+.my-page__row-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .my-page__group > .my-page__row:first-child {
