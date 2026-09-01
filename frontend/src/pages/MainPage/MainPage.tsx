@@ -1,5 +1,6 @@
 import Header from '@/components/Header/Header';
 import Typography from '@/components/Typography/Typography';
+import mainHero from '@/assets/main-hero.png';
 import './MainPage.css';
 
 interface SpotCard {
@@ -48,7 +49,7 @@ function MainPage() {
           <br />
           발견해보세요
         </Typography>
-        <div className="main-page__hero-image" />
+        <img src={mainHero} alt="" className="main-page__hero-image" />
       </section>
 
       <section className="main-page__spots">
