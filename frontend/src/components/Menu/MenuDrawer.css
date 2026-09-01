@@ -138,9 +138,9 @@
   left: 0;
   top: 0;
   height: 100%;
-  width: 36%;
   border-radius: 50px;
   background: #2c2c6b;
+  transition: width 0.2s ease;
 }
 
 .menu-drawer__progress-bottom {

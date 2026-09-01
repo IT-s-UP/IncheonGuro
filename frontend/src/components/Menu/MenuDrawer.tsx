@@ -15,6 +15,7 @@ import './MenuDrawer.css';
 interface MenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  isLoggedIn?: boolean;
 }
 
 interface MenuRowItem {
@@ -49,10 +50,11 @@ const MENU_GROUP_2: MenuRowItem[] = [
   { key: 'info', icon: InfoCircleIcon, label: '이용안내' },
 ];
 
-const STAMP_SLOTS = [true, true, true, false, false, false, false, false, false];
+const STAMP_TOTAL = 9;
+const STAMP_OWNED = 3;
 const STAMP_PLACES = ['야생화단지', '개항로', '차이나타운'];
 
-function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
+function MenuDrawer({ isOpen, onClose, isLoggedIn = true }: MenuDrawerProps) {
   const navigate = useNavigate();
 
   const handleNavigate = (to?: string) => {
@@ -60,6 +62,10 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
     onClose();
     navigate(to);
   };
+
+  const ownedStampCount = isLoggedIn ? STAMP_OWNED : 0;
+  const stampPercent = Math.round((ownedStampCount / STAMP_TOTAL) * 100);
+  const stampSlots = Array.from({ length: STAMP_TOTAL }, (_, index) => index < ownedStampCount);
 
   return (
     <div
@@ -92,15 +98,21 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
         <button
           type="button"
           className="menu-drawer__profile"
-          onClick={() => handleNavigate('/my-page')}
+          onClick={() => handleNavigate(isLoggedIn ? '/my-page' : '/login')}
         >
           <span className="menu-drawer__avatar" aria-hidden="true" />
-          <span className="menu-drawer__profile-text">
-            <Typography variant="subtitle2">인천구로 탐험가 님</Typography>
-            <Typography variant="subtitle3" color="#666666">
-              동인천구 · 서해구
-            </Typography>
-          </span>
+          {isLoggedIn ? (
+            <span className="menu-drawer__profile-text">
+              <Typography variant="subtitle2">인천구로 탐험가 님</Typography>
+              <Typography variant="subtitle3" color="#666666">
+                동인천구 · 서해구
+              </Typography>
+            </span>
+          ) : (
+            <span className="menu-drawer__profile-text">
+              <Typography variant="subtitle2">로그인 해주세요</Typography>
+            </span>
+          )}
           <ChevronRight size={20} className="menu-drawer__profile-arrow" />
         </button>
 
@@ -117,15 +129,15 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
               스탬프 투어
             </Typography>
             <Typography variant="p3" color="#ffffff" className="menu-drawer__progress-percent">
-              30%
+              {stampPercent}%
             </Typography>
             <div className="menu-drawer__progress-track">
-              <div className="menu-drawer__progress-fill" />
+              <div className="menu-drawer__progress-fill" style={{ width: `${stampPercent}%` }} />
             </div>
           </div>
           <div className="menu-drawer__progress-bottom">
             <div className="menu-drawer__stamp-row">
-              {STAMP_SLOTS.map((filled, index) => (
+              {stampSlots.map((filled, index) => (
                 <span
                   key={index}
                   className={[
@@ -136,7 +148,7 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
               ))}
             </div>
             <Typography variant="p3" className="menu-drawer__progress-places">
-              {STAMP_PLACES.join(' · ')}
+              {isLoggedIn ? STAMP_PLACES.join(' · ') : '아직 모은 스탬프가 없어요'}
             </Typography>
           </div>
         </div>
@@ -164,11 +176,13 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
           </button>
           <button
             type="button"
-            className="menu-drawer__stat menu-drawer__stat--active"
+            className={['menu-drawer__stat', isLoggedIn ? 'menu-drawer__stat--active' : ''].join(
+              ' ',
+            )}
             onClick={() => handleNavigate('/stamp-tour')}
           >
-            <Typography variant="p1" color="#eeab73">
-              2
+            <Typography variant="p1" color={isLoggedIn ? '#eeab73' : '#123040'}>
+              {ownedStampCount}
             </Typography>
             <Typography variant="p3" color="rgba(18, 48, 64, 0.68)">
               스탬프
