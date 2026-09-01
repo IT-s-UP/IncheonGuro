@@ -92,7 +92,7 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
         <button
           type="button"
           className="menu-drawer__profile"
-          onClick={() => handleNavigate('/my-courses')}
+          onClick={() => handleNavigate('/my-page')}
         >
           <span className="menu-drawer__avatar" aria-hidden="true" />
           <span className="menu-drawer__profile-text">
