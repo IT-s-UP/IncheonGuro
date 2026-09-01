@@ -45,9 +45,31 @@
 .main-page__title {
   position: absolute;
   left: 27px;
-  top: 60px;
+  top: 52px;
   width: 208px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-page__title-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.main-page__hero-arrow {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #000000;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .main-page__hero-image {
@@ -63,6 +85,7 @@
 
 .main-page__section-title {
   position: absolute;
+  right: 27px;
 }
 
 .main-page__section-title--spots {
@@ -70,7 +93,7 @@
   top: 337px;
 }
 
-/* 인기 관광지 */
+/* OO 님의 취향을 반영한 추천 장소 */
 
 .main-page__region-tabs {
   position: absolute;
@@ -154,9 +177,9 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* 핫플레이스 */
+/* 인천의 모든 장소들 */
 
-.main-page__hot {
+.main-page__regions {
   position: absolute;
   left: 0;
   top: 622px;
@@ -166,12 +189,12 @@
   background: rgba(217, 217, 217, 0.3);
 }
 
-.main-page__section-title--hot {
+.main-page__section-title--regions {
   left: 27px;
   top: 25px;
 }
 
-.main-page__hot-list {
+.main-page__region-list {
   position: absolute;
   left: 0;
   top: 72px;
@@ -184,11 +207,11 @@
   -ms-overflow-style: none;
 }
 
-.main-page__hot-list::-webkit-scrollbar {
+.main-page__region-list::-webkit-scrollbar {
   display: none;
 }
 
-.main-page__hot-card-wrap {
+.main-page__region-card-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,7 +220,7 @@
   width: 100px;
 }
 
-.main-page__hot-card {
+.main-page__region-card {
   width: 100px;
   height: 130px;
   border-radius: 20px;
@@ -206,21 +229,21 @@
   background-position: center;
 }
 
-/* 인천 대표 명소 */
+/* OO 님의 취향을 반영한 추천 코스 */
 
-.main-page__landmarks {
+.main-page__courses {
   position: absolute;
   left: 0;
   top: 889px;
   width: 393px;
 }
 
-.main-page__section-title--landmarks {
+.main-page__section-title--courses {
   left: 27px;
   top: 0;
 }
 
-.main-page__landmark-list {
+.main-page__course-list {
   position: absolute;
   left: 26px;
   top: 50px;
@@ -229,7 +252,7 @@
   gap: 10px;
 }
 
-.main-page__landmark-card {
+.main-page__course-card {
   position: relative;
   width: 340px;
   height: 85px;
@@ -239,7 +262,7 @@
   overflow: hidden;
 }
 
-.main-page__landmark-name {
+.main-page__course-name {
   position: absolute;
   left: 16px;
   bottom: 12px;
