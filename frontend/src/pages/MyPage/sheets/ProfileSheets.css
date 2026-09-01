@@ -1,0 +1,249 @@
+.profile-sheet__title {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.profile-sheet__input {
+  width: 100%;
+}
+
+.profile-sheet__counter {
+  display: block;
+  margin-top: 6px;
+  text-align: right;
+}
+
+.profile-sheet__confirm-btn {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* 라디오 목록 (성별) */
+
+.profile-sheet__radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-sheet__radio-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.profile-sheet__radio-dot {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 48, 64, 0.22);
+}
+
+.profile-sheet__radio-dot--selected {
+  border-color: #123040;
+  position: relative;
+}
+
+.profile-sheet__radio-dot--selected::after {
+  content: '';
+  position: absolute;
+  inset: 2.5px;
+  border-radius: 50%;
+  background: rgba(18, 48, 64, 0.68);
+}
+
+/* 관심 구/군 그리드 */
+
+.profile-sheet__region-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 12px;
+}
+
+.profile-sheet__region-grid .option-tab {
+  width: 100%;
+}
+
+/* 생년월일 선택 */
+
+.profile-sheet__birthdate-row {
+  display: flex;
+  gap: 10px;
+}
+
+.profile-sheet__birthdate-select {
+  flex: 1 1 0;
+  height: 50px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #cec9c7;
+  border-radius: 10px;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  color: #000000;
+  background: #ffffff;
+}
+
+/* 이메일 */
+
+.profile-sheet__email-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-sheet__email-at {
+  flex: none;
+}
+
+.profile-sheet__email-id {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.profile-sheet__email-domain {
+  position: relative;
+  flex: 0 0 110px;
+}
+
+.profile-sheet__email-domain-trigger {
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #cec9c7;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  color: #000000;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-sheet__email-domain-list {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  width: 100%;
+  z-index: 10;
+  border-radius: 10px;
+  overflow: hidden;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
+}
+
+.profile-sheet__email-domain-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1px solid #cec9c7;
+  border-top: none;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.profile-sheet__email-domain-list .profile-sheet__email-domain-option:first-child {
+  border-top: 1px solid #cec9c7;
+}
+
+.profile-sheet__email-verify-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-sheet__email-code-input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.profile-sheet__email-verify-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.profile-sheet__email-resend {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-size: 12px;
+  text-decoration: underline;
+  color: #000000;
+  cursor: pointer;
+}
+
+.profile-sheet__email-timer {
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-size: 12px;
+  color: #e81123;
+}
+
+/* 비밀번호 */
+
+.profile-sheet__password-field {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.profile-sheet__password-eye {
+  position: absolute;
+  right: 16px;
+  top: 15px;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  cursor: pointer;
+  color: #878787;
+}
+
+.profile-sheet__password-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.profile-sheet__password-check-item {
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-size: 12px;
+  color: #000000;
+}
+
+.profile-sheet__password-check-item--done {
+  color: #1d9e75;
+}
+
+.profile-sheet__password-match {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-size: 12px;
+}
+
+.profile-sheet__password-match--ok {
+  color: #1d9e75;
+}
+
+.profile-sheet__password-match--fail {
+  color: #e81123;
+}
