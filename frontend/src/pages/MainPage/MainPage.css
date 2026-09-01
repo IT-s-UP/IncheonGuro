@@ -47,6 +47,7 @@
   left: 27px;
   top: 60px;
   width: 208px;
+  z-index: 1;
 }
 
 .main-page__hero-image {
@@ -106,14 +107,24 @@
 
 .main-page__spot-list {
   position: absolute;
-  left: 26px;
+  left: 0;
   top: 427px;
+  width: 393px;
   display: flex;
   gap: 10px;
+  padding: 0 26px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-page__spot-list::-webkit-scrollbar {
+  display: none;
 }
 
 .main-page__spot-card {
   position: relative;
+  flex-shrink: 0;
   width: 130px;
   height: 160px;
   border-radius: 20px;
@@ -162,16 +173,26 @@
 
 .main-page__hot-list {
   position: absolute;
-  left: 26px;
+  left: 0;
   top: 72px;
+  width: 393px;
   display: flex;
   gap: 10px;
+  padding: 0 26px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-page__hot-list::-webkit-scrollbar {
+  display: none;
 }
 
 .main-page__hot-card-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
   gap: 6px;
   width: 100px;
 }
