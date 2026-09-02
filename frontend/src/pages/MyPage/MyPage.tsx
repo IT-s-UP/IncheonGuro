@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Pencil } from 'lucide-react';
 
@@ -48,18 +49,50 @@ const INITIAL_PROFILE: ProfileState = {
   gender: '선택 안 함',
   phone: '',
   region: '없음',
-  email: { id: '', domain: 'gmail.com' },
+  email: { id: 'incheonguro', domain: 'gmail.com' },
 };
 
 function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const closeSheet = () => setOpenField(null);
 
+  const getFieldValue = (key: FieldKey): string => {
+    switch (key) {
+      case 'name':
+        return profile.name;
+      case 'birthdate':
+        return `${profile.birthdate.year}년 ${profile.birthdate.month}월 ${profile.birthdate.day}일`;
+      case 'gender':
+        return profile.gender;
+      case 'phone':
+        return profile.phone || '미입력';
+      case 'region':
+        return profile.region;
+      case 'email':
+        return '변경하기';
+      case 'password':
+        return '변경하기';
+      default:
+        return '';
+    }
+  };
+
   const handleSave = () => {
     navigate(-1);
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setAvatarUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   };
 
   return (
@@ -72,8 +105,24 @@ function MyPage() {
 
       <section className="my-page__profile">
         <div className="my-page__avatar-wrap">
-          <span className="my-page__avatar" aria-hidden="true" />
-          <button type="button" className="my-page__avatar-edit-btn" aria-label="프로필 사진 변경">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="my-page__avatar" />
+          ) : (
+            <span className="my-page__avatar" aria-hidden="true" />
+          )}
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="my-page__avatar-input"
+            onChange={handleAvatarChange}
+          />
+          <button
+            type="button"
+            className="my-page__avatar-edit-btn"
+            aria-label="프로필 사진 변경"
+            onClick={() => avatarInputRef.current?.click()}
+          >
             <Camera size={14} color="#ffffff" />
           </button>
         </div>
@@ -100,6 +149,9 @@ function MyPage() {
             onClick={() => setOpenField(field.key)}
           >
             <Typography variant="head3">{field.label}</Typography>
+            <Typography variant="p2" color="#878787" className="my-page__row-value">
+              {getFieldValue(field.key)}
+            </Typography>
           </button>
         ))}
       </nav>
@@ -113,6 +165,9 @@ function MyPage() {
             onClick={() => setOpenField(field.key)}
           >
             <Typography variant="head3">{field.label}</Typography>
+            <Typography variant="p2" color="#878787" className="my-page__row-value">
+              {getFieldValue(field.key)}
+            </Typography>
           </button>
         ))}
       </nav>

@@ -46,6 +46,11 @@
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  object-fit: cover;
+}
+
+.my-page__avatar-input {
+  display: none;
 }
 
 .my-page__avatar-edit-btn {
@@ -114,6 +119,8 @@
 .my-page__row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
   height: 45px;
@@ -125,8 +132,22 @@
   text-align: left;
 }
 
+.my-page__row-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .my-page__group > .my-page__row:first-child {
   border-top: 1px solid rgba(18, 48, 64, 0.1);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.my-page__group > .my-page__row:last-child {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 /* 하단 저장 바 */

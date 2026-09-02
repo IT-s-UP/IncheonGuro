@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import logo from '@/assets/logo.png';
+import MenuDrawer from '@/components/Menu/MenuDrawer';
 import './Header.css';
 
 interface HeaderProps {
@@ -10,9 +12,15 @@ interface HeaderProps {
 
 function Header({ onNotificationClick, onMenuClick }: HeaderProps) {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogoClick = () => {
     navigate('/');
+  };
+
+  const handleMenuClick = () => {
+    setIsMenuOpen(true);
+    onMenuClick?.();
   };
 
   return (
@@ -47,7 +55,7 @@ function Header({ onNotificationClick, onMenuClick }: HeaderProps) {
         <button
           type="button"
           className="header__menu-btn"
-          onClick={onMenuClick}
+          onClick={handleMenuClick}
           aria-label="메뉴 열기"
         >
           <svg className="header__menu-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -60,6 +68,8 @@ function Header({ onNotificationClick, onMenuClick }: HeaderProps) {
           </svg>
         </button>
       </div>
+
+      <MenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 }
