@@ -5,6 +5,8 @@ export interface Place {
   district: string; // 구
   category: '관광지' | '카페' | '식당' | '숙소' | '쇼핑';
   imageUrl?: string;
+  tags: string[];
+  description: string;
 }
 
 export const mockPlaces: Place[] = [
@@ -14,6 +16,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 중구 차이나타운로 12',
     district: '중구',
     category: '관광지',
+    tags: ['#이국적인거리', '#중화요리', '#사진맛집'],
+    description:
+      '국내 최대 규모의 차이나타운으로, 붉은 건물과 홍등이 늘어선 이국적인 거리를 산책하며 정통 중화요리를 맛볼 수 있는 곳입니다.',
   },
   {
     id: 2,
@@ -21,6 +26,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 중구 을왕동 665-4',
     district: '중구',
     category: '관광지',
+    tags: ['#바다', '#일몰명소', '#드라이브'],
+    description:
+      '수도권에서 가까운 서해 해변으로, 낙조가 아름답기로 유명해 저녁 시간대에 특히 많은 사람들이 찾는 드라이브 코스입니다.',
   },
   {
     id: 3,
@@ -28,6 +36,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 서구 청라동 123-1',
     district: '서구',
     category: '관광지',
+    tags: ['#산책', '#호수뷰', '#반려동물동반'],
+    description:
+      '넓은 호수를 따라 산책로가 조성되어 있어 산책과 자전거 라이딩을 즐기기 좋고, 반려동물과 함께 방문하는 사람들도 많은 공원입니다.',
   },
   {
     id: 4,
@@ -35,6 +46,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 서구 청라커널로 66',
     district: '서구',
     category: '카페',
+    tags: ['#카페거리', '#야경', '#데이트'],
+    description:
+      '인공 수로를 따라 감각적인 카페와 레스토랑이 모여 있는 거리로, 해질 무렵 야경이 아름다워 데이트 코스로 인기가 많습니다.',
   },
   {
     id: 5,
@@ -42,6 +56,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 계양구 계산동 산 8-1',
     district: '계양구',
     category: '관광지',
+    tags: ['#등산', '#둘레길', '#자연'],
+    description:
+      '초보자도 부담 없이 걸을 수 있는 완만한 둘레길로, 도심 속에서 자연을 느끼며 가볍게 산행을 즐기기 좋은 코스입니다.',
   },
   {
     id: 6,
@@ -49,6 +66,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 계양구 계양산로 45',
     district: '계양구',
     category: '식당',
+    tags: ['#한식', '#가족모임', '#정갈한상차림'],
+    description:
+      '정갈한 한정식 상차림으로 유명한 식당으로, 넓은 좌식 공간을 갖추고 있어 가족 모임이나 단체 방문에도 좋습니다.',
   },
   {
     id: 7,
@@ -56,6 +76,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 부평구 부평대로 20',
     district: '부평구',
     category: '쇼핑',
+    tags: ['#쇼핑', '#젊음의거리', '#먹거리'],
+    description:
+      '다양한 상점과 먹거리가 밀집한 젊음의 거리로, 쇼핑과 식사를 함께 즐길 수 있어 주말이면 인파로 붐비는 곳입니다.',
   },
   {
     id: 8,
@@ -63,6 +86,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 부평구 부평문화로 88',
     district: '부평구',
     category: '숙소',
+    tags: ['#비즈니스', '#역세권', '#조식포함'],
+    description:
+      '부평역과 가까운 역세권 호텔로, 비즈니스 출장객과 여행객 모두에게 편리하며 조식 서비스도 제공합니다.',
   },
   {
     id: 9,
@@ -70,6 +96,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 동구 화도진로 9',
     district: '동구',
     category: '숙소',
+    tags: ['#감성숙소', '#골목여행', '#가성비'],
+    description:
+      '오래된 골목 사이에 자리한 감성 숙소로, 합리적인 가격에 아늑한 분위기를 느낄 수 있어 골목 여행객에게 인기입니다.',
   },
   {
     id: 10,
@@ -77,6 +106,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 동구 창영동 43-1',
     district: '동구',
     category: '관광지',
+    tags: ['#헌책방', '#근대골목', '#레트로'],
+    description:
+      '수십 년의 세월을 간직한 헌책방들이 모여 있는 골목으로, 레트로 감성과 근대 인천의 정취를 느낄 수 있는 곳입니다.',
   },
   {
     id: 11,
@@ -84,6 +116,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 남동구 소래포구로 30',
     district: '남동구',
     category: '식당',
+    tags: ['#해산물', '#수산시장', '#현지맛집'],
+    description:
+      '싱싱한 해산물을 저렴하게 맛볼 수 있는 전통 수산시장으로, 현지인과 관광객 모두에게 사랑받는 미식 명소입니다.',
   },
   {
     id: 12,
@@ -91,6 +126,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 남동구 무네미로 236',
     district: '남동구',
     category: '카페',
+    tags: ['#공원뷰', '#브런치', '#가족나들이'],
+    description:
+      '넓은 공원 전망을 즐기며 브런치를 즐길 수 있는 카페로, 가족 단위 나들이객들이 많이 찾는 힐링 공간입니다.',
   },
   {
     id: 13,
@@ -98,6 +136,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 미추홀구 수봉로 14',
     district: '미추홀구',
     category: '식당',
+    tags: ['#국밥', '#현지인맛집', '#해장'],
+    description:
+      '진한 국물 맛으로 소문난 오래된 국밥집으로, 아침저녁 가리지 않고 현지인들의 발길이 끊이지 않는 해장 맛집입니다.',
   },
   {
     id: 14,
@@ -105,6 +146,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 미추홀구 인주대로 100',
     district: '미추홀구',
     category: '숙소',
+    tags: ['#게스트하우스', '#저렴한숙소', '#배낭여행'],
+    description:
+      '합리적인 가격의 도미토리와 개인실을 함께 운영하는 게스트하우스로, 배낭여행객들이 부담 없이 묵기 좋은 숙소입니다.',
   },
   {
     id: 15,
@@ -112,6 +156,9 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 연수구 컨벤시아대로 160',
     district: '연수구',
     category: '관광지',
+    tags: ['#수상택시', '#야경명소', '#피크닉'],
+    description:
+      '인공 수로와 도심 공원이 어우러진 랜드마크로, 수상택시 체험과 야경 감상, 피크닉을 함께 즐길 수 있는 곳입니다.',
   },
   {
     id: 16,
@@ -119,5 +166,8 @@ export const mockPlaces: Place[] = [
     subtitle: '인천 연수구 송도과학로 32',
     district: '연수구',
     category: '숙소',
+    tags: ['#오션뷰', '#호캉스', '#고급숙소'],
+    description:
+      '탁 트인 바다 전망을 자랑하는 고급 호텔로, 편안한 휴식을 원하는 호캉스족들에게 인기가 높은 숙소입니다.',
   },
 ];
