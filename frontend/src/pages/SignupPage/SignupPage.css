@@ -66,6 +66,8 @@
 }
 
 .signup-field {
+  width: 100%;
+
   display: flex;
   flex-direction: column;
 
@@ -76,16 +78,25 @@
    ID + 중복 확인
 ========================= */
 
+.signup-id-area {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+}
+
 .signup-inline {
+  width: 100%;
+
   display: flex;
 
   align-items: center;
 
-  gap: 30px;
+  gap: 12px;
 }
 
 .signup-inline .input {
-  flex-shrink: 1;
+  flex: 1 1 auto;
 
   min-width: 0;
 }
@@ -101,23 +112,131 @@
 }
 
 /* =========================
+   ID 중복 확인 메시지
+========================= */
+
+.signup-id-message {
+  display: block;
+
+  margin-top: 6px;
+}
+
+.signup-id-message--success {
+  color: #78aac3;
+}
+
+.signup-id-message--error {
+  color: #e05555;
+}
+
+/* =========================
+   비밀번호
+========================= */
+
+.signup-password-input {
+  position: relative;
+
+  width: 100%;
+}
+
+.signup-password-input .input {
+  width: 100%;
+}
+
+.signup-password-input input {
+  padding-right: 46px;
+}
+
+/* =========================
+   비밀번호 눈 아이콘
+========================= */
+
+.signup-password-eye {
+  position: absolute;
+
+  top: 50%;
+  right: 13px;
+
+  z-index: 2;
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  transform: translateY(-50%);
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background-color: transparent;
+
+  color: #828585;
+
+  cursor: pointer;
+}
+
+/* =========================
+   비밀번호 조건
+========================= */
+
+.signup-password-rules {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  column-gap: 8px;
+  row-gap: 4px;
+}
+
+.signup-password-rule {
+  color: #333333;
+}
+
+.signup-password-rule--valid {
+  color: #78aac3;
+}
+
+/* =========================
+   비밀번호 불일치
+========================= */
+
+.signup-password-error {
+  color: #e05555;
+}
+
+/* =========================
    생년월일 + 성별
 ========================= */
 
 .signup-detail-row {
+  width: 100%;
+
   display: flex;
 
-  align-items: flex-end;
+  align-items: flex-start;
 
   gap: 16px;
 }
 
 .signup-detail-row .signup-field {
   width: auto;
+
+  gap: 9px;
+
+  align-self: flex-start;
 }
 
 .signup-birth-field {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
 
   min-width: 0;
 }
@@ -129,12 +248,16 @@
 .signup-gender-options {
   display: flex;
 
-  align-items: center;
+  align-items: flex-start;
 
   gap: 6px;
+
+  margin: 0;
 }
 
 .signup-gender-button {
+  margin: 0;
+
   opacity: 0.55;
 }
 
@@ -143,38 +266,12 @@
 }
 
 /* =========================
-   전화번호
-========================= */
-
-.signup-phone-row {
-  display: flex;
-
-  align-items: center;
-
-  gap: 14px;
-}
-
-.signup-phone-row > span {
-  flex: 0 0 auto;
-
-  font-family: 'Pretendard', sans-serif;
-
-  font-size: 16px;
-
-  color: #111111;
-}
-
-.signup-phone-row .input {
-  flex-shrink: 1;
-
-  min-width: 0;
-}
-
-/* =========================
    이메일
 ========================= */
 
 .signup-email-row {
+  width: 100%;
+
   display: flex;
 
   align-items: center;
@@ -193,7 +290,7 @@
 }
 
 .signup-email-row .input {
-  flex-shrink: 1;
+  flex: 1 1 0;
 
   min-width: 0;
 }
@@ -201,11 +298,12 @@
 .signup-email-select {
   box-sizing: border-box;
 
+  flex: 1 1 0;
+
+  min-width: 0;
   height: 40px;
 
   padding: 0 10px;
-
-  flex: 0 0 auto;
 
   border: 1px solid #dedede;
 
@@ -233,29 +331,122 @@
 ========================= */
 
 .signup-verify-row {
+  --verify-control-height: 48px;
+
+  width: 100%;
+
   display: flex;
+  align-items: flex-start;
 
-  align-items: center;
-
-  gap: 30px;
+  gap: 12px;
 
   margin-top: 4px;
 }
 
-.signup-verify-row .input {
-  flex-shrink: 1;
+/* =========================
+   인증번호 Input + 재전송
+========================= */
+
+.signup-verify-input-area {
+  flex: 1 1 auto;
 
   min-width: 0;
+
+  display: grid;
+
+  /*
+   * 첫 번째 줄 = Input 영역
+   * 두 번째 줄 = 재전송 문구
+   */
+  grid-template-rows:
+    var(--verify-control-height)
+    auto;
+
+  align-items: start;
 }
 
-.signup-verify-button-area {
+.signup-verify-input-area .input {
+  width: 100%;
+  min-width: 0;
+
+  align-self: center;
+}
+
+/* =========================
+   인증번호 재전송
+========================= */
+
+.signup-email-resend {
+  justify-self: start;
+  align-self: start;
+
+  width: auto;
+
+  margin-top: 10px;
+  margin-left: 0;
+
+  padding: 0;
+
+  border: none;
+
+  background-color: transparent;
+
+  font-family: 'Pretendard', sans-serif;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  color: #111111;
+
+  text-align: left;
+  text-decoration: underline;
+
+  cursor: pointer;
+}
+
+/* =========================
+   인증 버튼 + 타이머
+========================= */
+
+.signup-verify-action-area {
   flex: 0 0 auto;
+
+  display: grid;
+
+  /*
+   * 왼쪽과 똑같이
+   * 첫 줄 48px / 두 번째 줄 문구
+   */
+  grid-template-rows:
+    var(--verify-control-height)
+    auto;
+
+  align-items: start;
+
+  justify-items: end;
 }
 
-.signup-small-button--hidden {
-  visibility: hidden;
+/*
+ * 인증 버튼을 Input 높이의
+ * 정가운데에 위치
+ */
+.signup-verify-action-area .signup-small-button {
+  align-self: center;
+}
 
-  pointer-events: none;
+/* =========================
+   인증 타이머
+========================= */
+
+.signup-verification-timer {
+  align-self: start;
+
+  margin-top: 10px;
+
+  text-align: right;
+
+  white-space: nowrap;
 }
 
 /* =========================
@@ -383,7 +574,6 @@
   overflow: hidden;
 }
 
-/* 실제 이미지 */
 .signup-complete-image img {
   display: block;
 
@@ -394,6 +584,7 @@
 }
 
 /* signup1.png */
+
 .signup-complete-image--back {
   top: 0;
   right: 0;
@@ -403,6 +594,7 @@
 }
 
 /* signup2.png */
+
 .signup-complete-image--front {
   top: 210px;
   left: 0;

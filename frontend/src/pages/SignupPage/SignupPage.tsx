@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 import Header from '@/components/Header/Header';
 import Button from '@/components/Button/Button';
@@ -45,9 +46,13 @@ function SignupPage() {
 
   const [userId, setUserId] = useState('');
   const [isIdChecked, setIsIdChecked] = useState(false);
+  const [idCheckMessage, setIdCheckMessage] = useState('');
 
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   /* =========================
      2. 상세 정보
@@ -58,16 +63,19 @@ function SignupPage() {
 
   const [gender, setGender] = useState('');
 
-  const [phoneMiddle, setPhoneMiddle] = useState('');
-  const [phoneLast, setPhoneLast] = useState('');
+  const [phone, setPhone] = useState('');
 
   const [emailId, setEmailId] = useState('');
   const [emailDomain, setEmailDomain] = useState('');
+  const [emailDomainOption, setEmailDomainOption] = useState('');
 
   const [verificationCode, setVerificationCode] = useState('');
 
   const [isEmailCodeSent, setIsEmailCodeSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+  /* 7분 = 420초 */
+  const [verificationTime, setVerificationTime] = useState(0);
 
   /* =========================
      3. 닉네임
@@ -94,30 +102,77 @@ function SignupPage() {
   const allAgree = ageAgree && locationAgree && privacyAgree;
 
   /* =========================
+     비밀번호 조건
+  ========================= */
+
+  const passwordRules = {
+    length: password.length >= 8,
+    english: /[A-Za-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ\s]/.test(password),
+  };
+
+  const isPasswordValid =
+    passwordRules.length && passwordRules.english && passwordRules.number && passwordRules.special;
+
+  const isPasswordConfirmMismatch = passwordConfirm.length > 0 && password !== passwordConfirm;
+
+  /* =========================
+     전화번호 자동 하이픈
+  ========================= */
+
+  const handlePhoneChange = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
+
+    let formatted = numbers;
+
+    if (numbers.length > 3 && numbers.length <= 7) {
+      formatted = `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    }
+
+    if (numbers.length > 7) {
+      formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+    }
+
+    setPhone(formatted);
+  };
+
+  /* =========================
      ID 중복 확인
   ========================= */
 
   const handleIdCheck = () => {
     if (!userId.trim()) {
-      alert('ID를 입력해주세요.');
+      setIsIdChecked(false);
+      setIdCheckMessage('ID를 입력해주세요.');
       return;
     }
 
-    // TODO: 추후 ID 중복 확인 API 연결
-    setIsIdChecked(true);
+    /*
+     * 프론트 테스트용
+     * API 연결 후 교체
+     */
+    const isDuplicate = userId === 'test';
 
-    alert('사용 가능한 ID입니다.');
+    if (isDuplicate) {
+      setIsIdChecked(false);
+      setIdCheckMessage('이미 사용 중인 ID입니다.');
+      return;
+    }
+
+    setIsIdChecked(true);
+    setIdCheckMessage('사용 가능한 ID입니다.');
   };
 
   /* =========================
-     이메일 정보 변경 시
-     기존 인증 초기화
+     이메일 인증 초기화
   ========================= */
 
   const resetEmailVerification = () => {
     setVerificationCode('');
     setIsEmailCodeSent(false);
     setIsEmailVerified(false);
+    setVerificationTime(0);
   };
 
   /* =========================
@@ -125,22 +180,37 @@ function SignupPage() {
   ========================= */
 
   const handleEmailVerification = () => {
+    /*
+     * 인증번호 최초 전송
+     */
     if (!isEmailCodeSent) {
       if (!emailId || !emailDomain) {
         alert('이메일을 입력해주세요.');
         return;
       }
 
-      // TODO: 추후 이메일 인증번호 전송 API 연결
+      // TODO: 인증번호 전송 API 연결
+
       setIsEmailCodeSent(true);
       setIsEmailVerified(false);
       setVerificationCode('');
 
-      alert('인증번호가 전송되었습니다.\n테스트 인증번호는 123456입니다.');
+      setVerificationTime(7 * 60);
 
       return;
     }
 
+    /*
+     * 인증시간 만료
+     */
+    if (verificationTime <= 0) {
+      alert('인증 시간이 만료되었습니다. 인증번호를 다시 요청해주세요.');
+      return;
+    }
+
+    /*
+     * 인증번호 확인
+     */
     if (!verificationCode) {
       alert('인증번호를 입력해주세요.');
       return;
@@ -157,6 +227,54 @@ function SignupPage() {
     }
 
     setIsEmailVerified(true);
+    setVerificationTime(0);
+  };
+
+  /* =========================
+     이메일 인증 재전송
+  ========================= */
+
+  const handleEmailResend = () => {
+    if (!emailId || !emailDomain) {
+      return;
+    }
+
+    // TODO: 인증번호 재전송 API 연결
+
+    setVerificationCode('');
+    setIsEmailVerified(false);
+    setIsEmailCodeSent(true);
+
+    /*
+     * 다시 7분부터 시작
+     */
+    setVerificationTime(7 * 60);
+  };
+
+  /* =========================
+     이메일 인증 타이머
+  ========================= */
+
+  useEffect(() => {
+    if (!isEmailCodeSent || isEmailVerified || verificationTime <= 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setVerificationTime((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isEmailCodeSent, isEmailVerified, verificationTime]);
+
+  const formatVerificationTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+
+    const remainSeconds = seconds % 60;
+
+    return `${String(minutes).padStart(2, '0')}:${String(remainSeconds).padStart(2, '0')}`;
   };
 
   /* =========================
@@ -175,6 +293,11 @@ function SignupPage() {
         return;
       }
 
+      if (!isPasswordValid) {
+        alert('비밀번호 조건을 모두 충족해주세요.');
+        return;
+      }
+
       if (password !== passwordConfirm) {
         alert('비밀번호가 일치하지 않습니다.');
         return;
@@ -182,8 +305,13 @@ function SignupPage() {
     }
 
     if (step === 1) {
-      if (!name || !birth || !gender || !phoneMiddle || !phoneLast || !emailId || !emailDomain) {
+      if (!name || !birth || !gender || !phone || !emailId || !emailDomain) {
         alert('모든 정보를 입력해주세요.');
+        return;
+      }
+
+      if (phone.length !== 13) {
+        alert('전화번호를 정확하게 입력해주세요.');
         return;
       }
 
@@ -243,7 +371,7 @@ function SignupPage() {
      *   name,
      *   birth,
      *   gender,
-     *   phone: `010-${phoneMiddle}-${phoneLast}`,
+     *   phone,
      *   email: `${emailId}@${emailDomain}`,
      *   nickname,
      *   region,
@@ -270,63 +398,173 @@ function SignupPage() {
             </Typography>
 
             <div className="signup-form signup-form--account">
+              {/* ID */}
+
               <div className="signup-field">
                 <Typography as="label" variant="head3">
                   ID
                 </Typography>
 
-                <div className="signup-inline">
-                  <Input
-                    variant="box"
-                    size="middle"
-                    value={userId}
-                    placeholder="텍스트를 입력하세요."
-                    onChange={(event) => {
-                      setUserId(event.target.value);
+                <div className="signup-id-area">
+                  <div className="signup-inline">
+                    <Input
+                      variant="box"
+                      size="middle"
+                      value={userId}
+                      placeholder="ID를 입력하세요."
+                      onChange={(event) => {
+                        /*
+                         * 영문 + 숫자만 허용
+                         */
+                        const value = event.target.value.replace(/[^A-Za-z0-9]/g, '');
 
-                      setIsIdChecked(false);
-                    }}
-                  />
+                        setUserId(value);
 
-                  <Button
-                    size="small"
-                    variant="primary"
-                    className="signup-small-button"
-                    onClick={handleIdCheck}
-                  >
-                    중복 확인
-                  </Button>
+                        /*
+                         * ID 수정 시
+                         * 기존 중복확인 결과 초기화
+                         */
+                        setIsIdChecked(false);
+                        setIdCheckMessage('');
+                      }}
+                    />
+
+                    <Button
+                      size="small"
+                      variant="primary"
+                      className="signup-small-button"
+                      onClick={handleIdCheck}
+                    >
+                      중복 확인
+                    </Button>
+                  </div>
+
+                  {idCheckMessage && (
+                    <Typography
+                      variant="caption1"
+                      className={[
+                        'signup-id-message',
+                        isIdChecked ? 'signup-id-message--success' : 'signup-id-message--error',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      {idCheckMessage}
+                    </Typography>
+                  )}
                 </div>
               </div>
+
+              {/* 비밀번호 */}
 
               <div className="signup-field">
                 <Typography as="label" variant="head3">
                   비밀번호
                 </Typography>
 
-                <Input
-                  type="password"
-                  variant="box"
-                  size="main"
-                  value={password}
-                  placeholder="비밀번호를 입력하세요."
-                  onChange={(event) => setPassword(event.target.value)}
-                />
+                <div className="signup-password-input">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    variant="box"
+                    size="main"
+                    value={password}
+                    placeholder="비밀번호를 입력하세요."
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    className="signup-password-eye"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                  >
+                    {showPassword ? <Eye size={19} /> : <EyeOff size={19} />}
+                  </button>
+                </div>
+
+                <div className="signup-password-rules">
+                  <Typography
+                    variant="caption1"
+                    className={[
+                      'signup-password-rule',
+                      passwordRules.length ? 'signup-password-rule--valid' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    ○ 8자 이상
+                  </Typography>
+
+                  <Typography
+                    variant="caption1"
+                    className={[
+                      'signup-password-rule',
+                      passwordRules.english ? 'signup-password-rule--valid' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    ○ 영문 포함
+                  </Typography>
+
+                  <Typography
+                    variant="caption1"
+                    className={[
+                      'signup-password-rule',
+                      passwordRules.number ? 'signup-password-rule--valid' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    ○ 숫자 포함
+                  </Typography>
+
+                  <Typography
+                    variant="caption1"
+                    className={[
+                      'signup-password-rule',
+                      passwordRules.special ? 'signup-password-rule--valid' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    ○ 특수문자 포함
+                  </Typography>
+                </div>
               </div>
+
+              {/* 비밀번호 재입력 */}
 
               <div className="signup-field">
                 <Typography as="label" variant="head3">
                   비밀번호 재입력
                 </Typography>
 
-                <Input
-                  type="password"
-                  variant="box"
-                  size="main"
-                  value={passwordConfirm}
-                  placeholder="비밀번호를 다시 입력하세요."
-                  onChange={(event) => setPasswordConfirm(event.target.value)}
-                />
+                <div className="signup-password-input">
+                  <Input
+                    type={showPasswordConfirm ? 'text' : 'password'}
+                    variant="box"
+                    size="main"
+                    value={passwordConfirm}
+                    placeholder="비밀번호를 다시 입력하세요."
+                    onChange={(event) => setPasswordConfirm(event.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    className="signup-password-eye"
+                    onClick={() => setShowPasswordConfirm((prev) => !prev)}
+                    aria-label={showPasswordConfirm ? '비밀번호 숨기기' : '비밀번호 보기'}
+                  >
+                    {showPasswordConfirm ? <Eye size={19} /> : <EyeOff size={19} />}
+                  </button>
+                </div>
+
+                {isPasswordConfirmMismatch && (
+                  <Typography variant="caption1" className="signup-password-error">
+                    비밀번호가 일치하지 않습니다
+                  </Typography>
+                )}
               </div>
             </div>
 
@@ -361,7 +599,7 @@ function SignupPage() {
                   variant="box"
                   size="main"
                   value={name}
-                  placeholder="텍스트를 입력하세요."
+                  placeholder="이름을 입력해주세요"
                   onChange={(event) => setName(event.target.value)}
                 />
               </div>
@@ -381,7 +619,9 @@ function SignupPage() {
                     maxLength={8}
                     value={birth}
                     placeholder="YYYYMMDD"
-                    onChange={(event) => setBirth(event.target.value.replace(/\D/g, ''))}
+                    onChange={(event) =>
+                      setBirth(event.target.value.replace(/\D/g, '').slice(0, 8))
+                    }
                   />
                 </div>
 
@@ -418,31 +658,15 @@ function SignupPage() {
                   전화번호
                 </Typography>
 
-                <div className="signup-phone-row">
-                  <Typography variant="p0">010</Typography>
-
-                  <span>-</span>
-
-                  <Input
-                    variant="box"
-                    size="mini"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={phoneMiddle}
-                    onChange={(event) => setPhoneMiddle(event.target.value.replace(/\D/g, ''))}
-                  />
-
-                  <span>-</span>
-
-                  <Input
-                    variant="box"
-                    size="mini"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={phoneLast}
-                    onChange={(event) => setPhoneLast(event.target.value.replace(/\D/g, ''))}
-                  />
-                </div>
+                <Input
+                  variant="box"
+                  size="main"
+                  inputMode="numeric"
+                  maxLength={13}
+                  value={phone}
+                  placeholder="010-0000-0000"
+                  onChange={(event) => handlePhoneChange(event.target.value)}
+                />
               </div>
 
               {/* 이메일 */}
@@ -467,48 +691,92 @@ function SignupPage() {
 
                   <span>@</span>
 
-                  <select
-                    className="signup-email-select"
-                    value={emailDomain}
-                    onChange={(event) => {
-                      setEmailDomain(event.target.value);
+                  {emailDomainOption === 'direct' ? (
+                    <Input
+                      variant="box"
+                      size="small"
+                      value={emailDomain}
+                      placeholder="도메인 입력"
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/@/g, '').replace(/\s/g, '');
 
-                      resetEmailVerification();
-                    }}
-                  >
-                    <option value="">선택</option>
+                        setEmailDomain(value);
 
-                    <option value="naver.com">naver.com</option>
+                        resetEmailVerification();
+                      }}
+                    />
+                  ) : (
+                    <select
+                      className="signup-email-select"
+                      value={emailDomainOption}
+                      onChange={(event) => {
+                        const selectedValue = event.target.value;
 
-                    <option value="gmail.com">gmail.com</option>
+                        setEmailDomainOption(selectedValue);
 
-                    <option value="daum.net">daum.net</option>
+                        if (selectedValue === 'direct') {
+                          setEmailDomain('');
+                        } else {
+                          setEmailDomain(selectedValue);
+                        }
 
-                    <option value="kakao.com">kakao.com</option>
-                  </select>
+                        resetEmailVerification();
+                      }}
+                    >
+                      <option value="">선택</option>
+
+                      <option value="naver.com">naver.com</option>
+
+                      <option value="gmail.com">gmail.com</option>
+
+                      <option value="daum.net">daum.net</option>
+
+                      <option value="kakao.com">kakao.com</option>
+
+                      <option value="direct">직접 입력</option>
+                    </select>
+                  )}
                 </div>
 
-                {/* 이메일 인증 */}
+                {/* =========================
+                    이메일 인증
+                ========================= */}
 
                 <div className="signup-verify-row">
-                  <Input
-                    variant="box"
-                    size="middle"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={isEmailVerified ? '인증 완료' : verificationCode}
-                    placeholder="인증번호 6자리"
-                    readOnly={!isEmailCodeSent || isEmailVerified}
-                    onChange={(event) => {
-                      if (isEmailVerified) {
-                        return;
-                      }
+                  {/* 인증번호 + 재전송 */}
 
-                      setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6));
-                    }}
-                  />
+                  <div className="signup-verify-input-area">
+                    <Input
+                      variant="box"
+                      size="main"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={isEmailVerified ? '인증 완료' : verificationCode}
+                      placeholder="인증번호 6자리"
+                      readOnly={!isEmailCodeSent || isEmailVerified}
+                      onChange={(event) => {
+                        if (isEmailVerified) {
+                          return;
+                        }
 
-                  <div className="signup-verify-button-area">
+                        setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6));
+                      }}
+                    />
+
+                    {isEmailCodeSent && !isEmailVerified && (
+                      <button
+                        type="button"
+                        className="signup-email-resend"
+                        onClick={handleEmailResend}
+                      >
+                        인증번호 재전송
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 인증버튼 + 타이머 */}
+
+                  <div className="signup-verify-action-area">
                     {!isEmailVerified && (
                       <Button
                         size="small"
@@ -516,8 +784,21 @@ function SignupPage() {
                         className="signup-small-button"
                         onClick={handleEmailVerification}
                       >
-                        {isEmailCodeSent ? '인증 완료' : '인증하기'}
+                        {isEmailCodeSent ? '인증 확인' : '인증하기'}
                       </Button>
+                    )}
+
+                    {isEmailCodeSent && !isEmailVerified && (
+                      <div className="signup-verification-timer">
+                        <Typography
+                          variant="caption1"
+                          color={verificationTime > 0 ? '#78AAC3' : '#E05555'}
+                        >
+                          {verificationTime > 0
+                            ? formatVerificationTime(verificationTime)
+                            : '인증 시간이 만료되었습니다.'}
+                        </Typography>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -561,7 +842,7 @@ function SignupPage() {
                   variant="box"
                   size="main"
                   value={nickname}
-                  placeholder="텍스트를 입력하세요."
+                  placeholder="닉네임을 입력하세요."
                   onChange={(event) => setNickname(event.target.value)}
                 />
 
