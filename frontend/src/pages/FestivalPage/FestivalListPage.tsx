@@ -323,7 +323,7 @@ function FestivalListPage() {
 
     return {
       transform: `translate3d(calc(-50% + ${x}px), -50%, 0) scale(${scale})`,
-      zIndex: Math.round(scale * 100),
+      zIndex: Math.round(scale * 10),
     };
   };
 
