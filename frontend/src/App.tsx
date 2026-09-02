@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import ScrollToTop from '@/components/ScrollToTop';
 
 import MainPage from '@/pages/MainPage/MainPage';
 
@@ -15,24 +16,29 @@ import FestivalDetailPage from './pages/FestivalPage/FestivalDetailPage';
 import StampTourPage from './pages/StampTourPage/StampTourPage';
 import PlaceGuideMainPage from '@/pages/PlaceGuidePage/PlaceGuideMainPage';
 import PlaceGuideSearchPage from '@/pages/PlaceGuidePage/PlaceGuideSearchPage';
+import PlaceGuideDetailPage from '@/pages/PlaceGuidePage/PlaceGuideDetailPage';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<MainPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/course-recommend" element={<CourseRecommendPage />} />
-      <Route path="/course-guide" element={<CourseGuideListPage />} />
-      <Route path="/course-guide/:courseId" element={<CourseGuideDetailPage />} />
-      <Route path="/my-courses" element={<MyCoursesPage />} />
-      <Route path="/region-recommend" element={<RegionRecommendPage />} />
-      <Route path="/festivals" element={<FestivalListPage />} />
-      <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
-      <Route path="/stamp-tour" element={<StampTourPage />} />
-      <Route path="/place-guide" element={<PlaceGuideMainPage />} />
-      <Route path="/place-guide/search" element={<PlaceGuideSearchPage />} />
-    </Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/course-recommend" element={<CourseRecommendPage />} />
+        <Route path="/course-guide" element={<CourseGuideListPage />} />
+        <Route path="/course-guide/:courseId" element={<CourseGuideDetailPage />} />
+        <Route path="/my-courses" element={<MyCoursesPage />} />
+        <Route path="/region-recommend" element={<RegionRecommendPage />} />
+        <Route path="/festivals" element={<FestivalListPage />} />
+        <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
+        <Route path="/stamp-tour" element={<StampTourPage />} />
+        <Route path="/place-guide" element={<PlaceGuideMainPage />} />
+        <Route path="/place-guide/search" element={<PlaceGuideSearchPage />} />
+        <Route path="/place-guide/:placeId" element={<PlaceGuideDetailPage />} />
+      </Routes>
+    </>
   );
 }
 

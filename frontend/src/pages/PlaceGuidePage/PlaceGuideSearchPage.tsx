@@ -17,7 +17,6 @@ function PlaceGuideSearchPage() {
 
   const submittedQuery = searchParams.get('q') ?? '';
 
-  // 입력창에 보여줄 임시 텍스트 (엔터/돋보기 눌러야 실제 검색 반영)
   const [query, setQuery] = useState(submittedQuery);
 
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
@@ -88,6 +87,7 @@ function PlaceGuideSearchPage() {
               title={place.title}
               subtitle={place.subtitle}
               bookmarked={bookmarkedIds.has(place.id)}
+              onClick={() => navigate(`/place-guide/${place.id}`)}
               onBookmarkClick={() => handleBookmarkToggle(place.id)}
             />
           ))}

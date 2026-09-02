@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Search } from 'lucide-react';
@@ -28,6 +28,9 @@ const MAX_SUGGESTIONS = 6;
 
 function PlaceGuideMainPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') ?? '';
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   const [activeDistricts, setActiveDistricts] = useState<Set<number>>(new Set());
@@ -92,7 +95,7 @@ function PlaceGuideMainPage() {
 
   const bookmarkedPlaces = mockPlaces.filter((place) => bookmarkedIds.has(place.id));
 
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
 
   // 연관 검색어: 장소 이름 + 코스 이름 중 query 포함하는 것들
@@ -220,6 +223,7 @@ function PlaceGuideMainPage() {
                 title={place.title}
                 subtitle={place.subtitle}
                 bookmarked={bookmarkedIds.has(place.id)}
+                onClick={() => navigate(`/place-guide/${place.id}`)}
                 onBookmarkClick={() => handleBookmarkToggle(place.id)}
               />
             ))}
@@ -245,6 +249,7 @@ function PlaceGuideMainPage() {
                 title={place.title}
                 subtitle={place.subtitle}
                 bookmarked={bookmarkedIds.has(place.id)}
+                onClick={() => navigate(`/place-guide/${place.id}`)}
                 onBookmarkClick={() => handleBookmarkToggle(place.id)}
               />
             ))
