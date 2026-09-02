@@ -13,6 +13,11 @@
   text-align: right;
 }
 
+.profile-sheet__error {
+  display: block;
+  margin-top: 6px;
+}
+
 .profile-sheet__confirm-btn {
   width: 100%;
   margin-top: 24px;

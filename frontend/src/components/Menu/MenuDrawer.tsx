@@ -103,7 +103,7 @@ function MenuDrawer({ isOpen, onClose, isLoggedIn = true }: MenuDrawerProps) {
           <span className="menu-drawer__avatar" aria-hidden="true" />
           {isLoggedIn ? (
             <span className="menu-drawer__profile-text">
-              <Typography variant="subtitle2">인천구로 탐험가 님</Typography>
+              <Typography variant="subtitle2">탐험가 님</Typography>
               <Typography variant="subtitle3" color="#666666">
                 동인천구 · 서해구
               </Typography>
