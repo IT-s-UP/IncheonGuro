@@ -6,19 +6,21 @@ import Button from '@/components/Button/Button';
 import './ProfileSheets.css';
 
 const MAX_LENGTH = 5;
+const NICKNAME_REGEX = /^[A-Za-z0-9가-힣ㄱ-ㅎ]{2,5}$/;
 
-interface NameSheetProps {
+interface NicknameSheetProps {
   value: string;
   onSave: (value: string) => void;
 }
 
-function NameSheet({ value, onSave }: NameSheetProps) {
+function NicknameSheet({ value, onSave }: NicknameSheetProps) {
   const [draft, setDraft] = useState(value);
+  const isValid = NICKNAME_REGEX.test(draft);
 
   return (
     <div>
       <Typography as="p" variant="p1" className="profile-sheet__title">
-        이름
+        닉네임
       </Typography>
 
       <Input
@@ -26,17 +28,27 @@ function NameSheet({ value, onSave }: NameSheetProps) {
         value={draft}
         maxLength={MAX_LENGTH}
         onChange={(event) => setDraft(event.target.value)}
-        placeholder="이름을 입력해주세요"
+        placeholder="닉네임을 입력해주세요"
       />
-      <Typography as="span" variant="caption1" color="#878787" className="profile-sheet__counter">
+      <Typography
+        as="span"
+        variant="caption1"
+        color={draft && !isValid ? '#e05555' : '#878787'}
+        className="profile-sheet__counter"
+      >
         {draft.length}/{MAX_LENGTH}
       </Typography>
+      {draft && !isValid && (
+        <Typography as="p" variant="caption1" color="#e05555" className="profile-sheet__error">
+          영문, 한글, 숫자 2~5자로 입력해주세요.
+        </Typography>
+      )}
 
       <Button
         size="middle"
         className="profile-sheet__confirm-btn"
         onClick={() => onSave(draft)}
-        disabled={draft.trim().length === 0}
+        disabled={!isValid}
       >
         확인
       </Button>
@@ -44,4 +56,4 @@ function NameSheet({ value, onSave }: NameSheetProps) {
   );
 }
 
-export default NameSheet;
+export default NicknameSheet;

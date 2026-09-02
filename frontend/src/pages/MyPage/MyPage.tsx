@@ -8,6 +8,7 @@ import BackHeader from '@/components/Header/BackHeader';
 import Typography from '@/components/Typography/Typography';
 import BottomSheet from '@/components/BottomSheet/BottomSheet';
 import NameSheet from './sheets/NameSheet';
+import NicknameSheet from './sheets/NicknameSheet';
 import BirthdateSheet from './sheets/BirthdateSheet';
 import type { Birthdate } from './sheets/BirthdateSheet';
 import GenderSheet from './sheets/GenderSheet';
@@ -19,7 +20,15 @@ import type { EmailValue } from './sheets/EmailSheet';
 import PasswordSheet from './sheets/PasswordSheet';
 import './MyPage.css';
 
-type FieldKey = 'name' | 'birthdate' | 'gender' | 'phone' | 'region' | 'email' | 'password';
+type FieldKey =
+  | 'name'
+  | 'nickname'
+  | 'birthdate'
+  | 'gender'
+  | 'phone'
+  | 'region'
+  | 'email'
+  | 'password';
 
 const FIELDS_GROUP_1: { key: FieldKey; label: string }[] = [
   { key: 'name', label: '이름' },
@@ -36,6 +45,7 @@ const FIELDS_GROUP_2: { key: FieldKey; label: string }[] = [
 
 interface ProfileState {
   name: string;
+  nickname: string;
   birthdate: Birthdate;
   gender: Gender;
   phone: string;
@@ -44,9 +54,10 @@ interface ProfileState {
 }
 
 const INITIAL_PROFILE: ProfileState = {
-  name: '인천구로 탐험가',
+  name: '',
+  nickname: '탐험가',
   birthdate: { year: 2000, month: 1, day: 1 },
-  gender: '선택 안 함',
+  gender: '남성',
   phone: '',
   region: '없음',
   email: { id: 'incheonguro', domain: 'gmail.com' },
@@ -64,7 +75,9 @@ function MyPage() {
   const getFieldValue = (key: FieldKey): string => {
     switch (key) {
       case 'name':
-        return profile.name;
+        return profile.name || '미입력';
+      case 'nickname':
+        return profile.nickname;
       case 'birthdate':
         return `${profile.birthdate.year}년 ${profile.birthdate.month}월 ${profile.birthdate.day}일`;
       case 'gender':
@@ -128,12 +141,12 @@ function MyPage() {
         </div>
 
         <div className="my-page__nickname">
-          <Typography variant="head3">{profile.name}</Typography>
+          <Typography variant="head3">{profile.nickname}</Typography>
           <button
             type="button"
             className="my-page__nickname-edit-btn"
             aria-label="닉네임 수정"
-            onClick={() => setOpenField('name')}
+            onClick={() => setOpenField('nickname')}
           >
             <Pencil size={8} color="#000000" />
           </button>
@@ -185,6 +198,16 @@ function MyPage() {
           value={profile.name}
           onSave={(name) => {
             setProfile((prev) => ({ ...prev, name }));
+            closeSheet();
+          }}
+        />
+      </BottomSheet>
+
+      <BottomSheet open={openField === 'nickname'} onClose={closeSheet}>
+        <NicknameSheet
+          value={profile.nickname}
+          onSave={(nickname) => {
+            setProfile((prev) => ({ ...prev, nickname }));
             closeSheet();
           }}
         />

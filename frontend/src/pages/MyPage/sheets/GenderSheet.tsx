@@ -4,7 +4,7 @@ import Typography from '@/components/Typography/Typography';
 import Button from '@/components/Button/Button';
 import './ProfileSheets.css';
 
-const GENDER_OPTIONS = ['남성', '여성', '선택 안 함'] as const;
+const GENDER_OPTIONS = ['남성', '여성'] as const;
 type Gender = (typeof GENDER_OPTIONS)[number];
 
 interface GenderSheetProps {
