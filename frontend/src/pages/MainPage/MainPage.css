@@ -1,227 +1,683 @@
+/* =========================================================
+   MainPage
+========================================================= */
+
 .main-page {
-  position: relative;
-  width: 393px;
-  min-height: 1247px;
+  --page-padding: clamp(24px, 6.8vw, 32px);
+
+  box-sizing: border-box;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
   margin: 0 auto;
-  background: #ffffff;
+
+  overflow-x: hidden;
+
+  background-color: #ffffff;
+
   font-family: 'Pretendard', system-ui, sans-serif;
-  overflow: hidden;
+}
+
+.main-page *,
+.main-page *::before,
+.main-page *::after {
+  box-sizing: border-box;
 }
 
 .main-page ul {
-  list-style: none;
   margin: 0;
   padding: 0;
+
+  list-style: none;
 }
 
 .main-page h1,
-.main-page h2 {
+.main-page h2,
+.main-page p {
   margin: 0;
 }
 
-/* Header */
-
-.main-page .header {
-  position: absolute;
-  left: 0;
-  top: 0;
+.main-page button {
+  font-family: inherit;
 }
 
-/* Hero */
+/* =========================================================
+   Content
+========================================================= */
+
+.main-page__content {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   Hero
+========================================================= */
 
 .main-page__hero {
-  position: absolute;
-  left: 0;
-  top: 80px;
-  width: 393px;
+  position: relative;
+
+  width: 100%;
   height: 222px;
-  box-sizing: border-box;
-  background: #ffffff;
-  box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
-    inset 0 1px 1px rgba(0, 0, 0, 0.25);
-}
 
-.main-page__title {
-  position: absolute;
-  left: 27px;
-  top: 60px;
-  width: 208px;
-}
-
-.main-page__hero-image {
-  position: absolute;
-  left: 212px;
-  top: 33px;
-  width: 157px;
-  height: 157px;
-  background: #d9d9d9;
-}
-
-/* Section title (shared) */
-
-.main-page__section-title {
-  position: absolute;
-}
-
-.main-page__section-title--spots {
-  left: 27px;
-  top: 337px;
-}
-
-/* 인기 관광지 */
-
-.main-page__region-tabs {
-  position: absolute;
-  left: 27px;
-  top: 380px;
-  display: flex;
-  gap: 12px;
-}
-
-.main-page__region-tab {
-  width: 80px;
-  height: 20px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 0;
-  border-radius: 30px;
-  background: rgba(120, 170, 195, 0.25);
-  border: 1px solid #78aac3;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
-  font-family: inherit;
+
+  overflow: hidden;
+
+  border: none;
+  border-top: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
+
+  background-color: #ffffff;
+
+  text-align: left;
+
   cursor: pointer;
 }
 
-.main-page__region-tab--active {
-  background: #ffffff;
-  border-color: transparent;
-}
+/* =========================================================
+   Hero Text
+========================================================= */
 
-.main-page__region-tab--active .typography {
-  font-weight: 700;
-}
-
-.main-page__spot-list {
+.main-page__hero-text {
   position: absolute;
-  left: 26px;
-  top: 427px;
+
+  top: 52px;
+  left: var(--page-padding);
+
+  z-index: 2;
+
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+
+  align-items: flex-start;
 }
+
+.main-page__hero-last-line {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+/* =========================================================
+   Hero Arrow
+========================================================= */
+
+.main-page__hero-arrow {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  flex: 0 0 auto;
+
+  color: #111111;
+}
+
+/* =========================================================
+   Hero Image
+========================================================= */
+
+.main-page__hero-image {
+  position: absolute;
+
+  top: 34px;
+  right: var(--page-padding);
+
+  width: clamp(130px, 40vw, 157px);
+  height: clamp(130px, 40vw, 157px);
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   Section Title
+========================================================= */
+
+.main-page__section-title {
+  width: 100%;
+}
+
+/* =========================================================
+   추천 장소
+========================================================= */
+
+.main-page__spots {
+  width: 100%;
+
+  padding: 38px 0 40px;
+}
+
+.main-page__spots .main-page__section-title {
+  padding-right: var(--page-padding);
+  padding-left: var(--page-padding);
+}
+
+/* =========================================================
+   추천 지역 OptionTab
+========================================================= */
+
+.main-page__region-tabs {
+  width: 100%;
+
+  /*
+   * 제목과 OptionTab 사이
+   */
+  margin-top: 20px;
+
+  /*
+   * 위아래에도 공간을 줘서
+   * OptionTab의 border / shadow가
+   * 잘리지 않도록 처리
+   */
+  padding: 6px var(--page-padding) 7px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  overflow-x: auto;
+  overflow-y: visible;
+
+  scroll-padding-left: var(--page-padding);
+
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-page__region-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * 공용 OptionTab small을 사용하되
+ * MainPage 안에서만 크기 조정
+ */
+.main-page__region-tabs .option-tab.option-tab--small {
+  width: auto;
+
+  min-width: 72px;
+  height: 28px;
+
+  padding: 0 12px;
+
+  flex: 0 0 auto;
+
+  border-radius: 999px;
+}
+
+/* =========================================================
+   추천 장소 List
+========================================================= */
+
+.main-page .main-page__spot-list {
+  width: 100%;
+
+  /*
+   * OptionTab과 카드 사이
+   */
+  margin-top: 22px;
+
+  padding-right: var(--page-padding) !important;
+
+  padding-left: var(--page-padding) !important;
+
+  display: flex;
+
+  gap: 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-padding-left: var(--page-padding);
+
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-page__spot-list::-webkit-scrollbar {
+  display: none;
+}
+
+.main-page__spot-item {
+  flex: 0 0 auto;
+
+  scroll-snap-align: start;
+}
+
+/* =========================================================
+   추천 장소 Card
+========================================================= */
 
 .main-page__spot-card {
   position: relative;
+
+  display: block;
+
   width: 130px;
   height: 160px;
-  border-radius: 20px;
-  background-size: cover;
-  background-position: center;
+
+  padding: 0;
+
   overflow: hidden;
+
+  border: none;
+  border-radius: 20px;
+
+  background-color: #d9d9d9;
+
+  cursor: pointer;
 }
 
-.main-page__spot-tag {
+/* =========================================================
+   추천 장소 Image
+========================================================= */
+
+.main-page__spot-image,
+.main-page__spot-placeholder {
   position: absolute;
-  left: 15px;
-  top: 124px;
-  height: 24px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid #78aac3;
-  border-radius: 12px;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
 }
+
+.main-page__spot-image {
+  display: block;
+
+  object-fit: cover;
+}
+
+.main-page__spot-placeholder {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background-color: #d9d9d9;
+}
+
+/* =========================================================
+   추천 장소 Gradient
+========================================================= */
+
+.main-page__spot-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.52) 0%,
+    rgba(0, 0, 0, 0.05) 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   추천 장소 Name
+========================================================= */
 
 .main-page__spot-name {
   position: absolute;
-  left: 15px;
-  top: 97px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+  left: 14px;
+  right: 10px;
+  bottom: 43px;
+
+  z-index: 2;
+
+  overflow: hidden;
+
+  text-align: left;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 }
 
-/* 핫플레이스 */
+/* =========================================================
+   추천 장소 Tag
+========================================================= */
 
-.main-page__hot {
+.main-page__spot-tag {
   position: absolute;
-  left: 0;
-  top: 622px;
-  width: 393px;
-  height: 232px;
-  box-sizing: border-box;
-  background: rgba(217, 217, 217, 0.3);
-}
 
-.main-page__section-title--hot {
-  left: 27px;
-  top: 25px;
-}
+  left: 14px;
+  bottom: 13px;
 
-.main-page__hot-list {
-  position: absolute;
-  left: 26px;
-  top: 72px;
-  display: flex;
-  gap: 10px;
-}
+  z-index: 2;
 
-.main-page__hot-card-wrap {
-  display: flex;
-  flex-direction: column;
+  min-width: 58px;
+  height: 24px;
+
+  padding: 0 10px;
+
+  display: inline-flex;
+
   align-items: center;
-  gap: 6px;
-  width: 100px;
+  justify-content: center;
+
+  border: 1px solid #78aac3;
+
+  border-radius: 999px;
+
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
-.main-page__hot-card {
-  width: 100px;
-  height: 130px;
-  border-radius: 20px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
-  background-size: cover;
-  background-position: center;
+/* =========================================================
+   인천의 모든 장소
+========================================================= */
+
+.main-page__regions {
+  width: 100%;
+
+  padding: 34px 0 36px;
+
+  background-color: rgba(120, 170, 195, 0.15);
 }
 
-
-/* 인천 대표 명소 */
-
-.main-page__landmarks {
-  position: absolute;
-  left: 0;
-  top: 889px;
-  width: 393px;
+.main-page__regions .main-page__section-title {
+  padding-right: var(--page-padding);
+  padding-left: var(--page-padding);
 }
 
-.main-page__section-title--landmarks {
-  left: 27px;
-  top: 0;
-}
+/* =========================================================
+   지역 List
+========================================================= */
 
-.main-page__landmark-list {
-  position: absolute;
-  left: 26px;
-  top: 50px;
+.main-page .main-page__region-list {
+  width: 100%;
+
+  /*
+   * "인천의 모든 장소들"
+   * 제목과 카드 사이
+   */
+  margin-top: 34px;
+
+  padding-right: var(--page-padding) !important;
+
+  padding-left: var(--page-padding) !important;
+
   display: flex;
-  flex-direction: column;
+
+  align-items: stretch;
+
   gap: 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-padding-left: var(--page-padding);
+
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
 }
 
-.main-page__landmark-card {
-  position: relative;
-  width: 340px;
-  height: 85px;
+.main-page__region-list::-webkit-scrollbar {
+  display: none;
+}
+
+.main-page__region-item {
+  flex: 0 0 auto;
+
+  scroll-snap-align: start;
+}
+
+/* =========================================================
+   지역 Card
+========================================================= */
+
+.main-page__region-card {
+  width: 100px;
+  height: 132px;
+
+  padding: 14px 8px 7px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  border: none;
   border-radius: 20px;
-  background-size: cover;
-  background-position: center;
+
+  background-color: #ffffff;
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.13);
+
+  text-align: center;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   지역 Name
+========================================================= */
+
+.main-page__region-card .main-page__region-name {
+  display: block;
+
+  width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  flex: 0 0 auto;
+
+  align-self: stretch;
+
+  text-align: center;
+}
+
+.main-page__region-card .main-page__region-name.typography {
+  text-align: center;
+}
+
+/* =========================================================
+   지역 Mascot
+========================================================= */
+
+.main-page__region-mascot {
+  width: 100%;
+  min-height: 0;
+
+  margin-top: 6px;
+
+  flex: 1;
+
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: center;
+
   overflow: hidden;
 }
 
-.main-page__landmark-name {
+.main-page__region-mascot-image {
+  display: block;
+
+  max-width: 88%;
+  max-height: 82px;
+
+  margin: 0 auto;
+
+  object-fit: contain;
+}
+
+/* =========================================================
+   Mascot Placeholder
+========================================================= */
+
+.main-page__region-mascot-placeholder {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background-color: #eeeeee;
+
+  text-align: center;
+}
+
+/* =========================================================
+   추천 코스
+========================================================= */
+
+.main-page__courses {
+  width: 100%;
+
+  padding: 42px var(--page-padding) 48px;
+}
+
+/* =========================================================
+   추천 코스 List
+========================================================= */
+
+.main-page .main-page__course-list {
+  width: 100%;
+
+  /*
+   * 추천 코스 제목과
+   * 첫 번째 카드 사이
+   */
+  margin-top: 36px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.main-page__course-item {
+  width: 100%;
+}
+
+/* =========================================================
+   추천 코스 Card
+========================================================= */
+
+.main-page__course-card {
+  position: relative;
+
+  display: block;
+
+  width: 100%;
+  height: 85px;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: none;
+  border-radius: 20px;
+
+  background-color: #d9d9d9;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   추천 코스 Image
+========================================================= */
+
+.main-page__course-image,
+.main-page__course-placeholder {
   position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+}
+
+.main-page__course-image {
+  display: block;
+
+  object-fit: cover;
+}
+
+.main-page__course-placeholder {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background-color: #d9d9d9;
+}
+
+/* =========================================================
+   추천 코스 Gradient
+========================================================= */
+
+.main-page__course-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.48) 0%,
+    rgba(0, 0, 0, 0.08) 65%,
+    rgba(0, 0, 0, 0) 100%
+  );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   추천 코스 Name
+========================================================= */
+
+.main-page__course-name {
+  position: absolute;
+
   left: 16px;
-  bottom: 12px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  bottom: 13px;
+
+  z-index: 2;
+
+  max-width: calc(100% - 32px);
+
+  overflow: hidden;
+
+  text-align: left;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 }

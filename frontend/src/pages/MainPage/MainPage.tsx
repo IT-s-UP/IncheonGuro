@@ -1,136 +1,284 @@
+import { useMemo, useState } from 'react';
+
+import { useNavigate } from 'react-router-dom';
+
+import { ArrowRight } from 'lucide-react';
+
 import Header from '@/components/Header/Header';
+
+import OptionTab from '@/components/Tab/OptionTab';
+
 import Typography from '@/components/Typography/Typography';
+
+import mainHero from '@/assets/main-hero.png';
+
+import { COURSE_CARDS, RECOMMENDED_REGIONS, REGION_CARDS, SPOT_CARDS } from './mockData';
+
 import './MainPage.css';
 
-interface SpotCard {
-  name: string;
-  tag: string;
-  color: string;
-}
-
-interface HotCard {
-  name: string;
-  color: string;
-}
-
-interface LandmarkCard {
-  name: string;
-  color: string;
-}
-
-const SPOT_CARDS: SpotCard[] = [
-  { name: '야생화단지', tag: '관광지', color: '#c9d6c0' },
-  { name: '청라하늘대교', tag: '관광지', color: '#a9c2d6' },
-  { name: '정서진 중앙 시장', tag: '쇼핑', color: '#d6c9a9' },
-];
-
-const HOT_CARDS: HotCard[] = [
-  { name: '카페', color: '#e0c9c9' },
-  { name: '맛집', color: '#e0d3c9' },
-  { name: '공원', color: '#c9e0cf' },
-  { name: '야시장', color: '#c9d0e0' },
-];
-
-const LANDMARK_CARDS: LandmarkCard[] = [
-  { name: '개항로', color: '#d3b8a0' },
-  { name: '차이나타운', color: '#c94f4f' },
-  { name: '수봉공원', color: '#7a9e6f' },
-];
+/* =========================
+   MainPage
+========================= */
 
 function MainPage() {
+  const navigate = useNavigate();
+
+  /* =========================
+     임시 사용자 닉네임
+
+     나중에 사용자 정보 API로
+     교체하면 됨
+  ========================= */
+
+  const nickname = 'OO';
+
+  /* =========================
+     추천 지역 탭
+  ========================= */
+
+  const [activeRegionIndex, setActiveRegionIndex] = useState(0);
+
+  const activeRegion = RECOMMENDED_REGIONS[activeRegionIndex];
+
+  /* =========================
+     선택한 지역 추천 장소
+  ========================= */
+
+  const filteredSpots = useMemo(() => {
+    return SPOT_CARDS.filter((spot) => spot.region === activeRegion);
+  }, [activeRegion]);
+
+  /* =========================
+     인천 전체 장소
+  ========================= */
+
+  const handleHeroClick = () => {
+    navigate('/places');
+  };
+
+  /* =========================
+     장소 상세
+  ========================= */
+
+  const handleSpotClick = (spotId: number) => {
+    navigate(`/places/${spotId}`);
+  };
+
+  /* =========================
+     지역별 장소
+  ========================= */
+
+  const handleRegionClick = (regionName: string) => {
+    navigate(`/places?region=${encodeURIComponent(regionName)}`);
+  };
+
+  /* =========================
+     추천 코스 상세
+  ========================= */
+
+  const handleCourseClick = (courseId: number) => {
+    navigate(`/course-guide/${courseId}`);
+  };
+
   return (
     <div className="main-page">
       <Header />
 
-      <section className="main-page__hero">
-        <Typography as="h1" variant="head1" className="main-page__title">
-          인천의 숨은 매력을
-          <br />
-          발견해보세요
-        </Typography>
-        <div className="main-page__hero-image" />
-      </section>
+      <main className="main-page__content">
+        {/* =========================
+            메인 배너
+        ========================= */}
 
-      <section className="main-page__spots">
-        <Typography
-          as="h2"
-          variant="head2"
-          className="main-page__section-title main-page__section-title--spots"
-        >
-          인기 관광지
-        </Typography>
+        <button type="button" className="main-page__hero" onClick={handleHeroClick}>
+          <div className="main-page__hero-text">
+            <Typography as="h1" variant="head1">
+              요즘 떠오르는
+            </Typography>
 
-        <div className="main-page__region-tabs">
-          <button type="button" className="main-page__region-tab">
-            <Typography variant="p3">서해구</Typography>
-          </button>
-          <button type="button" className="main-page__region-tab main-page__region-tab--active">
-            <Typography variant="p3">동인천구</Typography>
-          </button>
-        </div>
+            <Typography as="p" variant="head1">
+              인천 장소를
+            </Typography>
 
-        <ul className="main-page__spot-list">
-          {SPOT_CARDS.map((card) => (
-            <li
-              key={card.name}
-              className="main-page__spot-card"
-              style={{ backgroundColor: card.color }}
-            >
-              <Typography variant="p3" className="main-page__spot-tag">
-                {card.tag}
+            <div className="main-page__hero-last-line">
+              <Typography as="p" variant="head1">
+                알아볼까요?
               </Typography>
-              <Typography variant="head3" color="#ffffff" className="main-page__spot-name">
-                {card.name}
-              </Typography>
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      <section className="main-page__hot">
-        <Typography
-          as="h2"
-          variant="head2"
-          className="main-page__section-title main-page__section-title--hot"
-        >
-          핫플레이스
-        </Typography>
+              <span className="main-page__hero-arrow">
+                <ArrowRight size={25} strokeWidth={3} />
+              </span>
+            </div>
+          </div>
 
-        <ul className="main-page__hot-list">
-          {HOT_CARDS.map((card) => (
-            <li key={card.name} className="main-page__hot-card-wrap">
-              <div className="main-page__hot-card" style={{ backgroundColor: card.color }} />
-              <Typography variant="head3" className="main-page__hot-name">
-                {card.name}
-              </Typography>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <img src={mainHero} alt="" className="main-page__hero-image" />
+        </button>
 
-      <section className="main-page__landmarks">
-        <Typography
-          as="h2"
-          variant="head2"
-          className="main-page__section-title main-page__section-title--landmarks"
-        >
-          인천 대표 명소
-        </Typography>
+        {/* =========================
+            추천 장소
+        ========================= */}
 
-        <ul className="main-page__landmark-list">
-          {LANDMARK_CARDS.map((card) => (
-            <li
-              key={card.name}
-              className="main-page__landmark-card"
-              style={{ backgroundColor: card.color }}
-            >
-              <Typography variant="head3" color="#ffffff" className="main-page__landmark-name">
-                {card.name}
-              </Typography>
-            </li>
-          ))}
-        </ul>
-      </section>
+        <section className="main-page__spots">
+          <Typography as="h2" variant="head2" className="main-page__section-title">
+            {nickname} 님의 취향을 반영한 추천 장소
+          </Typography>
+
+          {/* =========================
+              추천 지역 OptionTab
+          ========================= */}
+
+          <div className="main-page__region-tabs">
+            {RECOMMENDED_REGIONS.map((region, index) => (
+              <OptionTab
+                key={region}
+                label={region}
+                size="small"
+                active={index === activeRegionIndex}
+                onClick={() => setActiveRegionIndex(index)}
+              />
+            ))}
+          </div>
+
+          {/* =========================
+              추천 장소 카드
+          ========================= */}
+
+          <ul className="main-page__spot-list">
+            {filteredSpots.map((spot) => (
+              <li key={spot.id} className="main-page__spot-item">
+                <button
+                  type="button"
+                  className="main-page__spot-card"
+                  onClick={() => handleSpotClick(spot.id)}
+                >
+                  {/* 이미지 */}
+
+                  {spot.imageUrl ? (
+                    <img src={spot.imageUrl} alt={spot.name} className="main-page__spot-image" />
+                  ) : (
+                    <div className="main-page__spot-placeholder">
+                      <Typography variant="p3" color="#828585">
+                        장소 이미지
+                      </Typography>
+                    </div>
+                  )}
+
+                  {/* 이미지 아래쪽 어둡게 */}
+
+                  <div className="main-page__spot-overlay" />
+
+                  {/* 장소 이름 */}
+
+                  <Typography variant="head3" color="#ffffff" className="main-page__spot-name">
+                    {spot.name}
+                  </Typography>
+
+                  {/* 장소 종류 */}
+
+                  <span className="main-page__spot-tag">
+                    <Typography variant="p3">{spot.tag}</Typography>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* =========================
+            인천의 모든 장소
+        ========================= */}
+
+        <section className="main-page__regions">
+          <Typography as="h2" variant="head2" className="main-page__section-title">
+            인천의 모든 장소들
+          </Typography>
+
+          <ul className="main-page__region-list">
+            {REGION_CARDS.map((region) => (
+              <li key={region.id} className="main-page__region-item">
+                <button
+                  type="button"
+                  className="main-page__region-card"
+                  onClick={() => handleRegionClick(region.name)}
+                >
+                  {/* 지역 이름 */}
+
+                  <Typography variant="head3" className="main-page__region-name">
+                    {region.name}
+                  </Typography>
+
+                  {/* 마스코트 */}
+
+                  <div className="main-page__region-mascot">
+                    {region.mascotUrl ? (
+                      <img
+                        src={region.mascotUrl}
+                        alt={`${region.name} 마스코트`}
+                        className="main-page__region-mascot-image"
+                      />
+                    ) : (
+                      <Typography
+                        variant="p3"
+                        color="#828585"
+                        className="main-page__region-mascot-placeholder"
+                      >
+                        마스코트
+                      </Typography>
+                    )}
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* =========================
+            사용자 추천 코스
+        ========================= */}
+
+        <section className="main-page__courses">
+          <Typography as="h2" variant="head2" className="main-page__section-title">
+            {nickname} 님의 취향을 반영한 추천 코스
+          </Typography>
+
+          <ul className="main-page__course-list">
+            {COURSE_CARDS.map((course) => (
+              <li key={course.id} className="main-page__course-item">
+                <button
+                  type="button"
+                  className="main-page__course-card"
+                  onClick={() => handleCourseClick(course.id)}
+                >
+                  {/* 코스 이미지 */}
+
+                  {course.imageUrl ? (
+                    <img
+                      src={course.imageUrl}
+                      alt={course.name}
+                      className="main-page__course-image"
+                    />
+                  ) : (
+                    <div className="main-page__course-placeholder">
+                      <Typography variant="p3" color="#828585">
+                        코스 대표 이미지
+                      </Typography>
+                    </div>
+                  )}
+
+                  {/* Gradient */}
+
+                  <div className="main-page__course-overlay" />
+
+                  {/* 코스 이름 */}
+
+                  <Typography variant="head3" color="#ffffff" className="main-page__course-name">
+                    {course.name}
+                  </Typography>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </main>
     </div>
   );
 }

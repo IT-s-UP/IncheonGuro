@@ -14,9 +14,12 @@ import RegionRecommendPage from './pages/RegionRecommendPage/RegionRecommendPage
 import FestivalListPage from './pages/FestivalPage/FestivalListPage';
 import FestivalDetailPage from './pages/FestivalPage/FestivalDetailPage';
 import StampTourPage from './pages/StampTourPage/StampTourPage';
+
 import PlaceGuideMainPage from '@/pages/PlaceGuidePage/PlaceGuideMainPage';
 import PlaceGuideSearchPage from '@/pages/PlaceGuidePage/PlaceGuideSearchPage';
 import PlaceGuideDetailPage from '@/pages/PlaceGuidePage/PlaceGuideDetailPage';
+
+import MyPage from '@/pages/MyPage/MyPage';
 
 function App() {
   return (
@@ -34,9 +37,12 @@ function App() {
         <Route path="/festivals" element={<FestivalListPage />} />
         <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
         <Route path="/stamp-tour" element={<StampTourPage />} />
+
         <Route path="/place-guide" element={<PlaceGuideMainPage />} />
         <Route path="/place-guide/search" element={<PlaceGuideSearchPage />} />
         <Route path="/place-guide/:placeId" element={<PlaceGuideDetailPage />} />
+
+        <Route path="/my-page" element={<MyPage />} />
       </Routes>
     </>
   );
