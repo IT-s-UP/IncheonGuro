@@ -13,6 +13,7 @@ import RegionRecommendPage from './pages/RegionRecommendPage/RegionRecommendPage
 import FestivalListPage from './pages/FestivalPage/FestivalListPage';
 import FestivalDetailPage from './pages/FestivalPage/FestivalDetailPage';
 import StampTourPage from './pages/StampTourPage/StampTourPage';
+import PlaceGuideMainPage from '@/pages/PlaceGuidePage/PlaceGuideMainPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
       <Route path="/festivals" element={<FestivalListPage />} />
       <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
       <Route path="/stamp-tour" element={<StampTourPage />} />
+      <Route path="/place-guide" element={<PlaceGuideMainPage />} />
     </Routes>
   );
 }
