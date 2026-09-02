@@ -52,6 +52,52 @@
 }
 
 /* =========================
+   비밀번호 눈 아이콘
+========================= */
+
+.login-password-input {
+  position: relative;
+  width: 100%;
+}
+
+.login-password-input .input {
+  width: 100%;
+}
+
+/*
+  아이콘과 입력 글자가 겹치지 않도록
+  오른쪽 공간 확보
+*/
+.login-password-input input {
+  padding-right: 46px;
+}
+
+.login-password-eye {
+  position: absolute;
+
+  top: 50%;
+  right: 13px;
+
+  transform: translateY(-50%);
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #828585;
+
+  cursor: pointer;
+}
+
+/* =========================
    로그인 버튼
 ========================= */
 

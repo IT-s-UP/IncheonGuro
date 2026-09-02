@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +15,7 @@ function LoginPage() {
 
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   /* =========================
      로그인
@@ -91,13 +93,24 @@ function LoginPage() {
               비밀번호
             </Typography>
 
-            <Input
-              type="password"
-              variant="box"
-              size="main"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
+            <div className="login-password-input">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                variant="box"
+                size="main"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+
+              <button
+                type="button"
+                className="login-password-eye"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+              >
+                {showPassword ? <Eye size={19} /> : <EyeOff size={19} />}
+              </button>
+            </div>
           </div>
 
           {/* 로그인 버튼 */}
