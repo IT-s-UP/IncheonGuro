@@ -6,9 +6,23 @@ export interface CoursePlace {
   address: string;
 }
 
+export interface CourseCost {
+  transportation: number;
+  food: number;
+  admission: number;
+  etc: number;
+}
+
+export interface CourseDay {
+  id: number;
+  day: number;
+  transport: Transport;
+  places: CoursePlace[];
+  costs: CourseCost;
+}
+
 export interface Course {
   id: number;
   name: string;
-  transport?: Transport;
-  places?: CoursePlace[];
+  days: CourseDay[];
 }

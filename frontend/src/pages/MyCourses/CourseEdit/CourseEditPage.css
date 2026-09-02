@@ -13,7 +13,6 @@
   --course-background: #ffffff;
 
   position: relative;
-  box-sizing: border-box;
   width: min(100%, 393px);
   height: 100svh;
   margin: 0 auto;
@@ -45,16 +44,14 @@
   width: 100%;
   height: 58px;
   padding: 8px 20px;
-  gap: 8px;
   border-top: 1px solid var(--course-light-gray);
   border-bottom: 1px solid var(--course-light-gray);
   background: var(--course-background);
 }
 
 .course-edit-page__title-bar .back-header {
-  width: auto;
+  width: 100%;
   min-width: 0;
-  flex: 1;
 }
 
 .course-edit-page__title-bar .back-header__title {
@@ -70,37 +67,6 @@
   text-decoration: underline;
   text-decoration-color: var(--course-light-gray);
   text-underline-offset: 4px;
-}
-
-.course-edit-page__bookmark-button {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  padding: 6px 9px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #000000;
-  cursor: pointer;
-}
-
-.course-edit-page__bookmark-button:hover,
-.course-edit-page__bookmark-button:active,
-.course-edit-page__bookmark-button:focus {
-  background: transparent;
-}
-
-.course-edit-page__bookmark-button svg {
-  display: block;
-  width: 20px;
-  height: 26px;
-}
-
-.course-edit-page__bookmark-button--active {
-  background: transparent;
-  color: #000000;
 }
 
 .course-edit-page__name-editor {
@@ -150,6 +116,53 @@
   white-space: nowrap;
   cursor: pointer;
 }
+
+/* DAY 선택 */
+
+.course-edit-page__day-tabs {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 47px;
+  padding: 7px 20px;
+  gap: 7px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--course-light-gray);
+  background: var(--course-background);
+  scrollbar-width: none;
+}
+
+.course-edit-page__day-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.course-edit-page__day-tab,
+.course-edit-page__day-add {
+  height: 30px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+  border: 1px solid var(--course-pale-blue);
+  border-radius: 15px;
+  background: var(--course-background);
+  color: var(--course-gray);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.course-edit-page__day-tab--active {
+  border-color: var(--course-primary);
+  background: var(--course-primary);
+  color: var(--course-background);
+}
+
+.course-edit-page__day-add {
+  border-style: dashed;
+  color: var(--course-primary);
+}
+
+/* 이동수단 */
 
 .course-edit-page__tabs {
   width: 100%;
@@ -209,10 +222,12 @@
   content: '';
 }
 
+/* 지도 */
+
 .course-edit-page__map {
   position: relative;
-  height: calc(100svh - 180px);
-  min-height: 280px;
+  height: calc(100svh - 220px);
+  min-height: 260px;
   overflow: hidden;
   background:
     linear-gradient(
@@ -240,7 +255,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .course-edit-page__map-route {
@@ -276,6 +291,8 @@
   font-size: 12px;
   font-weight: 700;
 }
+
+/* 바텀시트 */
 
 .course-edit-page__sheet {
   position: absolute;
@@ -365,8 +382,10 @@
 .course-edit-page__empty {
   display: grid;
   place-items: center;
-  min-height: 170px;
+  min-height: 120px;
 }
+
+/* 경로 목록 */
 
 .course-edit-page__place-list {
   width: 100%;
@@ -533,6 +552,8 @@
   color: var(--course-red);
 }
 
+/* 장소 사이 이동수단 */
+
 .course-edit-page__transport-step {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -572,6 +593,93 @@
   padding-bottom: 4px;
   color: var(--course-green);
 }
+
+/* 예상 비용 */
+
+.course-edit-page__cost {
+  width: 100%;
+  margin: 10px 0 14px;
+  overflow: hidden;
+  border: 1px solid var(--course-pale-blue);
+  border-radius: 10px;
+  background: var(--course-background);
+}
+
+.course-edit-page__cost-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 12px;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--course-green);
+  text-align: left;
+  cursor: pointer;
+}
+
+.course-edit-page__cost-heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.course-edit-page__cost-total {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 5px;
+}
+
+.course-edit-page__cost-total svg {
+  width: 18px;
+  height: 18px;
+  color: var(--course-gray);
+}
+
+.course-edit-page__cost-detail {
+  padding: 2px 12px 10px;
+  border-top: 1px solid var(--course-light-gray);
+}
+
+.course-edit-page__cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  gap: 12px;
+  color: var(--course-dark);
+  font-size: 12px;
+}
+
+.course-edit-page__cost-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--course-gray);
+}
+
+.course-edit-page__cost-input-wrap input {
+  width: 90px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--course-pale-blue);
+  border-radius: 4px;
+  outline: none;
+  background: var(--course-background);
+  color: var(--course-green);
+  font-size: 12px;
+  text-align: right;
+}
+
+.course-edit-page__cost-input-wrap input:focus {
+  border-color: var(--course-primary);
+}
+
+/* 하단 버튼 */
 
 .course-edit-page__actions {
   display: grid;
@@ -621,4 +729,33 @@
 .course-edit-page input:focus-visible {
   outline: 2px solid var(--course-primary);
   outline-offset: 2px;
+}
+
+@media (max-width: 350px) {
+  .course-edit-page__title-bar,
+  .course-edit-page__name-editor,
+  .course-edit-page__day-tabs,
+  .course-edit-page__sheet-body,
+  .course-edit-page__actions {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .course-edit-page__day-tab,
+  .course-edit-page__day-add {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .course-edit-page__tabs .line-tab__item .typography {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 394px) {
+  .course-edit-page {
+    border-right: 1px solid var(--course-light-gray);
+    border-left: 1px solid var(--course-light-gray);
+    box-shadow: 0 0 24px rgb(86 80 75 / 10%);
+  }
 }

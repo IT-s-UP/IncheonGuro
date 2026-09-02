@@ -7,18 +7,127 @@ import Header from '@/components/Header/Header';
 import Typography from '@/components/Typography/Typography';
 
 import CourseEditPage from './CourseEdit/CourseEditPage';
-import type { Course } from './types';
+import type { Course, CourseCost, CourseDay, CoursePlace, Transport } from './types';
+
 import './MyCoursesPage.css';
 
 const STORAGE_KEY = 'incheonguro-my-courses';
 
-const defaultCourses: Course[] = [
-  { id: 1, name: '내 코스 1' },
-  { id: 2, name: '내 코스 2' },
-  { id: 3, name: '내 코스 3' },
-  { id: 4, name: '내 코스 4' },
-  { id: 5, name: '내 코스 5' },
+const EMPTY_COSTS: CourseCost = {
+  transportation: 0,
+  food: 0,
+  admission: 0,
+  etc: 0,
+};
+
+const SAMPLE_PLACES: CoursePlace[] = [
+  {
+    id: 101,
+    name: '청라호수공원',
+    address: '인천광역시 서구 청라대로 204',
+  },
+  {
+    id: 102,
+    name: '정서진중앙시장',
+    address: '인천광역시 서구 원창로239번길 11',
+  },
+  {
+    id: 103,
+    name: '아라뱃길 전망대',
+    address: '인천광역시 서구 정서진1로 41',
+  },
 ];
+
+interface LegacyCourse {
+  id?: number;
+  name?: string;
+  transport?: Transport;
+  places?: CoursePlace[];
+  days?: CourseDay[];
+}
+
+function createCourseDay(day: number, includeSamplePlaces = false): CourseDay {
+  return {
+    id: Date.now() + day,
+    day,
+    transport: '대중교통',
+    places: includeSamplePlaces
+      ? SAMPLE_PLACES.map((place) => ({
+          ...place,
+          id: place.id + day * 100,
+        }))
+      : [],
+    costs: includeSamplePlaces
+      ? {
+          transportation: 8000,
+          food: 30000,
+          admission: 15000,
+          etc: 5000,
+        }
+      : { ...EMPTY_COSTS },
+  };
+}
+
+function createInitialDays(includeSamplePlaces = false): CourseDay[] {
+  return [1, 2, 3].map((day) => createCourseDay(day, includeSamplePlaces && day === 1));
+}
+
+const defaultCourses: Course[] = [
+  {
+    id: 1,
+    name: '내 코스 1',
+    days: createInitialDays(true),
+  },
+  {
+    id: 2,
+    name: '내 코스 2',
+    days: createInitialDays(false),
+  },
+  {
+    id: 3,
+    name: '내 코스 3',
+    days: createInitialDays(false),
+  },
+];
+
+function normalizeCourse(storedCourse: LegacyCourse, index: number): Course {
+  const courseId = typeof storedCourse.id === 'number' ? storedCourse.id : Date.now() + index;
+
+  const courseName =
+    typeof storedCourse.name === 'string' ? storedCourse.name : `내 코스 ${index + 1}`;
+
+  if (Array.isArray(storedCourse.days) && storedCourse.days.length > 0) {
+    return {
+      id: courseId,
+      name: courseName,
+      days: storedCourse.days.map((courseDay, dayIndex) => ({
+        id: typeof courseDay.id === 'number' ? courseDay.id : courseId + dayIndex + 1,
+        day: dayIndex + 1,
+        transport: courseDay.transport ?? '대중교통',
+        places: Array.isArray(courseDay.places) ? courseDay.places : [],
+        costs: {
+          ...EMPTY_COSTS,
+          ...(courseDay.costs ?? {}),
+        },
+      })),
+    };
+  }
+
+  // 기존 places/transport 구조를 DAY 1 구조로 변환합니다.
+  return {
+    id: courseId,
+    name: courseName,
+    days: [
+      {
+        id: courseId * 100 + 1,
+        day: 1,
+        transport: storedCourse.transport ?? '대중교통',
+        places: Array.isArray(storedCourse.places) ? storedCourse.places : [],
+        costs: { ...EMPTY_COSTS },
+      },
+    ],
+  };
+}
 
 function loadCourses(): Course[] {
   const savedCourses = localStorage.getItem(STORAGE_KEY);
@@ -30,7 +139,13 @@ function loadCourses(): Course[] {
   try {
     const parsedCourses: unknown = JSON.parse(savedCourses);
 
-    return Array.isArray(parsedCourses) ? (parsedCourses as Course[]) : defaultCourses;
+    if (!Array.isArray(parsedCourses)) {
+      return defaultCourses;
+    }
+
+    return parsedCourses.map((storedCourse, index) =>
+      normalizeCourse(storedCourse as LegacyCourse, index),
+    );
   } catch {
     return defaultCourses;
   }
@@ -90,6 +205,7 @@ function MyCoursesPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
@@ -110,8 +226,7 @@ function MyCoursesPage() {
     setSelectedCourse({
       id: Date.now(),
       name: '새 코스',
-      places: [],
-      transport: '대중교통',
+      days: createInitialDays(false),
     });
   };
 
@@ -227,7 +342,13 @@ function MyCoursesPage() {
                     type="button"
                     onClick={() => setSelectedCourse(course)}
                   >
-                    <Typography variant="p2">{course.name}</Typography>
+                    <span className="my-courses-page__course-copy">
+                      <Typography variant="p2">{course.name}</Typography>
+
+                      <Typography variant="caption2" color="#828585">
+                        {course.days.length}일 일정
+                      </Typography>
+                    </span>
                   </button>
 
                   {isDeleteOpen ? (

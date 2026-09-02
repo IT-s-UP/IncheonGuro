@@ -1,4 +1,5 @@
 import {
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -11,7 +12,8 @@ import Header from '@/components/Header/Header';
 import LineTab from '@/components/Tab/LineTab';
 import Typography from '@/components/Typography/Typography';
 
-import type { Course, CoursePlace, Transport } from '../types';
+import type { Course, CourseCost, CourseDay, CoursePlace, Transport } from '../types';
+
 import './CourseEditPage.css';
 
 interface CourseEditPageProps {
@@ -29,28 +31,53 @@ interface CircleIconProps {
   type: 'plus' | 'check';
 }
 
-const MIN_SHEET_HEIGHT = 230;
-const DEFAULT_SHEET_HEIGHT = 430;
+type CostKey = keyof CourseCost;
 
-const defaultPlaces: CoursePlace[] = [
+const MIN_SHEET_HEIGHT = 230;
+const DEFAULT_SHEET_HEIGHT = 470;
+
+const transportOptions: Transport[] = ['도보', '대중교통', '자전거', '자차'];
+
+const COST_ITEMS: Array<{
+  key: CostKey;
+  label: string;
+}> = [
   {
-    id: 1,
-    name: '청라호수공원',
-    address: '인천광역시 서구 청라대로 204',
+    key: 'transportation',
+    label: '교통비',
   },
   {
-    id: 2,
-    name: '정서진중앙시장',
-    address: '인천광역시 서구 원창로239번길 11',
+    key: 'food',
+    label: '식비',
   },
   {
-    id: 3,
-    name: '아라뱃길 전망대',
-    address: '인천광역시 서구 정서진1로 41',
+    key: 'admission',
+    label: '입장료',
+  },
+  {
+    key: 'etc',
+    label: '기타',
   },
 ];
 
-const transportOptions: Transport[] = ['도보', '대중교통', '자전거', '자차'];
+function createEmptyCosts(): CourseCost {
+  return {
+    transportation: 0,
+    food: 0,
+    admission: 0,
+    etc: 0,
+  };
+}
+
+function createEmptyDay(day: number): CourseDay {
+  return {
+    id: Date.now() + day,
+    day,
+    transport: '대중교통',
+    places: [],
+    costs: createEmptyCosts(),
+  };
+}
 
 function CircleIcon({ type }: CircleIconProps) {
   return (
@@ -66,6 +93,7 @@ function CircleIcon({ type }: CircleIconProps) {
       {type === 'plus' ? (
         <>
           <path d="M9 5.5V12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+
           <path d="M5.5 9H12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </>
       ) : (
@@ -81,26 +109,28 @@ function CircleIcon({ type }: CircleIconProps) {
   );
 }
 
-function BookmarkIcon({ active }: { active: boolean }) {
+function ChevronIcon({ open }: { open: boolean }) {
   return (
-    <svg viewBox="0 0 20 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path
-        d="M17.1429 0H2.85714C1.28571 0 0.014286 1.3 0.014286 2.88889L0 26L10 21.6667L20 26V2.88889C20 1.3 18.7143 0 17.1429 0ZM17.1429 21.6667L10 18.5178L2.85714 21.6667V2.88889H17.1429V21.6667Z"
-        fill="currentColor"
+        d={open ? 'M5 12.5L10 7.5L15 12.5' : 'M5 7.5L10 12.5L15 7.5'}
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-
-      {active && (
-        <path
-          d="M2.85714 2.88889H17.1429V21.6667L10 18.5178L2.85714 21.6667V2.88889Z"
-          fill="currentColor"
-        />
-      )}
     </svg>
   );
 }
 
+function formatPrice(price: number) {
+  return `${price.toLocaleString('ko-KR')}원`;
+}
+
 function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
   const isNewCourse = course.name === '새 코스';
+
+  const initialDays = course.days.length > 0 ? course.days : [createEmptyDay(1)];
 
   const [courseName, setCourseName] = useState(isNewCourse ? '' : course.name);
 
@@ -110,15 +140,15 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
   const [isEditingCourseName, setIsEditingCourseName] = useState(isNewCourse);
 
-  const [transport, setTransport] = useState<Transport>(course.transport ?? '대중교통');
+  const [days, setDays] = useState<CourseDay[]>(initialDays);
 
-  const [places, setPlaces] = useState<CoursePlace[]>(course.places ?? defaultPlaces);
+  const [selectedDayId, setSelectedDayId] = useState(initialDays[0].id);
 
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
 
   const [actionMenuPlaceId, setActionMenuPlaceId] = useState<number | null>(null);
 
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isCostDetailOpen, setIsCostDetailOpen] = useState(false);
 
   const [sheetHeight, setSheetHeight] = useState(DEFAULT_SHEET_HEIGHT);
 
@@ -126,16 +156,28 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
   const dragInformation = useRef<DragInformation | null>(null);
 
+  const selectedDay = days.find((courseDay) => courseDay.id === selectedDayId) ?? days[0];
+
   const displayedCourseName = courseName.trim() || previousCourseName || '새 코스';
 
-  const getMaximumSheetHeight = () => {
-    const availableHeight = window.innerHeight - 190;
+  const totalCost = useMemo(() => {
+    return Object.values(selectedDay.costs).reduce((total, cost) => total + cost, 0);
+  }, [selectedDay.costs]);
 
-    return Math.max(MIN_SHEET_HEIGHT, availableHeight);
+  const getMaximumSheetHeight = () => {
+    return Math.max(MIN_SHEET_HEIGHT, window.innerHeight - 190);
   };
 
   const clampSheetHeight = (height: number) => {
     return Math.min(Math.max(height, MIN_SHEET_HEIGHT), getMaximumSheetHeight());
+  };
+
+  const updateSelectedDay = (updater: (currentDay: CourseDay) => CourseDay) => {
+    setDays((currentDays) =>
+      currentDays.map((courseDay) =>
+        courseDay.id === selectedDay.id ? updater(courseDay) : courseDay,
+      ),
+    );
   };
 
   const startEditingCourseName = () => {
@@ -187,6 +229,7 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
     };
 
     setIsDragging(true);
+
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -221,35 +264,63 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
       setSheetHeight((currentHeight) => clampSheetHeight(currentHeight - 40));
     }
-
-    if (event.key === 'Home') {
-      event.preventDefault();
-      setSheetHeight(MIN_SHEET_HEIGHT);
-    }
-
-    if (event.key === 'End') {
-      event.preventDefault();
-      setSheetHeight(getMaximumSheetHeight());
-    }
   };
 
-  const toggleActionMenu = (placeId: number) => {
-    setActionMenuPlaceId((currentPlaceId) => (currentPlaceId === placeId ? null : placeId));
+  const selectDay = (dayId: number) => {
+    setSelectedDayId(dayId);
+    setActionMenuPlaceId(null);
+    setEditingPlaceId(null);
+    setIsCostDetailOpen(false);
+  };
+
+  const addDay = () => {
+    const nextDayNumber = days.length + 1;
+    const newDay = createEmptyDay(nextDayNumber);
+
+    setDays((currentDays) => [...currentDays, newDay]);
+
+    setSelectedDayId(newDay.id);
+    setIsCostDetailOpen(false);
+  };
+
+  const changeTransport = (transport: Transport) => {
+    updateSelectedDay((currentDay) => ({
+      ...currentDay,
+      transport,
+    }));
   };
 
   const changePlaceName = (placeId: number, name: string) => {
-    setPlaces((currentPlaces) =>
-      currentPlaces.map((place) => (place.id === placeId ? { ...place, name } : place)),
-    );
+    updateSelectedDay((currentDay) => ({
+      ...currentDay,
+      places: currentDay.places.map((place) => (place.id === placeId ? { ...place, name } : place)),
+    }));
   };
 
-  const startEditingPlace = (placeId: number) => {
-    setEditingPlaceId(placeId);
+  const addPlace = () => {
+    const newPlaceId = Date.now();
+
+    updateSelectedDay((currentDay) => ({
+      ...currentDay,
+      places: [
+        ...currentDay.places,
+        {
+          id: newPlaceId,
+          name: '새로운 장소',
+          address: '주소를 입력해주세요.',
+        },
+      ],
+    }));
+
+    setEditingPlaceId(newPlaceId);
     setActionMenuPlaceId(null);
   };
 
   const deletePlace = (placeId: number) => {
-    setPlaces((currentPlaces) => currentPlaces.filter((place) => place.id !== placeId));
+    updateSelectedDay((currentDay) => ({
+      ...currentDay,
+      places: currentDay.places.filter((place) => place.id !== placeId),
+    }));
 
     setActionMenuPlaceId(null);
   };
@@ -257,43 +328,41 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
   const movePlace = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction;
 
-    if (nextIndex < 0 || nextIndex >= places.length) {
+    if (nextIndex < 0 || nextIndex >= selectedDay.places.length) {
       return;
     }
 
-    setPlaces((currentPlaces) => {
-      const reorderedPlaces = [...currentPlaces];
+    updateSelectedDay((currentDay) => {
+      const reorderedPlaces = [...currentDay.places];
+
       const selectedPlace = reorderedPlaces[index];
 
       if (!selectedPlace) {
-        return currentPlaces;
+        return currentDay;
       }
 
       reorderedPlaces.splice(index, 1);
       reorderedPlaces.splice(nextIndex, 0, selectedPlace);
 
-      return reorderedPlaces;
+      return {
+        ...currentDay,
+        places: reorderedPlaces,
+      };
     });
 
     setActionMenuPlaceId(null);
   };
 
-  const addPlace = () => {
-    const newPlaceId = Date.now();
+  const changeCost = (costKey: CostKey, value: string) => {
+    const numberValue = Number(value.replace(/[^0-9]/g, ''));
 
-    setPlaces((currentPlaces) => [
-      ...currentPlaces,
-      {
-        id: newPlaceId,
-        name: '새로운 장소',
-        address: '주소를 입력해주세요.',
+    updateSelectedDay((currentDay) => ({
+      ...currentDay,
+      costs: {
+        ...currentDay.costs,
+        [costKey]: Number.isNaN(numberValue) ? 0 : numberValue,
       },
-    ]);
-
-    setEditingPlaceId(newPlaceId);
-    setActionMenuPlaceId(null);
-
-    setSheetHeight((currentHeight) => clampSheetHeight(Math.max(currentHeight, 430)));
+    }));
   };
 
   const saveCourse = () => {
@@ -308,24 +377,11 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
     onSave({
       ...course,
       name: trimmedName,
-      transport,
-      places,
+      days,
     });
   };
 
-  const getPlaceLabel = (index: number, totalPlaces: number) => {
-    if (index === 0) {
-      return '출발지';
-    }
-
-    if (index === totalPlaces - 1) {
-      return '도착지';
-    }
-
-    return `경유지 ${index}`;
-  };
-
-  const activeTransportIndex = transportOptions.indexOf(transport);
+  const activeTransportIndex = transportOptions.indexOf(selectedDay.transport);
 
   return (
     <main className="course-edit-page">
@@ -333,21 +389,6 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
       <div className="course-edit-page__title-bar" onPointerUp={handleTitleBarClick}>
         <BackHeader title={displayedCourseName} onBack={onBack} />
-
-        <button
-          className={[
-            'course-edit-page__bookmark-button',
-            isBookmarked ? 'course-edit-page__bookmark-button--active' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          type="button"
-          aria-label={isBookmarked ? '코스 저장 해제' : '코스 저장'}
-          aria-pressed={isBookmarked}
-          onClick={() => setIsBookmarked((current) => !current)}
-        >
-          <BookmarkIcon active={isBookmarked} />
-        </button>
       </div>
 
       {isEditingCourseName && (
@@ -382,6 +423,33 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
         </div>
       )}
 
+      <div className="course-edit-page__day-tabs">
+        {days.map((courseDay) => {
+          const isActive = courseDay.id === selectedDay.id;
+
+          return (
+            <button
+              className={[
+                'course-edit-page__day-tab',
+                isActive ? 'course-edit-page__day-tab--active' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              type="button"
+              key={courseDay.id}
+              aria-pressed={isActive}
+              onClick={() => selectDay(courseDay.id)}
+            >
+              DAY {courseDay.day}
+            </button>
+          );
+        })}
+
+        <button className="course-edit-page__day-add" type="button" onClick={addDay}>
+          ＋ DAY 추가
+        </button>
+      </div>
+
       <div className="course-edit-page__tabs">
         <LineTab
           items={transportOptions}
@@ -390,25 +458,25 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
             const selectedTransport = transportOptions[index];
 
             if (selectedTransport) {
-              setTransport(selectedTransport);
+              changeTransport(selectedTransport);
             }
           }}
         />
       </div>
 
-      <section className="course-edit-page__map" aria-label="코스 지도">
-        {places.length === 0 && (
+      <section className="course-edit-page__map" aria-label={`DAY ${selectedDay.day} 코스 지도`}>
+        {selectedDay.places.length === 0 && (
           <div className="course-edit-page__map-placeholder">
-            <Typography variant="subtitle3">지도</Typography>
+            <Typography variant="subtitle3">DAY {selectedDay.day} 지도</Typography>
 
             <Typography variant="caption2" color="#828585">
-              지도 API 연동 영역
+              장소를 추가해주세요.
             </Typography>
           </div>
         )}
 
         <div className="course-edit-page__map-route">
-          {places.slice(0, 4).map((place, index) => (
+          {selectedDay.places.slice(0, 4).map((place, index) => (
             <span
               className="course-edit-page__map-pin"
               key={place.id}
@@ -449,26 +517,31 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
         <div className="course-edit-page__sheet-header">
           <Typography as="h2" variant="head3" className="course-edit-page__route-title">
-            경로 안내
+            DAY {selectedDay.day} 경로 안내
           </Typography>
         </div>
 
         <div className="course-edit-page__sheet-body">
-          {places.length === 0 ? (
+          {selectedDay.places.length === 0 ? (
             <div className="course-edit-page__empty">
               <Typography variant="p2" color="#828585">
-                코스에 장소를 추가해주세요.
+                DAY {selectedDay.day}에 장소를 추가해주세요.
               </Typography>
             </div>
           ) : (
             <ol className="course-edit-page__place-list">
-              {places.map((place, index) => {
+              {selectedDay.places.map((place, index) => {
                 const isFirstPlace = index === 0;
-                const isLastPlace = index === places.length - 1;
+
+                const isLastPlace = index === selectedDay.places.length - 1;
 
                 const isActionMenuOpen = actionMenuPlaceId === place.id;
 
-                const placeLabel = getPlaceLabel(index, places.length);
+                const placeLabel = isFirstPlace
+                  ? '출발지'
+                  : isLastPlace
+                    ? '도착지'
+                    : `경유지 ${index}`;
 
                 return (
                   <li className="course-edit-page__route-group" key={place.id}>
@@ -527,7 +600,7 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
                             type="button"
                             aria-label={`${place.name} 메뉴 열기`}
                             aria-expanded={isActionMenuOpen}
-                            onClick={() => toggleActionMenu(place.id)}
+                            onClick={() => setActionMenuPlaceId(isActionMenuOpen ? null : place.id)}
                           >
                             ⋯
                           </button>
@@ -551,7 +624,13 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
                               아래로
                             </button>
 
-                            <button type="button" onClick={() => startEditingPlace(place.id)}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingPlaceId(place.id);
+                                setActionMenuPlaceId(null);
+                              }}
+                            >
                               수정
                             </button>
 
@@ -575,7 +654,7 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
                         <div className="course-edit-page__transport-info">
                           <Typography as="strong" variant="caption1">
-                            {transport}
+                            {selectedDay.transport}
                           </Typography>
 
                           <Typography as="p" variant="caption2" color="#828585">
@@ -589,13 +668,63 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
               })}
             </ol>
           )}
+
+          <section className="course-edit-page__cost">
+            <button
+              className="course-edit-page__cost-summary"
+              type="button"
+              aria-expanded={isCostDetailOpen}
+              onClick={() => setIsCostDetailOpen((current) => !current)}
+            >
+              <span className="course-edit-page__cost-heading">
+                <Typography as="strong" variant="subtitle3">
+                  예상 비용
+                </Typography>
+
+                <Typography variant="caption2" color="#828585">
+                  DAY {selectedDay.day} 기준
+                </Typography>
+              </span>
+
+              <span className="course-edit-page__cost-total">
+                <Typography variant="subtitle2" color="#3f8ba7">
+                  {formatPrice(totalCost)}
+                </Typography>
+
+                <ChevronIcon open={isCostDetailOpen} />
+              </span>
+            </button>
+
+            {isCostDetailOpen && (
+              <div className="course-edit-page__cost-detail">
+                {COST_ITEMS.map((costItem) => (
+                  <label className="course-edit-page__cost-row" key={costItem.key}>
+                    <span>{costItem.label}</span>
+
+                    <span className="course-edit-page__cost-input-wrap">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={selectedDay.costs[costItem.key] || ''}
+                        placeholder="0"
+                        aria-label={`${costItem.label} 입력`}
+                        onChange={(event) => changeCost(costItem.key, event.target.value)}
+                      />
+
+                      <span>원</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
         <div className="course-edit-page__actions">
           <Button size="sub" variant="primary" onClick={addPlace}>
             <span className="course-edit-page__button-content">
               <CircleIcon type="plus" />
-              <span>새 코스 만들기</span>
+              <span>장소 추가하기</span>
             </span>
           </Button>
 
