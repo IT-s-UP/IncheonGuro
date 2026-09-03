@@ -225,8 +225,8 @@ textarea {
 }
 
 .menu-drawer {
-  width: min(86vw, 340px);
-  max-width: 100%;
+  width: 100%;
+  max-width: var(--app-max-width);
 }
 
 /* 메인 페이지 */

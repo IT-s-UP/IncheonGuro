@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -56,6 +57,18 @@ const STAMP_PLACES = ['야생화단지', '개항로', '차이나타운'];
 
 function MenuDrawer({ isOpen, onClose, isLoggedIn = true }: MenuDrawerProps) {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const html = document.documentElement;
+    const originalOverflow = html.style.overflow;
+    html.style.overflow = 'hidden';
+
+    return () => {
+      html.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
 
   const handleNavigate = (to?: string) => {
     if (!to) return;
