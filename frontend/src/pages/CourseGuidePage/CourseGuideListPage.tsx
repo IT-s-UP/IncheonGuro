@@ -2,6 +2,9 @@
 import { useState } from 'react';
 import { mockRecommendedCourses } from '@/mocks/courseguide';
 import './CourseGuideListPage.css';
+
+import Header from '@/components/Header/Header';
+import BackHeader from '@/components/Header/BackHeader';
 import CourseGuideCourseList from '@/components/CourseGuide/CourseGuideCourseList';
 import Button from '@/components/Button/Button';
 import CourseGuideBackButton from '@/components/CourseGuide/CourseGuideBackButton';
@@ -29,8 +32,7 @@ function CourseGuideListPage() {
 
   return (
     <div className="course-guide-list-page">
-      {/* 할 일 : 공용 헤더 컴포넌트 추가하기 */}
-      {/* 할 일 : 공용 뒤로가기 버튼 컴포넌트 + "코스 안내" 텍스트 추가하기 */}
+      <Header />
       <CourseGuideBackButton />
 
       {/* 코스 추천 / 코스 목록 탭 버튼 컴포넌트 */}
