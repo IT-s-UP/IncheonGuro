@@ -547,7 +547,10 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
                   <li className="course-edit-page__route-group" key={place.id}>
                     <div className="course-edit-page__place">
                       <div className="course-edit-page__timeline">
-                        <span className="course-edit-page__place-marker">{index + 1}</span>
+                        <span
+                          className="course-edit-page__place-marker"
+                          aria-label={`${index + 1}번째 장소`}
+                        />
 
                         {!isLastPlace && (
                           <div className="course-edit-page__timeline-line" aria-hidden="true" />
