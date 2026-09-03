@@ -1,0 +1,1141 @@
+:root {
+  --app-max-width: 430px;
+  --app-min-width: 280px;
+  --responsive-padding: clamp(16px, 5.1vw, 22px);
+  --responsive-small-padding: clamp(12px, 4.1vw, 18px);
+}
+
+html {
+  width: 100%;
+  min-width: var(--app-min-width);
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+body {
+  width: 100%;
+  min-width: var(--app-min-width);
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: #f4f8f8;
+  scrollbar-width: none;
+}
+
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: none;
+}
+
+/* 스크롤은 유지하고 스크롤바가 차지하는 공간만 제거합니다. */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+  font-family: inherit;
+}
+
+/* 전체 페이지 컨테이너 */
+
+.main-page,
+.login-page,
+.signup-page,
+.course-recommend-page,
+.region-recommend-page,
+.course-guide-list-page,
+.course-guide-detail-page,
+.festival-list-page,
+.festival-detail-page,
+.stamp-tour-page,
+.place-guide-main-page,
+.place-guide-search-page,
+.place-guide-detail-page,
+.my-courses-page,
+.course-edit-page,
+.my-page {
+  width: 100% !important;
+  max-width: var(--app-max-width);
+  min-width: 0 !important;
+  margin-right: auto !important;
+  margin-left: auto !important;
+  overflow-x: hidden;
+  background-color: #ffffff;
+}
+
+.login-page,
+.signup-page,
+.course-recommend-page,
+.region-recommend-page,
+.course-guide-list-page,
+.course-guide-detail-page,
+.festival-list-page,
+.festival-detail-page,
+.stamp-tour-page,
+.place-guide-main-page,
+.place-guide-search-page,
+.place-guide-detail-page,
+.my-courses-page,
+.my-page {
+  min-height: 100svh;
+}
+
+.course-edit-page {
+  height: 100svh;
+}
+
+/* Header */
+
+.header {
+  width: 100%;
+  max-width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: clamp(10px, 3.5vw, 15px);
+}
+
+.header__logo-btn {
+  min-width: 0;
+}
+
+.header__logo {
+  width: auto;
+  max-width: min(145px, 42vw);
+  height: auto;
+  max-height: 40px;
+}
+
+.header__actions {
+  flex-shrink: 0;
+  gap: clamp(16px, 7.6vw, 30px);
+}
+
+.header__notification-btn,
+.header__menu-btn {
+  flex-shrink: 0;
+}
+
+/* BackHeader */
+
+.back-header {
+  width: 100%;
+  min-width: 0;
+}
+
+.back-header__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 공통 버튼과 입력창 */
+
+.button,
+.input {
+  max-width: 100%;
+}
+
+.button {
+  white-space: nowrap;
+}
+
+.input {
+  min-width: 0;
+}
+
+/* BottomNavBar */
+
+.bottom-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100% !important;
+  max-width: var(--app-max-width);
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  gap: clamp(8px, 8vw, 34px) !important;
+}
+
+.bottom-nav-bar__item {
+  min-width: 0;
+  flex: 1;
+}
+
+.bottom-nav-bar__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* BottomSheet */
+
+.bottom-sheet {
+  width: 100%;
+  max-width: var(--app-max-width);
+  max-height: calc(100svh - env(safe-area-inset-top));
+  overflow: hidden;
+}
+
+.bottom-sheet__content {
+  max-height: calc(100svh - 70px);
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Modal과 메뉴 */
+
+.password-modal,
+.result-modal {
+  width: calc(100% - var(--responsive-padding) * 2);
+  max-width: 353px;
+}
+
+.menu-drawer {
+  width: min(86vw, 340px);
+  max-width: 100%;
+}
+
+/* 메인 페이지 */
+
+.main-page {
+  min-height: 100svh !important;
+}
+
+.main-page__content,
+.main-page__hero {
+  width: 100%;
+  min-width: 0;
+}
+
+.main-page__hero-text {
+  max-width: 58%;
+}
+
+.main-page__hero-image {
+  max-width: 48%;
+  object-fit: contain;
+}
+
+.main-page__spot-list,
+.main-page__region-list {
+  width: 100%;
+  max-width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-page__spot-list::-webkit-scrollbar,
+.main-page__region-list::-webkit-scrollbar {
+  display: none;
+}
+
+.main-page__spot-item,
+.main-page__region-item {
+  flex-shrink: 0;
+}
+
+.main-page__courses {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.main-page__course-item,
+.main-page__course-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* 로그인 */
+
+.login-page__content {
+  width: 100%;
+  padding-right: clamp(24px, 11.7vw, 46px);
+  padding-left: clamp(24px, 11.7vw, 46px);
+}
+
+.login-form,
+.login-field,
+.login-password-input,
+.login-password-input .input,
+.login-button,
+.login-sns {
+  width: 100%;
+  min-width: 0;
+}
+
+.login-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.login-sns__button {
+  max-width: 100%;
+}
+
+/* 회원가입 */
+
+.signup-page__content {
+  width: 100%;
+  padding-right: clamp(20px, 12vw, 47px);
+  padding-left: clamp(20px, 12vw, 47px);
+}
+
+.signup-step,
+.signup-form,
+.signup-field,
+.signup-id-area,
+.signup-inline,
+.signup-password-input,
+.signup-email-row,
+.signup-verify-row,
+.signup-nickname-area,
+.signup-terms {
+  width: 100%;
+  min-width: 0;
+}
+
+.signup-inline > *,
+.signup-email-row > *,
+.signup-verify-row > * {
+  min-width: 0;
+}
+
+.signup-birth-field,
+.signup-gender-field,
+.signup-email-select,
+.signup-verify-input-area {
+  min-width: 0;
+  flex: 1;
+}
+
+.signup-region-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+.signup-bottom-button {
+  width: 100%;
+}
+
+/* 코스 및 지역 추천 */
+
+.course-recommend-content,
+.region-recommend-content {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.course-intro-image,
+.region-intro-image {
+  width: 100%;
+  height: clamp(210px, 66vw, 284px);
+}
+
+.course-option-grid,
+.region-option-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.course-option-list,
+.region-option-list,
+.course-date-area,
+.course-date-input,
+.course-bottom-button,
+.region-bottom-button,
+.course-map,
+.course-plan-list,
+.course-cost-wrapper,
+.course-result-buttons,
+.region-recommended-list,
+.region-result-buttons {
+  width: 100%;
+  min-width: 0;
+}
+
+.course-loading-image,
+.region-loading-image,
+.region-result-image {
+  width: min(100%, 280px);
+  height: auto;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.course-result-buttons,
+.region-result-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* 코스 안내 */
+
+.course-guide-list-page,
+.course-guide-detail-page {
+  min-height: 100svh;
+}
+
+.course-name {
+  width: auto !important;
+  max-width: calc(100% - var(--responsive-padding) * 2);
+  margin-right: auto;
+  margin-left: auto;
+  overflow-wrap: anywhere;
+}
+
+.map-placeholder {
+  width: calc(100% - var(--responsive-padding) * 2) !important;
+  max-width: 340px;
+  height: clamp(210px, 61vw, 240px);
+}
+
+.recommend-button-wrap {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.recommend-button-wrap > button {
+  width: min(100%, 268px) !important;
+}
+
+.detail-map-area {
+  width: 100%;
+  height: calc(100svh - 200px);
+  min-height: 380px;
+}
+
+.detail-map-placeholder {
+  width: 100% !important;
+}
+
+.course-guide-search-box,
+.course-guide-tab-bar,
+.course-guide-transport-tab-bar,
+.course-guide-route-panel,
+.course-guide-route-list-wrap,
+.course-guide-route-scroll,
+.course-guide-route-list,
+.course-guide-route-detail-list,
+.course-guide-course-list {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.course-guide-route-panel {
+  max-height: calc(100svh - 160px);
+}
+
+.course-guide-route-panel__content,
+.course-guide-route-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.course-guide-course-item,
+.route-detail-item,
+.course-guide-route-item {
+  min-width: 0;
+}
+
+/* 축제 목록 */
+
+.festival-list-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.festival-list-header {
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.festival-carousel {
+  width: 100%;
+  max-width: 100%;
+  height: clamp(200px, 57.5vw, 226px);
+}
+
+.festival-carousel__slide {
+  width: clamp(150px, 44.8vw, 176px);
+  height: clamp(188px, 56vw, 220px);
+}
+
+.festival-district-tabs {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.festival-district-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.festival-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  gap: clamp(10px, 3vw, 14px);
+}
+
+.festival-card {
+  width: 100% !important;
+  min-width: 0;
+}
+
+.festival-poster--card {
+  width: 100% !important;
+  height: auto;
+  aspect-ratio: 176 / 220;
+}
+
+/* 축제 상세 */
+
+.festival-detail-content {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.festival-detail-main,
+.festival-detail-info,
+.festival-detail-bottom {
+  width: 100%;
+  min-width: 0;
+}
+
+.festival-detail-poster {
+  width: min(54vw, 190px);
+  height: auto;
+  aspect-ratio: 190 / 238;
+}
+
+.festival-detail-info__line {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+}
+
+.festival-detail-add-button {
+  width: 100%;
+  max-width: 310px;
+}
+
+/* 장소 안내 */
+
+.place-guide-main-page,
+.place-guide-search-page,
+.place-guide-detail-page {
+  min-height: 100svh;
+}
+
+.place-guide-main-page > .back-header,
+.place-guide-search-page > .back-header,
+.place-guide-detail-page > .back-header {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.place-guide-main-page > .line-tab {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  overflow-x: auto;
+}
+
+.place-guide-search-box,
+.place-guide-search-page__search-box {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.place-guide-location,
+.place-guide-section-title,
+.place-guide-filter-title,
+.place-guide-sort-dropdown,
+.place-guide-result-title,
+.place-guide-empty,
+.place-guide-search-page__location,
+.place-guide-search-page__title,
+.place-guide-search-page__section-label,
+.place-guide-search-page__empty {
+  margin-right: var(--responsive-padding);
+  margin-left: var(--responsive-padding);
+}
+
+.place-guide-district-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-right: var(--responsive-padding);
+  margin-left: var(--responsive-padding);
+  gap: clamp(5px, 2.5vw, 10px);
+}
+
+.place-guide-district-grid .option-tab {
+  width: 100%;
+  min-width: 0;
+  padding-right: 4px;
+  padding-left: 4px;
+}
+
+.place-guide-filter-list {
+  justify-content: flex-start;
+  margin-right: var(--responsive-padding);
+  margin-left: var(--responsive-padding);
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.place-guide-filter-list::-webkit-scrollbar {
+  display: none;
+}
+
+.place-guide-card-list,
+.place-guide-search-page__card-list,
+.place-guide-search-page__course-list {
+  width: auto;
+  margin-right: var(--responsive-padding);
+  margin-left: var(--responsive-padding);
+}
+
+.place-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.place-guide-map-area,
+.place-guide-map-placeholder {
+  width: 100%;
+}
+
+.place-guide-map-placeholder {
+  min-height: clamp(320px, 100vw, 430px);
+}
+
+/* 장소 상세 */
+
+.place-guide-detail-page__image {
+  width: 100%;
+  height: clamp(190px, 56vw, 240px);
+}
+
+.place-guide-detail-page__header-row,
+.place-guide-detail-page__address,
+.place-guide-detail-page__description,
+.place-guide-detail-page__tags,
+.place-guide-detail-page__nearby-title,
+.place-guide-detail-page__nearby-list,
+.place-guide-detail-page__not-found {
+  margin-right: var(--responsive-padding);
+  margin-left: var(--responsive-padding);
+}
+
+.place-guide-detail-page__header-row {
+  min-width: 0;
+  gap: 12px;
+}
+
+.place-guide-detail-page__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.place-guide-detail-page__add-course-btn,
+.place-guide-detail-page__info-box,
+.place-guide-detail-page__map {
+  width: calc(100% - var(--responsive-padding) * 2);
+  margin-right: var(--responsive-padding);
+  margin-left: var(--responsive-padding);
+}
+
+.place-guide-detail-page__nearby-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.place-guide-detail-page__nearby-item {
+  min-width: 0;
+}
+
+/* 내 코스 */
+
+.my-courses-page,
+.course-edit-page {
+  width: 100% !important;
+  max-width: var(--app-max-width);
+}
+
+.my-courses-page__title,
+.my-courses-page__search-field,
+.my-courses-page__content,
+.my-courses-page__bottom-action,
+.course-edit-page__title-bar,
+.course-edit-page__name-editor,
+.course-edit-page__day-tabs,
+.course-edit-page__sheet-body,
+.course-edit-page__actions {
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.my-courses-page__item,
+.my-courses-page__course-button,
+.my-courses-page__course-copy {
+  min-width: 0;
+}
+
+.course-edit-page__day-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.course-edit-page__day-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.course-edit-page__map,
+.course-edit-page__sheet {
+  width: 100%;
+  max-width: 100%;
+}
+
+.course-edit-page__place,
+.course-edit-page__place-main,
+.course-edit-page__place-info,
+.course-edit-page__place-content,
+.course-edit-page__cost {
+  min-width: 0;
+}
+
+.course-edit-page__cost-input-wrap input {
+  width: clamp(64px, 23vw, 90px);
+}
+
+/* 마이페이지 */
+
+.my-page {
+  display: flex !important;
+  flex-direction: column;
+  height: auto !important;
+  min-height: 100svh;
+}
+
+.my-page > .header {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.my-page__back-header {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: auto !important;
+  margin: 18px var(--responsive-padding) 0;
+  flex-shrink: 0;
+}
+
+.my-page__profile {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  height: 224px;
+  margin-top: 18px;
+  flex-shrink: 0;
+}
+
+.my-page__avatar-wrap {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 110px;
+  height: 110px;
+  margin: 33px auto 0;
+}
+
+.my-page__nickname {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  margin-top: 20px;
+}
+
+.my-page__group {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: calc(100% - var(--responsive-padding) * 2) !important;
+  margin-right: var(--responsive-padding) !important;
+  margin-left: var(--responsive-padding) !important;
+}
+
+.my-page__group:first-of-type {
+  margin-top: 20px !important;
+}
+
+.my-page__group:nth-of-type(2) {
+  margin-top: 20px !important;
+  margin-bottom: 20px !important;
+}
+
+.my-page__row {
+  width: 100%;
+  min-width: 0;
+}
+
+.my-page__row-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-page__bottom-bar {
+  position: sticky !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: 0;
+  left: auto !important;
+  z-index: 10;
+  width: 100% !important;
+  height: auto !important;
+  margin-top: auto;
+  padding: 12px var(--responsive-padding) max(16px, env(safe-area-inset-bottom));
+  background: #ffffff;
+}
+
+.my-page__save-btn {
+  width: 100% !important;
+  max-width: 340px;
+  height: clamp(48px, 15vw, 60px);
+}
+
+/* 마이페이지 수정 시트 */
+
+.profile-sheet__input,
+.profile-sheet__radio-list,
+.profile-sheet__region-grid,
+.profile-sheet__birthdate-row,
+.profile-sheet__email-row,
+.profile-sheet__email-verify-row,
+.profile-sheet__password-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.profile-sheet__region-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.profile-sheet__birthdate-row,
+.profile-sheet__email-row,
+.profile-sheet__email-verify-row {
+  display: flex;
+  min-width: 0;
+}
+
+.profile-sheet__birthdate-select,
+.profile-sheet__email-id,
+.profile-sheet__email-domain,
+.profile-sheet__email-code-input {
+  min-width: 0;
+}
+
+.profile-sheet__confirm-btn {
+  width: 100%;
+}
+
+/* 스탬프 투어 */
+
+.stamp-tour-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.stamp-tour-header {
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.stamp-tour-hero {
+  width: 100%;
+  height: clamp(230px, 73.8vw, 310px);
+}
+
+.stamp-tour-hero__info {
+  width: calc(100% - var(--responsive-padding) * 2);
+}
+
+.stamp-tour-tabs {
+  width: 100%;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.stamp-tour-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.stamp-tour-stamps,
+.stamp-tour-badges {
+  width: 100%;
+  min-width: 0;
+  padding-right: var(--responsive-padding);
+  padding-left: var(--responsive-padding);
+}
+
+.stamp-tour-path {
+  width: 100%;
+  max-width: 340px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.stamp-tour-badge-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  gap: clamp(8px, 3vw, 14px);
+}
+
+.stamp-tour-badge {
+  width: 100%;
+  min-width: 0;
+}
+
+.stamp-tour-badge__image,
+.stamp-tour-badge__placeholder {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+/* 작은 모바일 */
+
+@media (max-width: 350px) {
+  :root {
+    --responsive-padding: 16px;
+    --responsive-small-padding: 12px;
+  }
+
+  .header {
+    height: 72px;
+  }
+
+  .header__logo {
+    max-width: 122px;
+  }
+
+  .header__actions {
+    gap: 14px;
+  }
+
+  .header__vector {
+    width: 23px;
+    height: auto;
+  }
+
+  .header__menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .bottom-sheet__content {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .login-page__content,
+  .signup-page__content {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .signup-inline,
+  .signup-email-row,
+  .signup-verify-row {
+    gap: 6px;
+  }
+
+  .signup-region-grid,
+  .profile-sheet__region-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .course-result-buttons,
+  .region-result-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .place-guide-district-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .place-guide-detail-page__nearby-list {
+    grid-template-columns: 1fr;
+  }
+
+  .festival-grid {
+    gap: 10px;
+  }
+
+  .course-edit-page__tabs .line-tab__item .typography {
+    font-size: 14px;
+  }
+
+  .course-edit-page__actions {
+    gap: 7px;
+  }
+
+  .course-edit-page__button-content {
+    gap: 4px;
+  }
+
+  .stamp-tour-badge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 모바일 화면에서는 기기 너비를 모두 사용합니다. */
+
+@media (max-width: 767px) {
+  body {
+    background: #ffffff;
+  }
+
+  .main-page,
+  .login-page,
+  .signup-page,
+  .course-recommend-page,
+  .region-recommend-page,
+  .course-guide-list-page,
+  .course-guide-detail-page,
+  .festival-list-page,
+  .festival-detail-page,
+  .stamp-tour-page,
+  .place-guide-main-page,
+  .place-guide-search-page,
+  .place-guide-detail-page,
+  .my-courses-page,
+  .course-edit-page,
+  .my-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .header,
+  .bottom-nav-bar,
+  .bottom-sheet {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* 태블릿과 PC */
+
+@media (min-width: 768px) {
+  body {
+    background: #f4f8f8;
+  }
+
+  .main-page,
+  .login-page,
+  .signup-page,
+  .course-recommend-page,
+  .region-recommend-page,
+  .course-guide-list-page,
+  .course-guide-detail-page,
+  .festival-list-page,
+  .festival-detail-page,
+  .stamp-tour-page,
+  .place-guide-main-page,
+  .place-guide-search-page,
+  .place-guide-detail-page,
+  .my-courses-page,
+  .course-edit-page,
+  .my-page {
+    width: 100% !important;
+    max-width: var(--app-max-width) !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+    border-right: 1px solid #eeeeee;
+    border-left: 1px solid #eeeeee;
+    box-shadow: 0 0 24px rgb(86 80 75 / 10%);
+  }
+}
+
+/* 세로 높이가 짧은 기기 */
+
+@media (max-height: 700px) {
+  .login-page__content,
+  .signup-page__content {
+    padding-top: 32px;
+    padding-bottom: 28px;
+  }
+
+  .course-edit-page__sheet {
+    max-height: calc(100svh - 150px);
+  }
+
+  .bottom-sheet {
+    max-height: 92svh;
+  }
+
+  .bottom-sheet__content {
+    max-height: calc(92svh - 60px);
+  }
+}
