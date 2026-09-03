@@ -158,9 +158,10 @@
 }
 
 .menu-drawer__stamp {
-  flex: none;
-  width: 30px;
-  height: 30px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 30px;
+  aspect-ratio: 1;
   border-radius: 50%;
   box-sizing: border-box;
 }
