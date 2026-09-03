@@ -2,6 +2,8 @@
   position: fixed;
   inset: 0;
   z-index: 100;
+  display: flex;
+  justify-content: center;
   background: rgba(0, 0, 0, 0.35);
   opacity: 0;
   pointer-events: none;
@@ -14,12 +16,9 @@
 }
 
 .menu-drawer {
-  position: absolute;
-  top: 0;
-  right: 0;
+  flex: none;
   width: 393px;
   max-width: 100%;
-  height: 100%;
   overflow-y: auto;
   background: #ffffff;
   font-family: 'Pretendard', system-ui, sans-serif;
