@@ -64,7 +64,6 @@
   padding: 9px;
   flex-shrink: 0;
   border: 0;
-  border-radius: 0;
   background: transparent;
   color: var(--course-green);
   cursor: pointer;
@@ -150,7 +149,7 @@
 
 .my-courses-page__item {
   display: flex;
-  min-height: 48px;
+  min-height: 56px;
   overflow: hidden;
   border: 1px solid var(--course-pale-blue);
   border-radius: 5px;
@@ -163,7 +162,7 @@
 
 .my-courses-page__course-button {
   min-width: 0;
-  padding: 0 14px;
+  padding: 8px 14px;
   flex: 1;
   overflow: hidden;
   border: 0;
@@ -172,7 +171,19 @@
   cursor: pointer;
 }
 
-.my-courses-page__course-button .typography {
+.my-courses-page__course-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 2px;
+}
+
+.my-courses-page__course-copy .typography {
+  max-width: 100%;
+}
+
+.my-courses-page__course-button .my-courses-page__course-copy > .typography:first-child {
   display: block;
   overflow: hidden;
   color: var(--course-green);
@@ -260,7 +271,6 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: var(--course-background);
 }
 
 .my-courses-page button:focus-visible,
