@@ -28,6 +28,7 @@
   color: #000000;
   font-size: 16px;
   margin: 20px auto 16px;
+  box-sizing: border-box;
 }
 
 /* 새로고침 아이콘 + 텍스트 */

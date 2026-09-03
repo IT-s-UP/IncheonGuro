@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { TransportMode } from '@/mocks/courseRoute';
+import Header from '@/components/Header/Header';
 import CourseGuideBackButton from '@/components/CourseGuide/CourseGuideBackButton';
 import CourseGuideTransportTab from '@/components/CourseGuide/CourseGuideTransportTab';
 import CourseGuideRoutePanel from '@/components/CourseGuide/CourseGuideRoutePanel';
@@ -12,6 +13,7 @@ function CourseGuideDetailPage() {
 
   return (
     <div className="course-guide-detail-page">
+      <Header />
       <CourseGuideBackButton to="/course-guide" />
       <CourseGuideTransportTab activeMode={activeMode} onChange={setActiveMode} />
 
