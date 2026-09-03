@@ -990,10 +990,6 @@ textarea {
     height: 36px;
   }
 
-  .menu-drawer__stamp-row {
-    gap: 4px;
-  }
-
   .bottom-sheet__content {
     padding-right: 22px;
     padding-left: 22px;

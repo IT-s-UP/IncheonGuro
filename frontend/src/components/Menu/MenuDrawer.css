@@ -160,6 +160,7 @@
 
 .menu-drawer__stamp-row {
   display: flex;
+  justify-content: space-between;
   gap: 7px;
   margin-bottom: 20px;
 }
