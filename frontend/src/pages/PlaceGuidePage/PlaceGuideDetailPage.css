@@ -1,0 +1,221 @@
+.place-guide-detail-page {
+  position: relative;
+  width: 393px;
+  margin: 0 auto;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100vh;
+}
+
+.place-guide-detail-page > .back-header {
+  padding: 16px 20px 12px;
+  margin-bottom: 20px;
+}
+
+.place-guide-detail-page__not-found {
+  margin: 40px 20px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #888888;
+}
+
+/* 장소 이미지 */
+.place-guide-detail-page__image {
+  position: relative;
+  width: 100%;
+  height: 220px;
+
+  background: #d9d9d9;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #888888;
+  font-size: 16px;
+}
+
+.place-guide-detail-page__image-more {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 6px 10px;
+
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+
+  font-size: 12px;
+  color: #000000;
+
+  cursor: pointer;
+}
+
+/* 제목 + 북마크 */
+.place-guide-detail-page__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin: 20px 20px 0;
+}
+
+.place-guide-detail-page__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.place-guide-detail-page__bookmark-btn {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  background: none;
+  border: none;
+
+  cursor: pointer;
+}
+
+.place-guide-detail-page__address {
+  margin: 16px 20px 0;
+  font-size: 14px;
+  color: #000000;
+}
+
+.place-guide-detail-page__description {
+  margin: 16px 20px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #000000;
+}
+
+/* 내 코스에 추가하기 버튼 */
+.place-guide-detail-page__add-course-btn {
+  box-sizing: border-box;
+  width: calc(100% - 40px);
+  height: 44px;
+  margin: 20px 20px 0;
+
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+
+  cursor: pointer;
+}
+
+/* 표 내용 박스 */
+.place-guide-detail-page__info-box {
+  box-sizing: border-box;
+  width: calc(100% - 40px);
+  min-height: 130px;
+  margin: 20px 20px 0;
+  padding: 16px;
+
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+
+  font-size: 13px;
+  color: #888888;
+}
+
+/* 상세 지도 */
+.place-guide-detail-page__map {
+  width: calc(100% - 40px);
+  height: 180px;
+  margin: 20px 20px 0;
+
+  background: #d9d9d9;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #888888;
+  font-size: 16px;
+
+  border-radius: 4px;
+}
+
+/* 태그 */
+.place-guide-detail-page__tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  margin: 16px 20px 0;
+}
+
+.place-guide-detail-page__tag {
+  box-sizing: border-box;
+  padding: 6px 12px;
+
+  background: #ffffff;
+  border: 1px solid #78aac3;
+  border-radius: 20px;
+
+  font-size: 13px;
+  color: #78aac3;
+
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 주변 장소 */
+.place-guide-detail-page__nearby-title {
+  margin: 24px 20px 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.place-guide-detail-page__nearby-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  margin: 0 20px 30px;
+}
+
+.place-guide-detail-page__nearby-item {
+  box-sizing: border-box;
+  padding: 14px;
+
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 8px;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.place-guide-detail-page__nearby-item-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.place-guide-detail-page__nearby-item-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #6e6e6e;
+}
