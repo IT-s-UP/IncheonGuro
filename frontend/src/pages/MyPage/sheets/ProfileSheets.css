@@ -162,6 +162,13 @@
 
 .profile-sheet__email-domain-list .profile-sheet__email-domain-option:first-child {
   border-top: 1px solid #cec9c7;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.profile-sheet__email-domain-list .profile-sheet__email-domain-option:last-child {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .profile-sheet__email-verify-row {
