@@ -234,6 +234,13 @@
 
 .menu-drawer__group > .menu-drawer__row:first-child {
   border-top: 1px solid rgba(18, 48, 64, 0.1);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.menu-drawer__group > .menu-drawer__row:last-child {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .menu-drawer__row-icon {
