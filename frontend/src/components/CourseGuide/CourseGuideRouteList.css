@@ -3,7 +3,6 @@
   max-width: 320px;
   margin: 0 auto;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
 
 .course-guide-route-scroll {
@@ -12,16 +11,34 @@
 
   position: relative;
   width: 100%;
+
+  max-height: 32vh;
+  min-height: 160px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #828585 transparent;
+}
+
+.course-guide-route-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.course-guide-route-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.course-guide-route-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #828585;
 }
 
 .course-guide-route-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  position: relative; /* line의 기준점 */
+  position: relative;
 }
 
-/* 처음 원부터 마지막 원까지, 항목 수와 무관하게 자동으로 이어지는 선 */
 .course-guide-route-line {
   position: absolute;
   left: calc(var(--marker-size) / 2 - 1px);
@@ -32,7 +49,6 @@
   z-index: 0;
 }
 
-/* 장소 한 줄 */
 .course-guide-route-item {
   display: flex;
   align-items: center;
@@ -41,7 +57,7 @@
   min-height: 40px;
   box-sizing: border-box;
   position: relative;
-  width: 100%; /* 추가: 부모(320px) 폭을 명확히 따르도록 */
+  width: 100%;
 }
 
 .course-guide-route-marker-area {
@@ -52,7 +68,6 @@
   flex-shrink: 0;
 }
 
-/* 하늘색 원 */
 .course-guide-route-marker {
   width: var(--marker-size);
   height: var(--marker-size);
@@ -64,7 +79,6 @@
   z-index: 1;
 }
 
-/* 장소 이름 + 주소를 감싸는 텍스트 영역 */
 .course-guide-route-text {
   flex: 1;
   min-width: 0;
@@ -83,7 +97,6 @@
   margin: 2px 0 0;
 }
 
-/* 오른쪽 사진 자리 - 연동 전까지 회색 박스 */
 .course-guide-route-thumb {
   width: 40px;
   height: 40px;

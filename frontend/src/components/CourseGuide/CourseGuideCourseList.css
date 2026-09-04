@@ -2,9 +2,26 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  /* max-height: 520px;
-  overflow-y: auto; */
   box-sizing: border-box;
+
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #828585 transparent;
+}
+
+.course-guide-course-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.course-guide-course-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.course-guide-course-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #828585;
 }
 
 /* 칸 하나를 감싸는 wrapper(li) */
