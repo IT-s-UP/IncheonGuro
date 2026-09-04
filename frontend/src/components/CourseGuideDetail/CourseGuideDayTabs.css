@@ -1,0 +1,55 @@
+.course-guide-detail-page__day-tabs {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 47px;
+  padding: 7px 20px;
+  gap: 7px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--course-light-gray);
+  background: var(--course-background);
+  scrollbar-width: none;
+}
+
+.course-guide-detail-page__day-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.course-guide-detail-page__day-tab,
+.course-guide-detail-page__day-add {
+  height: 30px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+  border: 1px solid var(--course-pale-blue);
+  border-radius: 15px;
+  background: var(--course-background);
+  color: var(--course-gray);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.course-guide-detail-page__day-tab--active {
+  border-color: var(--course-primary);
+  background: var(--course-primary);
+  color: var(--course-background);
+}
+
+.course-guide-detail-page__day-add {
+  border-style: dashed;
+  color: var(--course-primary);
+}
+
+@media (max-width: 350px) {
+  .course-guide-detail-page__day-tabs {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .course-guide-detail-page__day-tab,
+  .course-guide-detail-page__day-add {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}

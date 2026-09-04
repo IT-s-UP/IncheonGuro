@@ -1,8 +1,9 @@
 .course-guide-search-box {
   display: flex;
   align-items: center;
+  justify-content: center; /* 자식 요소(input, icon) 중앙 정렬 */
   gap: 12px;
-  margin: 20px 20px 0;
+  margin: 20px auto 0; /* 좌우 margin을 auto로 변경하여 박스 자체를 중앙 배치 */
 }
 
 .course-guide-search-input {

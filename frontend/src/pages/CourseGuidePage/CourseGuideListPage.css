@@ -1,13 +1,39 @@
-/* 페이지 전체 */
 .course-guide-list-page {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 393px;
+  height: 100vh;
   margin: 0 auto;
   background: #ffffff;
   font-family: 'Pretendard', system-ui, sans-serif;
 }
 
-/* 코스 추천 탭 */
+.course-guide-list-page__top {
+  flex-shrink: 0;
+}
+
+.course-guide-list-page__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #828585 transparent;
+}
+
+.course-guide-list-page__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.course-guide-list-page__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.course-guide-list-page__content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #828585;
+}
+
 .course-name {
   text-align: center;
   font-size: 28px;
@@ -16,7 +42,6 @@
   margin: 32px 16px 16px;
 }
 
-/* 간략 지도 */
 .map-placeholder {
   width: 320px;
   height: 240px;
@@ -28,9 +53,9 @@
   color: #000000;
   font-size: 16px;
   margin: 20px auto 16px;
+  box-sizing: border-box;
 }
 
-/* 새로고침 아이콘 + 텍스트 */
 .recommend-btn-content {
   display: inline-flex;
   align-items: center;
@@ -45,10 +70,8 @@
   display: flex;
   justify-content: center;
   width: 100%;
-
   padding-top: 28px;
   padding-bottom: 32px;
-
   box-sizing: border-box;
 }
 

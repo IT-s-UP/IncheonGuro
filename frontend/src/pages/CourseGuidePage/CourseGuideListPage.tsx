@@ -4,7 +4,6 @@ import { mockRecommendedCourses } from '@/mocks/courseguide';
 import './CourseGuideListPage.css';
 
 import Header from '@/components/Header/Header';
-import BackHeader from '@/components/Header/BackHeader';
 import CourseGuideCourseList from '@/components/CourseGuide/CourseGuideCourseList';
 import Button from '@/components/Button/Button';
 import CourseGuideBackButton from '@/components/CourseGuide/CourseGuideBackButton';
@@ -32,39 +31,45 @@ function CourseGuideListPage() {
 
   return (
     <div className="course-guide-list-page">
-      <Header />
-      <CourseGuideBackButton />
+      {/* 높이가 고정된 상단 영역: 헤더 + 뒤로가기 + 탭 + 검색창 */}
+      <div className="course-guide-list-page__top">
+        <Header />
+        <CourseGuideBackButton />
 
-      {/* 코스 추천 / 코스 목록 탭 버튼 컴포넌트 */}
-      <CourseGuideTab activeTab={activeTab} onChange={setActiveTab} />
+        {/* 코스 추천 / 코스 목록 탭 버튼 컴포넌트 */}
+        <CourseGuideTab activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* 검색창 컴포넌트 */}
-      <CourseGuideSearchBox />
+        {/* 검색창 컴포넌트 */}
+        <CourseGuideSearchBox />
+      </div>
 
-      {/* activeTab이 'recommend'면 추천 코스 화면, 아니면 목록 화면을 보여줌 */}
-      {activeTab === 'recommend' ? (
-        <div className="recommend-view">
-          <h2 className="course-name">{currentCourse.name}</h2>
+      {/* 남는 공간을 전부 차지하고, 내용이 넘치면 이 영역만 스크롤됨 */}
+      <div className="course-guide-list-page__content">
+        {/* activeTab이 'recommend'면 추천 코스 화면, 아니면 목록 화면을 보여줌 */}
+        {activeTab === 'recommend' ? (
+          <div className="recommend-view">
+            <h2 className="course-name">{currentCourse.name}</h2>
 
-          {/* 간략 지도 - 실제 연동 전까진 그냥 회색 박스 */}
-          <div className="map-placeholder">간략 지도</div>
+            {/* 간략 지도 - 실제 연동 전까진 그냥 회색 박스 */}
+            <div className="map-placeholder">간략 지도</div>
 
-          {/* 코스 경로 안내 컴포넌트 - 길어지면 스크롤 추가 */}
-          <CourseGuideRouteList places={currentCourse.places} />
+            {/* 코스 경로 안내 컴포넌트 - 길어지면 스크롤 추가 */}
+            <CourseGuideRouteList places={currentCourse.places} />
 
-          {/* "오늘의 추천 코스 n/전체" 버튼 - 누르면 다음 코스로 새로고침 */}
-          <div className="recommend-button-wrap">
-            <Button size="main" variant="primary" onClick={handleNextRecommend}>
-              <span className="recommend-btn-content">
-                <RotateCw className="refresh-icon" size={16} />
-                오늘의 추천 코스 {recommendIndex + 1}/{totalRecommend}
-              </span>
-            </Button>
+            {/* "오늘의 추천 코스 n/전체" 버튼 - 누르면 다음 코스로 새로고침 */}
+            <div className="recommend-button-wrap">
+              <Button size="main" variant="primary" onClick={handleNextRecommend}>
+                <span className="recommend-btn-content">
+                  <RotateCw className="refresh-icon" size={25} />
+                  오늘의 추천 코스 {recommendIndex + 1}/{totalRecommend}
+                </span>
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <CourseGuideCourseList />
-      )}
+        ) : (
+          <CourseGuideCourseList />
+        )}
+      </div>
     </div>
   );
 }

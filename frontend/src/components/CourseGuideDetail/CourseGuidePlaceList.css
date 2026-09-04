@@ -1,0 +1,214 @@
+.course-guide-detail-page__place-list {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 0 12px;
+  list-style: none;
+}
+
+.course-guide-detail-page__route-group {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  list-style: none;
+}
+
+.course-guide-detail-page__place {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+
+.course-guide-detail-page__timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 34px;
+  min-width: 0;
+}
+
+.course-guide-detail-page__place-marker {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 2px solid var(--course-primary);
+  border-radius: 50%;
+  background: var(--course-pale-blue);
+}
+
+.course-guide-detail-page__timeline-line {
+  width: 2px;
+  min-height: 53px;
+  flex: 1;
+  background: var(--course-light-gray);
+}
+
+.course-guide-detail-page__place-content {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 10px;
+}
+
+.course-guide-detail-page__place-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+}
+
+.course-guide-detail-page__place-info {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.course-guide-detail-page__place-name {
+  display: block;
+  width: 100%;
+  margin-top: 1px;
+  overflow: hidden;
+  color: var(--course-green);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-guide-detail-page__address {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-guide-detail-page__place-input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 30px;
+  margin-top: 2px;
+  padding: 0 8px;
+  border: 1px solid var(--course-primary);
+  border-radius: 4px;
+  outline: none;
+  background: var(--course-background);
+  color: var(--course-green);
+  font-size: 12px;
+}
+
+.course-guide-detail-page__more-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--course-green);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.course-guide-detail-page__more-button:hover,
+.course-guide-detail-page__more-button[aria-expanded='true'] {
+  background: var(--course-primary-light);
+}
+
+.course-guide-detail-page__place-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 8px;
+  gap: 5px;
+}
+
+.course-guide-detail-page__place-actions button {
+  min-width: 39px;
+  height: 25px;
+  padding: 0 7px;
+  border: 1px solid var(--course-pale-blue);
+  border-radius: 5px;
+  background: var(--course-background);
+  color: var(--course-dark);
+  font-size: 10px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.course-guide-detail-page__place-actions button:hover:not(:disabled) {
+  background: var(--course-primary-light);
+}
+
+.course-guide-detail-page__place-actions button:disabled {
+  color: var(--course-light-gray);
+  cursor: default;
+  opacity: 0.65;
+}
+
+.course-guide-detail-page__place-actions .course-guide-detail-page__delete {
+  border-color: var(--course-peach);
+  color: var(--course-red);
+}
+
+.course-guide-detail-page__transport-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  width: 100%;
+  min-height: 55px;
+  gap: 8px;
+}
+
+.course-guide-detail-page__transport-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 34px;
+}
+
+.course-guide-detail-page__transport-timeline::before,
+.course-guide-detail-page__transport-timeline::after {
+  width: 2px;
+  flex: 1;
+  background: var(--course-light-gray);
+  content: '';
+}
+
+.course-guide-detail-page__transport-marker {
+  position: absolute;
+  top: calc(50% + 10px);
+  left: 12px;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--course-light-gray);
+  transform: translateY(-50%);
+}
+
+.course-guide-detail-page__transport-info {
+  position: absolute;
+  top: calc(50% + 10px);
+  right: 0;
+  left: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding-bottom: 0;
+  color: var(--course-green);
+  transform: translateY(-50%);
+}
