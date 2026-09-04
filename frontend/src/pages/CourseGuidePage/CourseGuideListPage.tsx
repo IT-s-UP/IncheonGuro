@@ -4,7 +4,6 @@ import { mockRecommendedCourses } from '@/mocks/courseguide';
 import './CourseGuideListPage.css';
 
 import Header from '@/components/Header/Header';
-import BackHeader from '@/components/Header/BackHeader';
 import CourseGuideCourseList from '@/components/CourseGuide/CourseGuideCourseList';
 import Button from '@/components/Button/Button';
 import CourseGuideBackButton from '@/components/CourseGuide/CourseGuideBackButton';
@@ -56,7 +55,7 @@ function CourseGuideListPage() {
           <div className="recommend-button-wrap">
             <Button size="main" variant="primary" onClick={handleNextRecommend}>
               <span className="recommend-btn-content">
-                <RotateCw className="refresh-icon" size={16} />
+                <RotateCw className="refresh-icon" size={25} />
                 오늘의 추천 코스 {recommendIndex + 1}/{totalRecommend}
               </span>
             </Button>
