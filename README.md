@@ -92,6 +92,39 @@ http://localhost:5173/api/health
 | `./gradlew build`   | 빌드 + 테스트 |
 | `./gradlew test`    | 테스트        |
 
+## 인프라
+
+### 배포 환경
+
+| 구성    | 스펙                                                     |
+| ------- | -------------------------------------------------------- |
+| 백엔드  | AWS EC2 (Amazon Linux 2023, 프리티어, ap-northeast-2)     |
+| DB      | AWS RDS PostgreSQL (프리티어, Single-AZ, ap-northeast-2)  |
+
+### RDS 접속 정보
+
+- Endpoint: `incheonguro-db.c7gui428mivt.ap-northeast-2.rds.amazonaws.com`
+- Port: `5432`
+- 접속 계정/비밀번호는 레포에 커밋하지 않고 팀 채널에서 별도 공유합니다.
+
+### 백엔드 DB 연결 (로컬 개발)
+
+`backend`는 아래 환경변수가 있어야 DB에 연결됩니다. `.env` 커밋 금지 규칙과 동일하게, 값은
+직접 실행 환경에 설정합니다.
+
+| 환경변수                    | 설명                                        |
+| ---------------------------- | ------------------------------------------- |
+| `SPRING_DATASOURCE_URL`      | `jdbc:postgresql://<endpoint>:5432/incheonguro` |
+| `SPRING_DATASOURCE_USERNAME` | RDS master username                         |
+| `SPRING_DATASOURCE_PASSWORD` | RDS master password                         |
+
+값은 팀 채널에서 공유받아서 로컬 환경변수 또는 IDE 실행 설정에 넣어주세요.
+
+### 참고
+
+- 인프라 구성 이슈: #51
+- 현재 보안그룹은 초기 세팅 단계라 넓게 열려 있습니다. 배포 전 팀원 IP 기준으로 좁히는 작업이 필요합니다.
+
 ## 협업 규약
 
 1. 저장 시 자동 포맷이 적용됩니다. 설정을 끄지 않습니다.
