@@ -36,7 +36,7 @@ public class CourseGuideService {
   public List<CourseSummaryResponse> getCourses(String keyword, Long userId) {
     // 1) userId가 북마크한 Bookmark들을 가져와서, 그 안의 Course만 뽑아냄
     List<Course> bookmarkedCourses = bookmarkRepository.findByUserId(userId).stream()
-        .map(Bookmark::getCourse)
+        .map(bookmark -> bookmark.getCourse())
         .collect(Collectors.toList());
 
     // 2) keyword가 있으면, 북마크한 코스들 중에서 이름 또는 설명에 keyword가 포함된 것만 남김
