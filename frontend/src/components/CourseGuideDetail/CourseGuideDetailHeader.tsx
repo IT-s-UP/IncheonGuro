@@ -1,4 +1,5 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { Bookmark } from 'lucide-react';
 import BackHeader from '@/components/Header/BackHeader';
 
 import './CourseGuideDetailHeader.css';
@@ -12,6 +13,8 @@ interface CourseGuideDetailHeaderProps {
   onChangeCourseName: (value: string) => void;
   onFinishEditingCourseName: () => void;
   onCancelEditingCourseName: () => void;
+  isBookmarked: boolean;
+  onToggleBookmark: () => void;
 }
 
 function CourseGuideDetailHeader({
@@ -23,11 +26,23 @@ function CourseGuideDetailHeader({
   onChangeCourseName,
   onFinishEditingCourseName,
   onCancelEditingCourseName,
+  isBookmarked,
+  onToggleBookmark,
 }: CourseGuideDetailHeaderProps) {
   return (
     <>
       <div className="course-guide-detail-page__title-bar" onPointerUp={onTitleBarPointerUp}>
         <BackHeader title={displayedCourseName} onBack={onBack} />
+
+        <button
+          className="course-guide-detail-page__bookmark-button"
+          type="button"
+          aria-pressed={isBookmarked}
+          aria-label={isBookmarked ? '북마크 해제' : '코스 북마크'}
+          onClick={onToggleBookmark}
+        >
+          <Bookmark size={20} fill={isBookmarked ? 'currentColor' : 'none'} />
+        </button>
       </div>
 
       {isEditingCourseName && (
