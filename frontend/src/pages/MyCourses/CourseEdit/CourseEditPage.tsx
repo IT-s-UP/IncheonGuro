@@ -12,8 +12,11 @@ import Header from '@/components/Header/Header';
 import LineTab from '@/components/Tab/LineTab';
 import Typography from '@/components/Typography/Typography';
 
-import type { Course, CourseCost, CourseDay, CoursePlace, Transport } from '../types';
+import type { Course, CourseCost, CourseDay, Transport } from '../types';
 
+import MyCourseMap from './MyCourseMap';
+import PlaceSearch from './PlaceSearch';
+import RouteDuration from './RouteDuration';
 import './CourseEditPage.css';
 
 interface CourseEditPageProps {
@@ -290,13 +293,6 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
     }));
   };
 
-  const changePlaceName = (placeId: number, name: string) => {
-    updateSelectedDay((currentDay) => ({
-      ...currentDay,
-      places: currentDay.places.map((place) => (place.id === placeId ? { ...place, name } : place)),
-    }));
-  };
-
   const addPlace = () => {
     const newPlaceId = Date.now();
 
@@ -464,32 +460,12 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
         />
       </div>
 
-      <section className="course-edit-page__map" aria-label={`DAY ${selectedDay.day} 코스 지도`}>
-        {selectedDay.places.length === 0 && (
-          <div className="course-edit-page__map-placeholder">
-            <Typography variant="subtitle3">DAY {selectedDay.day} 지도</Typography>
-
-            <Typography variant="caption2" color="#828585">
-              장소를 추가해주세요.
-            </Typography>
-          </div>
-        )}
-
-        <div className="course-edit-page__map-route">
-          {selectedDay.places.slice(0, 4).map((place, index) => (
-            <span
-              className="course-edit-page__map-pin"
-              key={place.id}
-              style={{
-                top: `${28 + index * 52}px`,
-                left: `${145 + index * 25}px`,
-              }}
-              aria-hidden="true"
-            >
-              {index + 1}
-            </span>
-          ))}
-        </div>
+      <section
+        className="course-edit-page__map"
+        aria-label={`DAY ${selectedDay.day} 코스 지도`}
+        style={{ height: `max(120px, calc(100svh - 220px - ${sheetHeight}px))`, minHeight: 120 }}
+      >
+        <MyCourseMap places={selectedDay.places} day={selectedDay.day} />
       </section>
 
       <section
@@ -565,18 +541,18 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
                             </Typography>
 
                             {editingPlaceId === place.id ? (
-                              <input
-                                className="course-edit-page__place-input"
-                                value={place.name}
-                                maxLength={30}
-                                onChange={(event) => changePlaceName(place.id, event.target.value)}
-                                onBlur={() => setEditingPlaceId(null)}
-                                onKeyDown={(event) => {
-                                  if (event.key === 'Enter') {
-                                    setEditingPlaceId(null);
-                                  }
+                              <PlaceSearch
+                                key={place.id}
+                                place={place}
+                                onSelect={(selected) => {
+                                  updateSelectedDay((currentDay) => ({
+                                    ...currentDay,
+                                    places: currentDay.places.map((current) =>
+                                      current.id === place.id ? selected : current,
+                                    ),
+                                  }));
+                                  setEditingPlaceId(null);
                                 }}
-                                autoFocus
                               />
                             ) : (
                               <Typography
@@ -587,7 +563,6 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
                                 {place.name}
                               </Typography>
                             )}
-
                             <Typography
                               as="p"
                               variant="caption2"
@@ -661,7 +636,11 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
                           </Typography>
 
                           <Typography as="p" variant="caption2" color="#828585">
-                            약 10분 · 예상 이동 시간
+                            <RouteDuration
+                              from={place}
+                              to={selectedDay.places[index + 1]}
+                              transport={selectedDay.transport}
+                            />
                           </Typography>
                         </div>
                       </div>
