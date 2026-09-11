@@ -24,7 +24,6 @@
   background: #828585;
 }
 
-/* 칸 하나를 감싸는 wrapper(li) */
 .course-guide-course-item-wrap {
   padding: 0 20px 20px;
   box-sizing: border-box;
@@ -39,6 +38,7 @@
 }
 
 .course-guide-course-item {
+  position: relative;
   width: 100%;
   height: 100px;
   padding: 20px;
@@ -51,7 +51,6 @@
   color: inherit;
 }
 
-/* 코스 이름 텍스트 */
 .course-guide-course-name {
   font-size: 20px;
   font-weight: 700;
@@ -62,7 +61,6 @@
   text-overflow: ellipsis;
 }
 
-/* 코스 설명 텍스트 */
 .course-guide-course-desc {
   font-size: 12px;
   font-weight: 400;
@@ -74,4 +72,14 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 카드 우측 상단 북마크 배지 */
+.course-guide-course-bookmark-badge {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  color: #78aac3;
 }
