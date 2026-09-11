@@ -75,7 +75,11 @@ function PlaceGuideDetailPage() {
 
       <p className="place-guide-detail-page__description">{place.description}</p>
 
-      <button type="button" className="place-guide-detail-page__add-course-btn">
+      <button
+        type="button"
+        className="place-guide-detail-page__add-course-btn"
+        onClick={() => navigate(`/place-guide/${placeId}/add-to-course`)}
+      >
         + 내 코스에 추가하기
       </button>
 
