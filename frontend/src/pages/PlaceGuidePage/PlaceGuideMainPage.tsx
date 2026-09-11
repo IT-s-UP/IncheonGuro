@@ -198,7 +198,7 @@ function PlaceGuideMainPage() {
 
           <h3 className="place-guide-filter-title">장소 필터</h3>
 
-          <div className="place-guide-filter-list">
+          <div className="place-guide-filter-row">
             {PLACE_FILTERS.map((filter, index) => (
               <OptionTab
                 key={filter}

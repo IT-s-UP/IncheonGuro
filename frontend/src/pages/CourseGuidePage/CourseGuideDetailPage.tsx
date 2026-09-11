@@ -26,6 +26,9 @@ import './CourseGuideDetailPage.css';
 
 const MY_COURSES_STORAGE_KEY = 'incheonguro-my-courses';
 
+// 북마크된 courseId 목록을 저장하는 localStorage 키
+const BOOKMARKED_COURSE_IDS_KEY = 'incheonguro-bookmarked-course-ids';
+
 interface DragInformation {
   startY: number;
   startHeight: number;
@@ -58,6 +61,27 @@ function loadMyCourses(): Course[] {
   } catch {
     return [];
   }
+}
+
+// 북마크된 courseId 목록을 읽어옴
+function loadBookmarkedCourseIds(): number[] {
+  const raw = localStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as number[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+// 북마크된 courseId 목록을 저장
+function saveBookmarkedCourseIds(courseIds: number[]) {
+  localStorage.setItem(BOOKMARKED_COURSE_IDS_KEY, JSON.stringify(courseIds));
 }
 
 function CourseGuideDetailPage() {
@@ -105,6 +129,11 @@ function CourseGuideDetailPage() {
   const [sheetHeight, setSheetHeight] = useState(DEFAULT_SHEET_HEIGHT);
 
   const [isDragging, setIsDragging] = useState(false);
+
+  // 이 코스가 현재 북마크되어 있는지? 페이지 진입 시 localStorage에서 바로 읽어옴
+  const [isBookmarked, setIsBookmarked] = useState(() =>
+    loadBookmarkedCourseIds().includes(numericCourseId),
+  );
 
   const dragInformation = useRef<DragInformation | null>(null);
 
@@ -163,6 +192,19 @@ function CourseGuideDetailPage() {
     if (target.closest('.back-header__title')) {
       startEditingCourseName();
     }
+  };
+
+  // 북마크 버튼 클릭 - 켜져 있으면 끄고, 꺼져 있으면 켠 뒤 localStorage에 courseId를 저장/삭제
+  const toggleBookmark = () => {
+    const currentIds = loadBookmarkedCourseIds();
+    const alreadyBookmarked = currentIds.includes(numericCourseId);
+
+    const nextIds = alreadyBookmarked
+      ? currentIds.filter((id) => id !== numericCourseId)
+      : [...currentIds, numericCourseId];
+
+    saveBookmarkedCourseIds(nextIds);
+    setIsBookmarked(!alreadyBookmarked);
   };
 
   const handleSheetPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -349,6 +391,8 @@ function CourseGuideDetailPage() {
         onChangeCourseName={setCourseName}
         onFinishEditingCourseName={finishEditingCourseName}
         onCancelEditingCourseName={cancelEditingCourseName}
+        isBookmarked={isBookmarked}
+        onToggleBookmark={toggleBookmark}
       />
 
       <CourseGuideDayTabs
