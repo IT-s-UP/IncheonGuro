@@ -1,0 +1,44 @@
+.my-course-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #eef3f3;
+}
+.my-course-map__canvas {
+  width: 100%;
+  height: 100%;
+}
+.my-course-map__status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #fffffff0;
+  color: #56504b;
+  font-size: 12px;
+  text-align: center;
+}
+.my-course-map__status button {
+  margin-left: 8px;
+  border: 0;
+  background: transparent;
+  color: #286780;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.my-course-map__marker {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #286780;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 5px #0003;
+}

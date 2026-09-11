@@ -4,6 +4,8 @@ export interface CoursePlace {
   id: number;
   name: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CourseCost {
