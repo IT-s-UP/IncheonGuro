@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ActiveProfiles("local")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"kto.service-key=test-key", "kakao.rest-api-key=test-key",
     "spring.datasource.url=jdbc:h2:mem:auth-flow;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
     "spring.sql.init.mode=always",
     "spring.sql.init.schema-locations=classpath:legacy-member.sql,file:database/social-member-nullable.sql",
@@ -35,6 +35,7 @@ class AuthFlowIntegrationTest {
     @Autowired javax.crypto.SecretKey localKey;
     @MockitoBean GoogleClient google;
     @MockitoBean KakaoClient kakao;
+    @MockitoBean com.itsup.incheonguro.Festival.service.FestivalService festivals;
     private HttpClient browser() { return HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build(); }
     private HttpRequest.Builder request(String path) { return HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)); }
     private HttpResponse<String> send(HttpClient client, HttpRequest.Builder request) throws Exception {
@@ -69,6 +70,8 @@ class AuthFlowIntegrationTest {
             assertEquals(401, send(browser(), request("/api/test-account")).statusCode());
             var account = send(client, request("/api/test-account").header("Authorization", "Bearer " + token));
             assertEquals(200, account.statusCode());
+            assertEquals(401, send(browser(), request("/stamp/my")).statusCode());
+            assertEquals(200, send(browser(), request("/stamp/my").header("Authorization", "Bearer " + token)).statusCode());
             assertTrue(object(account.body()).get("loginId").toString().startsWith("oauth:" + provider + ":"));
             assertTrue(send(client, request(callback)).headers().firstValue("location").orElseThrow().endsWith(provider + "_state"));
             assertEquals(403, send(client, request("/api/auth/logout").POST(HttpRequest.BodyPublishers.noBody())).statusCode());
@@ -76,6 +79,13 @@ class AuthFlowIntegrationTest {
             assertEquals(401, send(client, request("/api/auth/me")).statusCode());
         }
     }
+    @Test void festivalReadRemainsPublic() throws Exception {
+        when(festivals.getPopularFestivals()).thenReturn(java.util.List.of());
+        var response = send(browser(), request("/festivals/popular"));
+        assertEquals(200, response.statusCode());
+        assertEquals("[]", response.body());
+    }
+
     @Test void legacyMemberSurvivesSchemaMigration() {
         var legacy = members.findByLoginId("legacy-member").orElseThrow();
         assertEquals("01011112222", legacy.getPhoneNumber());
