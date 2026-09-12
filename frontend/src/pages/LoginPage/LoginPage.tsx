@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import Header from '@/components/Header/Header';
 import Button from '@/components/Button/Button';
@@ -12,6 +12,14 @@ import './LoginPage.css';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const error = params.get('error');
+  const provider = error?.startsWith('google_') ? '구글' : '카카오';
+  const loginError = !error ? '' : error.endsWith('_cancelled')
+    ? provider + ' 로그인이 취소되었어요.'
+    : error.endsWith('_state')
+      ? '로그인 요청이 만료되었어요. 다시 시도해 주세요.'
+      : provider + ' 로그인에 실패했어요. 다시 시도해 주세요.';
 
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
@@ -48,13 +56,11 @@ function LoginPage() {
   ========================= */
 
   const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 API
-    console.log('카카오 로그인');
+    window.location.assign('/api/auth/kakao');
   };
 
   const handleGoogleLogin = () => {
-    // TODO: 구글 로그인 API
-    console.log('구글 로그인');
+    window.location.assign('/api/auth/google');
   };
 
   return (
@@ -72,6 +78,7 @@ function LoginPage() {
             로그인 FORM
         ========================= */}
 
+        {loginError && <p role="alert">{loginError}</p>}
         <form className="login-form" onSubmit={handleLogin}>
           {/* ID */}
           <div className="login-field">

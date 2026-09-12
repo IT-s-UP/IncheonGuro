@@ -15,14 +15,23 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 @Configuration
 public class JwtConfig {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:}")
     private String secret;
 
     @Bean
-    public SecretKey jwtSecretKey() {
+    public SecretKey jwtSecretKey(org.springframework.core.env.Environment environment) {
+        if (environment.matchesProfiles("local")) {
+            // Never sign local H2 member IDs with the shared server key.
+            byte[] localKey = new byte[32];
+            new java.security.SecureRandom().nextBytes(localKey);
+            return new SecretKeySpec(localKey, "HmacSHA256");
+        }
+        if (secret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 UTF-8 bytes");
+        }
 
         return new SecretKeySpec(
-                secret.getBytes(),
+                secret.getBytes(java.nio.charset.StandardCharsets.UTF_8),
                 "HmacSHA256");
     }
 

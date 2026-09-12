@@ -1,0 +1,43 @@
+.place-search {
+  min-width: 0;
+  width: 100%;
+}
+.place-search__message {
+  margin: 6px 0;
+  color: #666;
+  font-size: 11px;
+}
+.place-search__results {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #c4deee;
+  border-radius: 6px;
+}
+.place-search__results button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-bottom: 1px solid #eee;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  color: #1b3327;
+}
+.place-search__results button:hover,
+.place-search__results button:focus-visible {
+  background: #edf5fa;
+}
+.place-search__results strong {
+  font-size: 12px;
+}
+.place-search__results span {
+  font-size: 11px;
+  color: #666;
+  overflow-wrap: anywhere;
+}

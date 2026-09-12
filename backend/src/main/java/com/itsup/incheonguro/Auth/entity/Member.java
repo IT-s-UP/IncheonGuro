@@ -27,25 +27,25 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    @Column
     private String phoneNumber;
 
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column
     private LocalDate birth;
 
-    @Column(nullable = false)
+    @Column
     private String gender;
 
-    @Column(nullable = false)
+    @Column
     private String email;
 
     @Column(nullable = false)
     private String nickname;
 
-    @Column(nullable = false)
+    @Column
     private Long interestedRegion;
 
     public Member(
