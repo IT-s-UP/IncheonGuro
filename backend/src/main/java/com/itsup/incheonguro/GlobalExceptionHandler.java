@@ -36,11 +36,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleSignupFailedException(
             SignupFailedException e) {
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of(
-                        "data", (Object) null,
-                        "code", "C-003",
-                        "message", e.getMessage()));
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("data", null);
+        body.put("code", "C-003");
+        body.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 }

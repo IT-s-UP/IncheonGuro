@@ -2,12 +2,9 @@ package com.itsup.incheonguro.Auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -20,11 +17,31 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .sessionManagement(session -> session.sessionCreationPolicy(
                         SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
+
+                        .requestMatchers(
+                                "/auth/signup",
+                                "/auth/login",
+                                "/api/health",
+                                "/api/auth/kakao", "/api/auth/kakao/callback",
+                                "/api/auth/google", "/api/auth/google/callback",
+                                "/api/auth/me", "/api/auth/logout")
+                        .permitAll()
+
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/festivals", "/festivals/**").permitAll()
+
+                        .requestMatchers("/api/**", "/stamp/**")
+                        .authenticated()
+
                         .anyRequest()
-                        .permitAll());
+                        .authenticated())
+
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));
 
         return http.build();
     }

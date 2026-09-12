@@ -34,7 +34,8 @@ public class AuthService {
     public SignupResponse signup(SignupRequest request) {
 
         // 아이디 중복 확인
-        if (memberRepository.existsByLoginId(request.getLoginId())) {
+        if (request.getLoginId().startsWith("oauth:")
+                || memberRepository.existsByLoginId(request.getLoginId())) {
             throw new SignupFailedException();
         }
 
