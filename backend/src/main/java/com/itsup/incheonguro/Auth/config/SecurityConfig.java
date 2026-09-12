@@ -28,6 +28,9 @@ public class SecurityConfig {
                                 "/auth/login")
                         .permitAll()
 
+                        .requestMatchers("/uploads/**")
+                        .permitAll()
+
                         .requestMatchers("/api/**")
                         .authenticated()
 
