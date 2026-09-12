@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.itsup.incheonguro.Auth.entity.Member;
+import com.itsup.incheonguro.Auth.repository.MemberRepository;
 import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
 import com.itsup.incheonguro.mypage.dto.EmailChangeRequest;
 import com.itsup.incheonguro.mypage.dto.MyPageResponse;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class MyPageService {
 
+    private final MemberRepository memberRepository;
     private final RegionRepository regionRepository;
     private final PasswordEncoder passwordEncoder;
     private final ProfileImageStorageService profileImageStorageService;
@@ -62,6 +64,8 @@ public class MyPageService {
                 request.getPhoneNumber(),
                 request.getInterestedRegion());
 
+        memberRepository.save(member);
+
         return MyPageResponse.of(member, regionNameOf(member.getInterestedRegion()));
     }
 
@@ -77,6 +81,7 @@ public class MyPageService {
         }
 
         member.changeEmail(request.getEmail());
+        memberRepository.save(member);
 
         return MyPageResponse.of(member, regionNameOf(member.getInterestedRegion()));
     }
@@ -93,6 +98,7 @@ public class MyPageService {
         }
 
         member.changePassword(passwordEncoder.encode(request.getNewPassword()));
+        memberRepository.save(member);
     }
 
     // ==========================================
@@ -106,6 +112,7 @@ public class MyPageService {
         String savedUrl = profileImageStorageService.save(member.getId(), file);
 
         member.changeProfileImage(savedUrl);
+        memberRepository.save(member);
         profileImageStorageService.delete(previousImageUrl);
 
         return new ProfileImageResponse(new ProfileImageResponse.Data(savedUrl), 200, "OK");
@@ -115,6 +122,7 @@ public class MyPageService {
     public void deleteProfileImage(Member member) {
         profileImageStorageService.delete(member.getProfileImageUrl());
         member.changeProfileImage(null);
+        memberRepository.save(member);
     }
 
     private String regionNameOf(Long regionId) {
