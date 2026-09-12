@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { AuthProvider } from '@/auth/AuthContext';
 import ScrollToTop from '@/components/ScrollToTop';
 
 import MainPage from '@/pages/MainPage/MainPage';
@@ -23,7 +24,7 @@ import MyPage from '@/pages/MyPage/MyPage';
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<MainPage />} />
@@ -44,7 +45,7 @@ function App() {
 
         <Route path="/my-page" element={<MyPage />} />
       </Routes>
-    </>
+    </AuthProvider>
   );
 }
 

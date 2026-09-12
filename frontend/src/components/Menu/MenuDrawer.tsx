@@ -1,3 +1,4 @@
+import { useAuth } from '@/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -15,7 +16,6 @@ import './MenuDrawer.css';
 interface MenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  isLoggedIn?: boolean;
 }
 
 interface MenuRowItem {
@@ -54,7 +54,9 @@ const STAMP_TOTAL = 9;
 const STAMP_OWNED = 3;
 const STAMP_PLACES = ['야생화단지', '개항로', '차이나타운'];
 
-function MenuDrawer({ isOpen, onClose, isLoggedIn = true }: MenuDrawerProps) {
+function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
+  const { user, logout } = useAuth();
+  const isLoggedIn = user !== null;
   const navigate = useNavigate();
 
   const handleNavigate = (to?: string) => {
@@ -103,7 +105,7 @@ function MenuDrawer({ isOpen, onClose, isLoggedIn = true }: MenuDrawerProps) {
           <span className="menu-drawer__avatar" aria-hidden="true" />
           {isLoggedIn ? (
             <span className="menu-drawer__profile-text">
-              <Typography variant="subtitle2">탐험가 님</Typography>
+              <Typography variant="subtitle2">{user?.nickname} 님</Typography>
               <Typography variant="subtitle3" color="#666666">
                 동인천구 · 서해구
               </Typography>
@@ -232,6 +234,9 @@ function MenuDrawer({ isOpen, onClose, isLoggedIn = true }: MenuDrawerProps) {
             );
           })}
         </nav>
+        {isLoggedIn && <button type="button" onClick={() => {
+          void logout().then(() => handleNavigate('/login')).catch(() => alert('로그아웃에 실패했어요. 다시 시도해 주세요.'));
+        }}>로그아웃</button>}
       </aside>
     </div>
   );

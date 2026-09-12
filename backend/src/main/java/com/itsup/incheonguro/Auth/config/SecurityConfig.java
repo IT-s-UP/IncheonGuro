@@ -22,10 +22,15 @@ public class SecurityConfig {
                         SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
 
                         .requestMatchers(
                                 "/auth/signup",
-                                "/auth/login")
+                                "/auth/login",
+                                "/api/health",
+                                "/api/auth/kakao", "/api/auth/kakao/callback",
+                                "/api/auth/google", "/api/auth/google/callback",
+                                "/api/auth/me", "/api/auth/logout")
                         .permitAll()
 
                         .requestMatchers("/api/**")
