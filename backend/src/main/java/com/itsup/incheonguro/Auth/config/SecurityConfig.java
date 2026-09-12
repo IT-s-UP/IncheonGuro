@@ -28,7 +28,7 @@ public class SecurityConfig {
                                 "/auth/login")
                         .permitAll()
 
-                        .requestMatchers("/uploads/**")
+                        .requestMatchers("/uploads/**", "/error")
                         .permitAll()
 
                         .requestMatchers("/api/**")
