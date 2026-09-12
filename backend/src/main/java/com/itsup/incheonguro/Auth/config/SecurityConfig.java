@@ -38,6 +38,8 @@ public class SecurityConfig {
 
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/festivals", "/festivals/**").permitAll()
 
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/region").permitAll()
+
                         .requestMatchers("/api/**", "/stamp/**")
                         .authenticated()
 
