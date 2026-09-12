@@ -51,7 +51,6 @@ function EmailSheet({ value, onSave }: EmailSheetProps) {
   const resolvedDomain = domain === '직접입력' ? customDomain : domain;
   const isEmailValid = id.trim().length > 0 && resolvedDomain.trim().length > 0;
   const isCodeSent = sentAt !== null;
-  const isCodeValid = code.trim().length === 6;
 
   const handleSend = () => {
     setSentAt(Date.now());
@@ -145,7 +144,7 @@ function EmailSheet({ value, onSave }: EmailSheetProps) {
         size="middle"
         className="profile-sheet__confirm-btn"
         onClick={handleSave}
-        disabled={!isCodeValid}
+        disabled={!isEmailValid}
       >
         확인
       </Button>

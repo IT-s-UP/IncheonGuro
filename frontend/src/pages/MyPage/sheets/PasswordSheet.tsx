@@ -7,7 +7,7 @@ import Button from '@/components/Button/Button';
 import './ProfileSheets.css';
 
 interface PasswordSheetProps {
-  onSave: (password: string) => void;
+  onSave: (currentPassword: string, newPassword: string) => void;
 }
 
 const CHECKS: { key: string; label: string; test: (value: string) => boolean }[] = [
@@ -18,6 +18,8 @@ const CHECKS: { key: string; label: string; test: (value: string) => boolean }[]
 ];
 
 function PasswordSheet({ onSave }: PasswordSheetProps) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +34,24 @@ function PasswordSheet({ onSave }: PasswordSheetProps) {
       <Typography as="p" variant="p1" className="profile-sheet__title">
         비밀번호
       </Typography>
+
+      <div className="profile-sheet__password-field">
+        <Input
+          className="profile-sheet__input"
+          type={showCurrentPassword ? 'text' : 'password'}
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          placeholder="현재 비밀번호"
+        />
+        <button
+          type="button"
+          className="profile-sheet__password-eye"
+          onClick={() => setShowCurrentPassword((prev) => !prev)}
+          aria-label={showCurrentPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+        >
+          {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
 
       <div className="profile-sheet__password-field">
         <Input
@@ -104,8 +124,8 @@ function PasswordSheet({ onSave }: PasswordSheetProps) {
       <Button
         size="middle"
         className="profile-sheet__confirm-btn"
-        onClick={() => onSave(password)}
-        disabled={!isStrong || !isMatch}
+        onClick={() => onSave(currentPassword, password)}
+        disabled={currentPassword.length === 0 || !isStrong || !isMatch}
       >
         확인
       </Button>
