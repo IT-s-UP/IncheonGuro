@@ -53,7 +53,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/festivals/**")
                         .permitAll()
-
+                                    
+                        // 지역 추천 조회 API
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/region")
+                        .permitAll()               
+                                       
                         // CORS preflight 요청
                         .requestMatchers(
                                 HttpMethod.OPTIONS,
