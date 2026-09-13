@@ -27,6 +27,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/signup",
                                 "/auth/login",
+                                "/auth/email/verification-code",
+                                "/auth/email/verification-code/confirm",
                                 "/api/health",
                                 "/api/auth/kakao", "/api/auth/kakao/callback",
                                 "/api/auth/google", "/api/auth/google/callback",

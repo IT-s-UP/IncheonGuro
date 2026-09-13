@@ -33,3 +33,29 @@ export async function loginWithPassword(loginId: string, password: string) {
 
   return body.data as LoginMember & { accessToken: string };
 }
+
+export async function sendEmailVerificationCode(email: string) {
+  const response = await fetch('/auth/email/verification-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.message ?? '인증번호 발송에 실패했습니다.');
+  }
+}
+
+export async function confirmEmailVerificationCode(email: string, code: string) {
+  const response = await fetch('/auth/email/verification-code/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.message ?? '인증번호가 일치하지 않습니다.');
+  }
+}

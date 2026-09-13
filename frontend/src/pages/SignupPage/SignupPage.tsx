@@ -10,6 +10,7 @@ import Typography from '@/components/Typography/Typography';
 
 import signup1 from '@/assets/signup1.png';
 import signup2 from '@/assets/signup2.png';
+import { confirmEmailVerificationCode, sendEmailVerificationCode } from '@/auth/api';
 
 import './SignupPage.css';
 
@@ -31,9 +32,6 @@ const REGION_OPTIONS = [
   '옹진군',
   '없음',
 ];
-
-/* 프론트 테스트용 이메일 인증번호 */
-const MOCK_VERIFICATION_CODE = '123456';
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -179,7 +177,7 @@ function SignupPage() {
      이메일 인증
   ========================= */
 
-  const handleEmailVerification = () => {
+  const handleEmailVerification = async () => {
     /*
      * 인증번호 최초 전송
      */
@@ -189,7 +187,12 @@ function SignupPage() {
         return;
       }
 
-      // TODO: 인증번호 전송 API 연결
+      try {
+        await sendEmailVerificationCode(`${emailId}@${emailDomain}`);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+        return;
+      }
 
       setIsEmailCodeSent(true);
       setIsEmailVerified(false);
@@ -221,8 +224,10 @@ function SignupPage() {
       return;
     }
 
-    if (verificationCode !== MOCK_VERIFICATION_CODE) {
-      alert('인증번호가 일치하지 않습니다.');
+    try {
+      await confirmEmailVerificationCode(`${emailId}@${emailDomain}`, verificationCode);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '인증번호가 일치하지 않습니다.');
       return;
     }
 
@@ -234,12 +239,17 @@ function SignupPage() {
      이메일 인증 재전송
   ========================= */
 
-  const handleEmailResend = () => {
+  const handleEmailResend = async () => {
     if (!emailId || !emailDomain) {
       return;
     }
 
-    // TODO: 인증번호 재전송 API 연결
+    try {
+      await sendEmailVerificationCode(`${emailId}@${emailDomain}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '인증번호 재전송에 실패했습니다.');
+      return;
+    }
 
     setVerificationCode('');
     setIsEmailVerified(false);

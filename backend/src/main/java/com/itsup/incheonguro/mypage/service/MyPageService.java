@@ -17,6 +17,7 @@ import com.itsup.incheonguro.mypage.dto.MyPageResponse;
 import com.itsup.incheonguro.mypage.dto.MyPageUpdateRequest;
 import com.itsup.incheonguro.mypage.dto.PasswordChangeRequest;
 import com.itsup.incheonguro.mypage.dto.ProfileImageResponse;
+import com.itsup.incheonguro.emailverification.service.EmailVerificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +30,7 @@ public class MyPageService {
     private final RegionRepository regionRepository;
     private final PasswordEncoder passwordEncoder;
     private final ProfileImageStorageService profileImageStorageService;
+    private final EmailVerificationService emailVerificationService;
 
     // ==========================================
     // 내 정보 조회
@@ -78,6 +80,10 @@ public class MyPageService {
 
         if (member.isSocialAccount()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "소셜 로그인 계정은 이메일을 변경할 수 없습니다.");
+        }
+
+        if (!emailVerificationService.isVerified(request.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일 인증을 먼저 완료해주세요.");
         }
 
         member.changeEmail(request.getEmail());
