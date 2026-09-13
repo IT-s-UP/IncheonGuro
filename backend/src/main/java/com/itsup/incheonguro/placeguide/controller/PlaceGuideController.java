@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 // 장소 안내(검색/필터/상세/북마크) API의 URL을 정의하는 컨트롤러
+// 장소 데이터는 한국관광공사 API에서 실시간으로 조회하며, 북마크만 우리 DB에 저장함
 @RestController
 @RequestMapping("/api/placeguide")
 @RequiredArgsConstructor
@@ -23,21 +24,18 @@ public class PlaceGuideController {
   private final PlaceGuideService placeGuideService;
 
   // GET /api/placeguide/autocomplete?keyword=검색어
-  // 키워드 자동완성 (장소 이름 + 코스 이름)
   @GetMapping("/autocomplete")
   public List<String> getAutocomplete(@RequestParam String keyword) {
     return placeGuideService.getAutocomplete(keyword);
   }
 
   // GET /api/placeguide/search?keyword=검색어
-  // 검색 결과 페이지 조회 (장소 + 코스)
   @GetMapping("/search")
   public PlaceSearchResultResponse getSearchResult(@RequestParam String keyword) {
     return placeGuideService.getSearchResult(keyword);
   }
 
   // GET /api/placeguide?districts=SEO,JUNG&categories=CAFE
-  // 주요 장소 안내 - 구/카테고리 필터 조회 (파라미터 없으면 전체 조회)
   @GetMapping
   public List<PlaceSummaryResponse> getPlaces(
       @RequestParam(required = false) List<District> districts,
@@ -45,69 +43,58 @@ public class PlaceGuideController {
     return placeGuideService.getPlaces(districts, categories);
   }
 
-  // GET /api/placeguide/tags?tagName=태그이름
-  // 태그 검색 결과 조회 (태그 클릭 시)
-  @GetMapping("/tags")
-  public List<PlaceSummaryResponse> getPlacesByTag(@RequestParam String tagName) {
-    return placeGuideService.getPlacesByTag(tagName);
-  }
-
-  // GET /api/placeguide/near-me?district=SEO
-  // 내 주변 장소 조회 (좌표 미사용, district 기준)
+  // GET /api/placeguide/near-me?latitude=37.xxx&longitude=126.xxx
+  // 프론트에서 navigator.geolocation으로 얻은 사용자의 실제 좌표를 그대로 넘겨받음
   @GetMapping("/near-me")
-  public List<PlaceSummaryResponse> getPlacesNearMe(@RequestParam District district) {
-    return placeGuideService.getPlacesNearMe(district);
+  public List<PlaceSummaryResponse> getPlacesNearMe(
+      @RequestParam double latitude,
+      @RequestParam double longitude) {
+    return placeGuideService.getPlacesNearMe(latitude, longitude);
   }
 
   // GET /api/placeguide/bookmarks
-  // 북마크 목록 조회
   @GetMapping("/bookmarks")
   public List<PlaceSummaryResponse> getBookmarkedPlaces(@AuthenticationPrincipal Jwt jwt) {
     Long userId = Long.valueOf(jwt.getSubject());
     return placeGuideService.getBookmarkedPlaces(userId);
   }
 
-  // GET /api/placeguide/{placeId}
-  // 장소 상세 조회
-  @GetMapping("/{placeId}")
+  // GET /api/placeguide/{contentId}
+  @GetMapping("/{contentId}")
   public PlaceDetailResponse getPlaceDetail(
-      @PathVariable Long placeId,
+      @PathVariable String contentId,
       @AuthenticationPrincipal Jwt jwt) {
-    Long userId = Long.valueOf(jwt.getSubject());
-    return placeGuideService.getPlaceDetail(placeId, userId);
+    Long userId = (jwt != null) ? Long.valueOf(jwt.getSubject()) : null;
+    return placeGuideService.getPlaceDetail(contentId, userId);
   }
 
-  // GET /api/placeguide/{placeId}/images
-  // 장소 상세 이미지 목록 조회
-  @GetMapping("/{placeId}/images")
-  public List<PlaceImageResponse> getPlaceImages(@PathVariable Long placeId) {
-    return placeGuideService.getPlaceImages(placeId);
+  // GET /api/placeguide/{contentId}/images
+  @GetMapping("/{contentId}/images")
+  public List<PlaceImageResponse> getPlaceImages(@PathVariable String contentId) {
+    return placeGuideService.getPlaceImages(contentId);
   }
 
-  // GET /api/placeguide/{placeId}/nearby
-  // 해당 장소의 주변 장소 조회
-  @GetMapping("/{placeId}/nearby")
-  public List<PlaceSummaryResponse> getNearbyPlaces(@PathVariable Long placeId) {
-    return placeGuideService.getNearbyPlaces(placeId);
+  // GET /api/placeguide/{contentId}/nearby
+  @GetMapping("/{contentId}/nearby")
+  public List<PlaceSummaryResponse> getNearbyPlaces(@PathVariable String contentId) {
+    return placeGuideService.getNearbyPlaces(contentId);
   }
 
-  // POST /api/placeguide/{placeId}/bookmark
-  // 북마크 등록
-  @PostMapping("/{placeId}/bookmark")
+  // POST /api/placeguide/{contentId}/bookmark
+  @PostMapping("/{contentId}/bookmark")
   public void addBookmark(
-      @PathVariable Long placeId,
+      @PathVariable String contentId,
       @AuthenticationPrincipal Jwt jwt) {
     Long userId = Long.valueOf(jwt.getSubject());
-    placeGuideService.addBookmark(placeId, userId);
+    placeGuideService.addBookmark(contentId, userId);
   }
 
-  // DELETE /api/placeguide/{placeId}/bookmark
-  // 북마크 해제
-  @DeleteMapping("/{placeId}/bookmark")
+  // DELETE /api/placeguide/{contentId}/bookmark
+  @DeleteMapping("/{contentId}/bookmark")
   public void removeBookmark(
-      @PathVariable Long placeId,
+      @PathVariable String contentId,
       @AuthenticationPrincipal Jwt jwt) {
     Long userId = Long.valueOf(jwt.getSubject());
-    placeGuideService.removeBookmark(placeId, userId);
+    placeGuideService.removeBookmark(contentId, userId);
   }
 }
