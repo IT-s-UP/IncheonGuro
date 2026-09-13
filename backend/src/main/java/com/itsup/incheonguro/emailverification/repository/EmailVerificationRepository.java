@@ -9,4 +9,6 @@ import com.itsup.incheonguro.emailverification.entity.EmailVerification;
 public interface EmailVerificationRepository extends JpaRepository<EmailVerification, Long> {
 
     Optional<EmailVerification> findTopByEmailOrderByIdDesc(String email);
+
+    void deleteByEmail(String email);
 }
