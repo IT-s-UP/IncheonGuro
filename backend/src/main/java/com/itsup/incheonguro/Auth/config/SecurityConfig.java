@@ -27,6 +27,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/signup",
                                 "/auth/login",
+                                "/auth/check-id",
                                 "/auth/email/verification-code",
                                 "/auth/email/verification-code/confirm",
                                 "/api/health",

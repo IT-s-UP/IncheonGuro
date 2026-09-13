@@ -29,6 +29,14 @@ public class AuthService {
     private final EmailVerificationService emailVerificationService;
 
     // ==========================================
+    // 로그인 ID 중복 확인
+    // ==========================================
+
+    public boolean isLoginIdAvailable(String loginId) {
+        return !loginId.startsWith("oauth:") && !memberRepository.existsByLoginId(loginId);
+    }
+
+    // ==========================================
     // 회원가입
     // ==========================================
 
