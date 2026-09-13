@@ -39,8 +39,5 @@ out/
 ### Environment ###
 .env
 
-### 업로드된 파일 ###
-/uploads/
-
 # Local development database
 /data/

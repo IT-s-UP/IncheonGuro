@@ -49,10 +49,6 @@
   object-fit: cover;
 }
 
-.my-page__avatar-input {
-  display: none;
-}
-
 .my-page__avatar-edit-btn {
   position: absolute;
   right: -2px;

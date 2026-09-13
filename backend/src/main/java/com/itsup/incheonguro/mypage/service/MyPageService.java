@@ -1,12 +1,12 @@
 package com.itsup.incheonguro.mypage.service;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.itsup.incheonguro.Auth.entity.Member;
@@ -16,7 +16,7 @@ import com.itsup.incheonguro.mypage.dto.EmailChangeRequest;
 import com.itsup.incheonguro.mypage.dto.MyPageResponse;
 import com.itsup.incheonguro.mypage.dto.MyPageUpdateRequest;
 import com.itsup.incheonguro.mypage.dto.PasswordChangeRequest;
-import com.itsup.incheonguro.mypage.dto.ProfileImageResponse;
+import com.itsup.incheonguro.mypage.dto.ProfileMascotRequest;
 import com.itsup.incheonguro.emailverification.service.EmailVerificationService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,10 +26,13 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class MyPageService {
 
+    private static final Set<String> VALID_MASCOTS = Set.of(
+            "ganghwa", "geomdan", "gyeyang", "namdong", "michuhol",
+            "bupyeong", "seohae", "yeonsu", "yeongjong", "ongjin", "jemulpo");
+
     private final MemberRepository memberRepository;
     private final RegionRepository regionRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ProfileImageStorageService profileImageStorageService;
     private final EmailVerificationService emailVerificationService;
 
     // ==========================================
@@ -109,26 +112,25 @@ public class MyPageService {
     }
 
     // ==========================================
-    // 프로필 사진 업로드 / 삭제
+    // 프로필 마스코트 선택 / 해제
     // ==========================================
 
     @Transactional
-    public ProfileImageResponse uploadProfileImage(Member member, MultipartFile file) {
+    public MyPageResponse changeProfileMascot(Member member, ProfileMascotRequest request) {
 
-        String previousImageUrl = member.getProfileImageUrl();
-        String savedUrl = profileImageStorageService.save(member.getId(), file);
+        if (!VALID_MASCOTS.contains(request.getMascot())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 마스코트입니다.");
+        }
 
-        member.changeProfileImage(savedUrl);
+        member.changeProfileMascot(request.getMascot());
         memberRepository.save(member);
-        profileImageStorageService.delete(previousImageUrl);
 
-        return new ProfileImageResponse(new ProfileImageResponse.Data(savedUrl), 200, "OK");
+        return MyPageResponse.of(member, regionNameOf(member.getInterestedRegion()));
     }
 
     @Transactional
-    public void deleteProfileImage(Member member) {
-        profileImageStorageService.delete(member.getProfileImageUrl());
-        member.changeProfileImage(null);
+    public void resetProfileMascot(Member member) {
+        member.changeProfileMascot(null);
         memberRepository.save(member);
     }
 
