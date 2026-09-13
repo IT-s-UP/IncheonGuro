@@ -27,7 +27,7 @@ public class MyPageResponse {
                         member.getEmail(),
                         member.getInterestedRegion(),
                         regionName,
-                        member.getProfileImageUrl(),
+                        member.getProfileMascot(),
                         member.isSocialAccount()),
                 200,
                 "OK");
@@ -46,7 +46,7 @@ public class MyPageResponse {
         private String email;
         private Long interestedRegion;
         private String interestedRegionName;
-        private String profileImageUrl;
+        private String profileMascot;
         private boolean socialAccount;
     }
 }
