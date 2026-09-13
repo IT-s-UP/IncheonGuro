@@ -79,6 +79,7 @@ public class AuthService {
                 request.getInterestedRegion());
 
         memberRepository.save(member);
+        emailVerificationService.consume(request.getEmail());
 
         SignupResponse.Data data = new SignupResponse.Data(
                 member.getName(),

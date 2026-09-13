@@ -88,6 +88,7 @@ public class MyPageService {
 
         member.changeEmail(request.getEmail());
         memberRepository.save(member);
+        emailVerificationService.consume(request.getEmail());
 
         return MyPageResponse.of(member, regionNameOf(member.getInterestedRegion()));
     }

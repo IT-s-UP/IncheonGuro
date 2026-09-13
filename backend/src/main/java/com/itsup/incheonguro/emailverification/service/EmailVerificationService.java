@@ -81,6 +81,11 @@ public class EmailVerificationService {
                 .isPresent();
     }
 
+    @Transactional
+    public void consume(String email) {
+        emailVerificationRepository.deleteByEmail(email);
+    }
+
     private String generateCode() {
         SecureRandom random = new SecureRandom();
         StringBuilder code = new StringBuilder(CODE_LENGTH);
