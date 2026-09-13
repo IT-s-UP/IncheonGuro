@@ -59,3 +59,39 @@ export async function confirmEmailVerificationCode(email: string, code: string) 
     throw new Error(body?.message ?? '인증번호가 일치하지 않습니다.');
   }
 }
+
+export async function isLoginIdAvailable(loginId: string) {
+  const response = await fetch(`/auth/check-id?loginId=${encodeURIComponent(loginId)}`);
+
+  if (!response.ok) {
+    throw new Error('아이디 확인에 실패했습니다.');
+  }
+
+  const body = await response.json();
+  return body.available as boolean;
+}
+
+export type SignupPayload = {
+  loginId: string;
+  password: string;
+  phoneNumber: string;
+  name: string;
+  birth: string;
+  gender: string;
+  email: string;
+  nickname: string;
+  interestedRegion: number;
+};
+
+export async function signup(payload: SignupPayload) {
+  const response = await fetch('/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.message ?? '회원가입에 실패했습니다.');
+  }
+}
