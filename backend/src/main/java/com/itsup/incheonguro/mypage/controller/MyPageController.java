@@ -5,13 +5,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.support.CurrentMember;
@@ -19,7 +16,7 @@ import com.itsup.incheonguro.mypage.dto.EmailChangeRequest;
 import com.itsup.incheonguro.mypage.dto.MyPageResponse;
 import com.itsup.incheonguro.mypage.dto.MyPageUpdateRequest;
 import com.itsup.incheonguro.mypage.dto.PasswordChangeRequest;
-import com.itsup.incheonguro.mypage.dto.ProfileImageResponse;
+import com.itsup.incheonguro.mypage.dto.ProfileMascotRequest;
 import com.itsup.incheonguro.mypage.service.MyPageService;
 
 import jakarta.validation.Valid;
@@ -81,20 +78,20 @@ public class MyPageController {
     }
 
     // ==========================================
-    // 프로필 사진 업로드 / 삭제
-    // POST/DELETE /api/mypage/profile-image
+    // 프로필 마스코트 선택 / 해제
+    // PATCH/DELETE /api/mypage/profile-mascot
     // ==========================================
 
-    @PostMapping(path = "/profile-image", consumes = "multipart/form-data")
-    public ProfileImageResponse uploadProfileImage(
+    @PatchMapping("/profile-mascot")
+    public MyPageResponse changeProfileMascot(
             @CurrentMember Member member,
-            @RequestParam("file") MultipartFile file) {
-        return myPageService.uploadProfileImage(member, file);
+            @Valid @RequestBody ProfileMascotRequest request) {
+        return myPageService.changeProfileMascot(member, request);
     }
 
-    @DeleteMapping("/profile-image")
-    public ResponseEntity<Void> deleteProfileImage(@CurrentMember Member member) {
-        myPageService.deleteProfileImage(member);
+    @DeleteMapping("/profile-mascot")
+    public ResponseEntity<Void> resetProfileMascot(@CurrentMember Member member) {
+        myPageService.resetProfileMascot(member);
         return ResponseEntity.noContent().build();
     }
 }
