@@ -1,80 +1,132 @@
 package com.itsup.incheonguro.placeguide.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itsup.incheonguro.courseguide.dto.CourseSummaryResponse;
 import com.itsup.incheonguro.courseguide.repository.CourseRepository;
-import com.itsup.incheonguro.placeguide.dto.PlaceDetailResponse;
-import com.itsup.incheonguro.placeguide.dto.PlaceImageResponse;
-import com.itsup.incheonguro.placeguide.dto.PlaceSearchResultResponse;
-import com.itsup.incheonguro.placeguide.dto.PlaceSummaryResponse;
+import com.itsup.incheonguro.placeguide.dto.*;
 import com.itsup.incheonguro.placeguide.entity.District;
-import com.itsup.incheonguro.placeguide.entity.Place;
 import com.itsup.incheonguro.placeguide.entity.PlaceBookmark;
 import com.itsup.incheonguro.placeguide.entity.PlaceCategory;
-import com.itsup.incheonguro.placeguide.entity.PlaceTag;
 import com.itsup.incheonguro.placeguide.repository.PlaceBookmarkRepository;
-import com.itsup.incheonguro.placeguide.repository.PlaceImageRepository;
-import com.itsup.incheonguro.placeguide.repository.PlaceRepository;
-import com.itsup.incheonguro.placeguide.repository.PlaceTagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PlaceGuideService {
 
-  private final PlaceRepository placeRepository;
-  private final PlaceImageRepository placeImageRepository;
-  private final PlaceTagRepository placeTagRepository;
-  private final PlaceBookmarkRepository placeBookmarkRepository;
+  // 한국관광공사 국문 관광정보 서비스(KorService2)의 기본 주소
+  private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
+  private static final String INCHEON_REGN_CD = "28";
 
-  // 다른 도메인(courseguide) 참조 - 통합 검색 결과에서 코스도 같이 보여줘야 하기 때문
+  // 기본 반경 - "내 주변" 조회 시 사용 (미터 단위)
+  private static final int DEFAULT_RADIUS_METERS = 2000;
+
+  private final RestTemplate restTemplate;
+  private final ObjectMapper objectMapper;
+  private final PlaceBookmarkRepository placeBookmarkRepository;
   private final CourseRepository courseRepository;
 
-  // 주요 장소 안내 - 필터(구/카테고리) 조회. 파라미터가 비어있으면(null 또는 empty) 그 조건은 무시하고 전체 조회
+  @Value("${kto.service-key}")
+  private String serviceKey;
+
+  // ==========================================
+  // 목록 / 필터
+  // ==========================================
+
+  // 주요 장소 안내 - 구/카테고리 필터 조회. districts, categories가 비어있으면 인천 전체/전체 카테고리
   public List<PlaceSummaryResponse> getPlaces(List<District> districts, List<PlaceCategory> categories) {
-    // Repository의 findByFilters는 "조건 없음"을 null로만 인식하므로, 빈 리스트는 null로 변환해서 넘김
-    List<District> districtCondition = (districts == null || districts.isEmpty()) ? null : districts;
-    List<PlaceCategory> categoryCondition = (categories == null || categories.isEmpty()) ? null : categories;
+    List<String> signguCds = (districts == null || districts.isEmpty())
+        ? List.of("")
+        : districts.stream()
+            .flatMap(district -> district.getSignguCds().stream())
+            .distinct()
+            .collect(Collectors.toList());
 
-    return placeRepository.findByFilters(districtCondition, categoryCondition).stream()
-        .map(PlaceSummaryResponse::new)
+    List<PlaceCategory> targetCategories = (categories == null || categories.isEmpty())
+        ? List.of(PlaceCategory.values())
+        : categories;
+
+    List<PlaceSummaryResponse> result = new ArrayList<>();
+
+    for (String signguCd : signguCds) {
+      for (PlaceCategory category : targetCategories) {
+        for (String contentTypeId : category.toContentTypeIds()) {
+          JsonNode items = callAreaBasedList(signguCd, contentTypeId);
+          for (JsonNode item : items) {
+            PlaceSummaryResponse response = PlaceSummaryResponse.from(item);
+            if (response.getCategory() == category) {
+              result.add(response);
+            }
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // 내 주변 장소 조회 - 사용자의 실제 좌표(latitude, longitude) 기준 반경 이내 장소를 조회
+  // district 기준이 아니라, 관광공사의 locationBasedList2(위치기반 조회)를 사용
+  public List<PlaceSummaryResponse> getPlacesNearMe(double latitude, double longitude) {
+    JsonNode items = callLocationBasedList(latitude, longitude);
+
+    List<PlaceSummaryResponse> result = new ArrayList<>();
+    for (JsonNode item : items) {
+      result.add(PlaceSummaryResponse.from(item));
+    }
+    return result;
+  }
+
+  // 해당 장소의 주변 장소 조회 - 같은 구에 속한 다른 장소 중 최대 4개 (자기 자신 제외)
+  public List<PlaceSummaryResponse> getNearbyPlaces(String contentId) {
+    PlaceDetailResponse target = getPlaceDetailWithoutBookmark(contentId);
+
+    if (target.getDistrict() == null) {
+      return List.of();
+    }
+
+    return getPlaces(List.of(target.getDistrict()), null).stream()
+        .filter(place -> !place.getPlaceId().equals(contentId))
+        .limit(4)
         .collect(Collectors.toList());
   }
 
-  // 태그 검색 결과 조회 - 태그 클릭 시 사용
-  public List<PlaceSummaryResponse> getPlacesByTag(String tagName) {
-    return placeRepository.findByTagName(tagName).stream()
-        .map(PlaceSummaryResponse::new)
-        .collect(Collectors.toList());
-  }
+  // ==========================================
+  // 검색 / 자동완성
+  // ==========================================
 
-  // 키워드 자동완성 - 장소 이름 + 코스 이름을 합쳐서 문자열 목록으로 반환
   public List<String> getAutocomplete(String keyword) {
-    List<String> placeTitles = placeRepository.findByTitleContaining(keyword).stream()
-        .map(Place::getTitle)
-        .collect(Collectors.toList());
+    List<String> placeTitles = new ArrayList<>();
+    for (JsonNode item : callSearchKeyword(keyword)) {
+      placeTitles.add(item.path("title").asText());
+    }
 
     List<String> courseNames = courseRepository.findByNameContainingOrDescriptionContaining(keyword, keyword)
         .stream()
         .map(course -> course.getName())
         .collect(Collectors.toList());
 
-    // 장소 이름 목록 뒤에 코스 이름 목록을 이어붙여서 하나의 리스트로 반환
-    List<String> suggestions = new java.util.ArrayList<>(placeTitles);
+    List<String> suggestions = new ArrayList<>(placeTitles);
     suggestions.addAll(courseNames);
     return suggestions;
   }
 
-  // 검색 결과 페이지 조회 - 장소와 코스를 함께 검색해서 반환
   public PlaceSearchResultResponse getSearchResult(String keyword) {
-    List<PlaceSummaryResponse> places = placeRepository.findByTitleContaining(keyword).stream()
-        .map(PlaceSummaryResponse::new)
-        .collect(Collectors.toList());
+    List<PlaceSummaryResponse> places = new ArrayList<>();
+    for (JsonNode item : callSearchKeyword(keyword)) {
+      places.add(PlaceSummaryResponse.from(item));
+    }
 
     List<CourseSummaryResponse> courses = courseRepository
         .findByNameContainingOrDescriptionContaining(keyword, keyword).stream()
@@ -84,77 +136,191 @@ public class PlaceGuideService {
     return new PlaceSearchResultResponse(places, courses);
   }
 
-  // 장소 상세 조회
-  public PlaceDetailResponse getPlaceDetail(Long placeId, Long userId) {
-    Place place = placeRepository.findById(placeId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장소입니다. id=" + placeId));
+  // ==========================================
+  // 상세 / 이미지
+  // ==========================================
 
-    // userId가 있고, 그 사용자가 이 장소를 북마크했으면 true
+  public PlaceDetailResponse getPlaceDetail(String contentId, Long userId) {
+    PlaceDetailResponse base = getPlaceDetailWithoutBookmark(contentId);
+
     boolean isBookmarked = userId != null
-        && placeBookmarkRepository.existsByUserIdAndPlaceId(userId, placeId);
-
-    List<String> tags = placeTagRepository.findByPlaceId(placeId).stream()
-        .map(PlaceTag::getTagName)
-        .collect(Collectors.toList());
+        && placeBookmarkRepository.existsByUserIdAndContentId(userId, contentId);
 
     return new PlaceDetailResponse(
-        place.getId(),
-        place.getTitle(),
-        place.getSubtitle(),
-        place.getDescription(),
-        isBookmarked,
-        tags);
+        base.getPlaceId(), base.getTitle(), base.getSubtitle(), base.getDescription(),
+        base.getDistrict(), base.getCategory(), isBookmarked, base.getTags());
   }
 
-  // 장소 상세 이미지 목록 조회
-  public List<PlaceImageResponse> getPlaceImages(Long placeId) {
-    return placeImageRepository.findByPlaceIdOrderByOrderIndexAsc(placeId).stream()
-        .map(PlaceImageResponse::new)
-        .collect(Collectors.toList());
+  // 북마크 여부를 모른 채로(false 고정), detailCommon2 API 하나만 호출해서 상세 정보 조립
+  private PlaceDetailResponse getPlaceDetailWithoutBookmark(String contentId) {
+    String url = BASE_URL + "/detailCommon2"
+        + "?serviceKey=" + serviceKey
+        + "&MobileOS=WEB"
+        + "&MobileApp=IncheonGuro"
+        + "&_type=json"
+        + "&contentId=" + contentId;
+
+    JsonNode item = callApi(url);
+
+    String contentTypeId = item.path("contenttypeid").asText();
+    String lclsSystm2 = item.path("lclsSystm2").asText();
+    String lclsSystm3Nm = item.path("lclsSystm3").asText();
+
+    return new PlaceDetailResponse(
+        contentId,
+        item.path("title").asText(),
+        item.path("addr1").asText(),
+        item.path("overview").asText(),
+        District.fromSignguCd(item.path("lDongSignguCd").asText()),
+        PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
+        false,
+        lclsSystm3Nm.isBlank() ? List.of() : List.of(lclsSystm3Nm));
   }
 
-  // 해당 장소의 주변 장소 조회 - 같은 구에 속한 다른 장소 중 최대 4개 (자기 자신 제외)
-  public List<PlaceSummaryResponse> getNearbyPlaces(Long placeId) {
-    Place place = placeRepository.findById(placeId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장소입니다. id=" + placeId));
+  public List<PlaceImageResponse> getPlaceImages(String contentId) {
+    String url = BASE_URL + "/detailImage2"
+        + "?serviceKey=" + serviceKey
+        + "&MobileOS=WEB"
+        + "&MobileApp=IncheonGuro"
+        + "&_type=json"
+        + "&contentId=" + contentId
+        + "&imageYN=Y";
 
-    return placeRepository.findByDistrictAndIdNot(place.getDistrict(), placeId).stream()
-        .limit(4)
-        .map(PlaceSummaryResponse::new)
-        .collect(Collectors.toList());
+    JsonNode items = callApiForItems(url);
+
+    List<PlaceImageResponse> images = new ArrayList<>();
+    for (JsonNode item : items) {
+      images.add(PlaceImageResponse.from(item));
+    }
+    return images;
   }
 
-  // 내 주변 장소 조회 - 특정 구에 속한 장소 전체 (좌표 미사용, district 기준)
-  public List<PlaceSummaryResponse> getPlacesNearMe(District district) {
-    return getPlaces(List.of(district), null);
-  }
+  // ==========================================
+  // 북마크
+  // ==========================================
 
-  // 북마크 목록 조회
   public List<PlaceSummaryResponse> getBookmarkedPlaces(Long userId) {
-    return placeBookmarkRepository.findByUserId(userId).stream()
-        .map(PlaceBookmark::getPlace)
-        .map(PlaceSummaryResponse::new)
-        .collect(Collectors.toList());
+    List<PlaceBookmark> bookmarks = placeBookmarkRepository.findByUserId(userId);
+
+    List<PlaceSummaryResponse> result = new ArrayList<>();
+    for (PlaceBookmark bookmark : bookmarks) {
+      // detailCommon2로 상세를 받아온 다음, 그 안의 좌표까지 그대로 넘겨서 요약 DTO로 변환
+      JsonNode item = fetchDetailCommonRaw(bookmark.getContentId());
+
+      String contentTypeId = item.path("contenttypeid").asText();
+      String lclsSystm2 = item.path("lclsSystm2").asText();
+
+      result.add(new PlaceSummaryResponse(
+          bookmark.getContentId(),
+          item.path("title").asText(),
+          item.path("addr1").asText(),
+          District.fromSignguCd(item.path("lDongSignguCd").asText()),
+          PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
+          item.path("mapy").asDouble(),
+          item.path("mapx").asDouble()));
+    }
+    return result;
   }
 
-  // 북마크 등록
-  @Transactional
-  public void addBookmark(Long placeId, Long userId) {
-    if (placeBookmarkRepository.existsByUserIdAndPlaceId(userId, placeId)) {
-      return; // 이미 북마크되어 있으면 아무것도 X
+  public void addBookmark(String contentId, Long userId) {
+    if (placeBookmarkRepository.existsByUserIdAndContentId(userId, contentId)) {
+      return;
+    }
+    placeBookmarkRepository.save(new PlaceBookmark(userId, contentId));
+  }
+
+  public void removeBookmark(String contentId, Long userId) {
+    placeBookmarkRepository.findByUserIdAndContentId(userId, contentId)
+        .ifPresent(placeBookmarkRepository::delete);
+  }
+
+  /**
+   * ==========================================
+   * 관광공사 API 호출 헬퍼
+   * ==========================================
+   */
+
+  private JsonNode callAreaBasedList(String signguCd, String contentTypeId) {
+    StringBuilder url = new StringBuilder(BASE_URL + "/areaBasedList2")
+        .append("?serviceKey=").append(serviceKey)
+        .append("&numOfRows=100")
+        .append("&pageNo=1")
+        .append("&MobileOS=WEB")
+        .append("&MobileApp=IncheonGuro")
+        .append("&_type=json")
+        .append("&arrange=C")
+        .append("&contentTypeId=").append(contentTypeId)
+        .append("&lDongRegnCd=").append(INCHEON_REGN_CD);
+
+    if (signguCd != null && !signguCd.isBlank()) {
+      url.append("&lDongSignguCd=").append(signguCd);
     }
 
-    Place place = placeRepository.findById(placeId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장소입니다. id=" + placeId));
-
-    PlaceBookmark bookmark = new PlaceBookmark(userId, place);
-    placeBookmarkRepository.save(bookmark);
+    return callApiForItems(url.toString());
   }
 
-  // 북마크 해제
-  @Transactional
-  public void removeBookmark(Long placeId, Long userId) {
-    placeBookmarkRepository.findByUserIdAndPlaceId(userId, placeId)
-        .ifPresent(placeBookmarkRepository::delete);
+  // 위치기반 목록 조회(locationBasedList2) 호출 - "내 주변" 탭에서 사용
+  private JsonNode callLocationBasedList(double latitude, double longitude) {
+    String url = BASE_URL + "/locationBasedList2"
+        + "?serviceKey=" + serviceKey
+        + "&numOfRows=50"
+        + "&pageNo=1"
+        + "&MobileOS=WEB"
+        + "&MobileApp=IncheonGuro"
+        + "&_type=json"
+        + "&arrange=E" // 거리순 정렬
+        + "&mapX=" + longitude // 관광공사 API의 mapX = 경도
+        + "&mapY=" + latitude // 관광공사 API의 mapY = 위도
+        + "&radius=" + DEFAULT_RADIUS_METERS;
+
+    return callApiForItems(url);
+  }
+
+  private JsonNode callSearchKeyword(String keyword) {
+    String encodedKeyword = URLEncoder.encode(keyword, StandardCharsets.UTF_8);
+
+    String url = BASE_URL + "/searchKeyword2"
+        + "?serviceKey=" + serviceKey
+        + "&numOfRows=20"
+        + "&pageNo=1"
+        + "&MobileOS=WEB"
+        + "&MobileApp=IncheonGuro"
+        + "&_type=json"
+        + "&arrange=C"
+        + "&lDongRegnCd=" + INCHEON_REGN_CD
+        + "&keyword=" + encodedKeyword;
+
+    return callApiForItems(url);
+  }
+
+  // 북마크 목록 조회에서 좌표까지 필요해서, item(JsonNode) 자체를 그대로 반환하는 버전
+  private JsonNode fetchDetailCommonRaw(String contentId) {
+    String url = BASE_URL + "/detailCommon2"
+        + "?serviceKey=" + serviceKey
+        + "&MobileOS=WEB"
+        + "&MobileApp=IncheonGuro"
+        + "&_type=json"
+        + "&contentId=" + contentId;
+
+    return callApi(url);
+  }
+
+  private JsonNode callApiForItems(String url) {
+    String response = restTemplate.getForObject(URI.create(url), String.class);
+
+    try {
+      return objectMapper.readTree(response)
+          .path("response")
+          .path("body")
+          .path("items")
+          .path("item");
+    } catch (Exception e) {
+      throw new RuntimeException("관광공사 API 응답 파싱 실패", e);
+    }
+  }
+
+  private JsonNode callApi(String url) {
+    JsonNode item = callApiForItems(url);
+    return item.isArray() ? item.get(0) : item;
   }
 }
