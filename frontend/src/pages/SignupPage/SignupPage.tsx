@@ -10,7 +10,13 @@ import Typography from '@/components/Typography/Typography';
 
 import signup1 from '@/assets/signup1.png';
 import signup2 from '@/assets/signup2.png';
-import { confirmEmailVerificationCode, sendEmailVerificationCode } from '@/auth/api';
+import {
+  confirmEmailVerificationCode,
+  isLoginIdAvailable,
+  sendEmailVerificationCode,
+  signup,
+} from '@/auth/api';
+import type { SignupPayload } from '@/auth/api';
 
 import './SignupPage.css';
 
@@ -18,20 +24,10 @@ type SignupStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 const GENDER_OPTIONS = ['남', '여'];
 
-const REGION_OPTIONS = [
-  '제물포구',
-  '영종구',
-  '미추홀구',
-  '연수구',
-  '남동구',
-  '부평구',
-  '계양구',
-  '서해구',
-  '검단구',
-  '강화군',
-  '옹진군',
-  '없음',
-];
+interface RegionOption {
+  id: number;
+  regionName: string;
+}
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -87,7 +83,23 @@ function SignupPage() {
      4. 관심 지역
   ========================= */
 
-  const [region, setRegion] = useState('');
+  const [regions, setRegions] = useState<RegionOption[]>([]);
+  const [regionId, setRegionId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/region')
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data: RegionOption[]) => {
+        if (!cancelled) setRegions(data);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /* =========================
      5. 약관
@@ -139,20 +151,24 @@ function SignupPage() {
      ID 중복 확인
   ========================= */
 
-  const handleIdCheck = () => {
+  const handleIdCheck = async () => {
     if (!userId.trim()) {
       setIsIdChecked(false);
       setIdCheckMessage('ID를 입력해주세요.');
       return;
     }
 
-    /*
-     * 프론트 테스트용
-     * API 연결 후 교체
-     */
-    const isDuplicate = userId === 'test';
+    let available: boolean;
 
-    if (isDuplicate) {
+    try {
+      available = await isLoginIdAvailable(userId);
+    } catch (err) {
+      setIsIdChecked(false);
+      setIdCheckMessage(err instanceof Error ? err.message : 'ID 확인에 실패했습니다.');
+      return;
+    }
+
+    if (!available) {
       setIsIdChecked(false);
       setIdCheckMessage('이미 사용 중인 ID입니다.');
       return;
@@ -339,7 +355,7 @@ function SignupPage() {
     }
 
     if (step === 3) {
-      if (!region) {
+      if (regionId === null) {
         alert('관심 지역을 선택해주세요.');
         return;
       }
@@ -366,27 +382,35 @@ function SignupPage() {
      회원가입 완료
   ========================= */
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!allAgree) {
       alert('필수 약관에 모두 동의해주세요.');
       return;
     }
 
-    /*
-     * 추후 API 연결
-     *
-     * const request = {
-     *   userId,
-     *   password,
-     *   name,
-     *   birth,
-     *   gender,
-     *   phone,
-     *   email: `${emailId}@${emailDomain}`,
-     *   nickname,
-     *   region,
-     * };
-     */
+    if (regionId === null) {
+      alert('관심 지역을 선택해주세요.');
+      return;
+    }
+
+    const payload: SignupPayload = {
+      loginId: userId,
+      password,
+      phoneNumber: phone,
+      name,
+      birth: `${birth.slice(0, 4)}-${birth.slice(4, 6)}-${birth.slice(6, 8)}`,
+      gender,
+      email: `${emailId}@${emailDomain}`,
+      nickname,
+      interestedRegion: regionId,
+    };
+
+    try {
+      await signup(payload);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
+      return;
+    }
 
     setStep(5);
   };
@@ -891,13 +915,13 @@ function SignupPage() {
             </div>
 
             <div className="signup-region-grid">
-              {REGION_OPTIONS.map((option) => (
+              {regions.map((option) => (
                 <OptionTab
-                  key={option}
-                  label={option}
+                  key={option.id}
+                  label={option.regionName}
                   size="small"
-                  active={region === option}
-                  onClick={() => setRegion(option)}
+                  active={regionId === option.id}
+                  onClick={() => setRegionId(option.id)}
                 />
               ))}
             </div>
