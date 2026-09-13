@@ -49,7 +49,7 @@ public class Member {
     private Long interestedRegion;
 
     @Column
-    private String profileImageUrl;
+    private String profileMascot;
 
     public Member(
             String loginId,
@@ -95,8 +95,8 @@ public class Member {
         this.password = encodedPassword;
     }
 
-    public void changeProfileImage(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
+    public void changeProfileMascot(String profileMascot) {
+        this.profileMascot = profileMascot;
     }
 
     public boolean isSocialAccount() {
