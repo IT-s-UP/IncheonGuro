@@ -14,6 +14,7 @@ import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.exception.LoginFailedException;
 import com.itsup.incheonguro.Auth.exception.SignupFailedException;
 import com.itsup.incheonguro.Auth.repository.MemberRepository;
+import com.itsup.incheonguro.emailverification.service.EmailVerificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailVerificationService emailVerificationService;
 
     // ==========================================
     // 회원가입
@@ -36,6 +38,11 @@ public class AuthService {
         // 아이디 중복 확인
         if (request.getLoginId().startsWith("oauth:")
                 || memberRepository.existsByLoginId(request.getLoginId())) {
+            throw new SignupFailedException();
+        }
+
+        // 이메일 인증 완료 확인
+        if (!emailVerificationService.isVerified(request.getEmail())) {
             throw new SignupFailedException();
         }
 
