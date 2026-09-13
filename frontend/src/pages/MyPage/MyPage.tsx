@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Pencil } from 'lucide-react';
 
@@ -8,6 +7,7 @@ import BackHeader from '@/components/Header/BackHeader';
 import Typography from '@/components/Typography/Typography';
 import BottomSheet from '@/components/BottomSheet/BottomSheet';
 import { apiFetch } from '@/auth/api';
+import { mascotImageOf } from '@/assets/mascots';
 import NameSheet from './sheets/NameSheet';
 import NicknameSheet from './sheets/NicknameSheet';
 import BirthdateSheet from './sheets/BirthdateSheet';
@@ -20,6 +20,7 @@ import type { RegionValue } from './sheets/RegionSheet';
 import EmailSheet from './sheets/EmailSheet';
 import type { EmailValue } from './sheets/EmailSheet';
 import PasswordSheet from './sheets/PasswordSheet';
+import MascotSheet from './sheets/MascotSheet';
 import './MyPage.css';
 
 type FieldKey =
@@ -30,7 +31,8 @@ type FieldKey =
   | 'phone'
   | 'region'
   | 'email'
-  | 'password';
+  | 'password'
+  | 'mascot';
 
 const FIELDS_GROUP_1: { key: FieldKey; label: string }[] = [
   { key: 'name', label: '이름' },
@@ -65,7 +67,7 @@ interface MyPageApiData {
   email: string | null;
   interestedRegion: number | null;
   interestedRegionName: string | null;
-  profileImageUrl: string | null;
+  profileMascot: string | null;
   socialAccount: boolean;
 }
 
@@ -111,8 +113,7 @@ function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [mascot, setMascot] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,7 +138,7 @@ function MyPage() {
           socialAccount: data.socialAccount,
         });
 
-        if (data.profileImageUrl) setAvatarUrl(data.profileImageUrl);
+        setMascot(data.profileMascot);
       })
       .catch(() => {});
 
@@ -201,27 +202,22 @@ function MyPage() {
     }
   };
 
-  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
+  const handleMascotSave = async (nextMascot: string) => {
     try {
-      const response = await apiFetch('/api/mypage/profile-image', {
-        method: 'POST',
-        body: formData,
+      const response = await apiFetch('/api/mypage/profile-mascot', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mascot: nextMascot }),
       });
 
       if (!response.ok) {
-        throw new Error(await readErrorMessage(response, '프로필 사진 업로드에 실패했습니다.'));
+        throw new Error(await readErrorMessage(response, '프로필 마스코트 변경에 실패했습니다.'));
       }
 
-      const body: { data: { profileImageUrl: string } } = await response.json();
-      setAvatarUrl(body.data.profileImageUrl);
+      setMascot(nextMascot);
+      closeSheet();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '프로필 사진 업로드에 실패했습니다.');
+      alert(err instanceof Error ? err.message : '프로필 마스코트 변경에 실패했습니다.');
     }
   };
 
@@ -235,23 +231,16 @@ function MyPage() {
 
       <section className="my-page__profile">
         <div className="my-page__avatar-wrap">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="my-page__avatar" />
+          {mascotImageOf(mascot) ? (
+            <img src={mascotImageOf(mascot) ?? ''} alt="" className="my-page__avatar" />
           ) : (
             <span className="my-page__avatar" aria-hidden="true" />
           )}
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/*"
-            className="my-page__avatar-input"
-            onChange={handleAvatarChange}
-          />
           <button
             type="button"
             className="my-page__avatar-edit-btn"
-            aria-label="프로필 사진 변경"
-            onClick={() => avatarInputRef.current?.click()}
+            aria-label="프로필 마스코트 변경"
+            onClick={() => setOpenField('mascot')}
           >
             <Camera size={14} color="#ffffff" />
           </button>
@@ -399,6 +388,10 @@ function MyPage() {
             }
           }}
         />
+      </BottomSheet>
+
+      <BottomSheet open={openField === 'mascot'} onClose={closeSheet}>
+        <MascotSheet value={mascot} onSave={handleMascotSave} />
       </BottomSheet>
 
       <BottomSheet open={openField === 'password'} onClose={closeSheet}>
