@@ -295,21 +295,29 @@
   min-width: 0;
 }
 
-.signup-email-select {
-  box-sizing: border-box;
+.signup-email-domain-select {
+  position: relative;
 
   flex: 1 1 0;
 
   min-width: 0;
-  height: 40px;
+}
 
-  padding: 0 10px;
+.signup-email-select {
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 50px;
+
+  padding: 0 30px 0 10px;
 
   border: 1px solid #dedede;
 
   border-radius: 5px;
 
   outline: none;
+
+  appearance: none;
 
   background-color: #ffffff;
 
@@ -324,6 +332,72 @@
 
 .signup-email-select:focus {
   border-color: #78aac3;
+}
+
+.signup-email-select-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+
+  transform: translateY(-50%);
+
+  color: #828585;
+
+  pointer-events: none;
+}
+
+.signup-email-domain-direct {
+  position: relative;
+
+  flex: 1 1 0;
+
+  min-width: 0;
+}
+
+.signup-email-domain-direct .input {
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 50px;
+
+  padding: 0 30px 0 10px;
+
+  border: 1px solid #dedede;
+
+  border-radius: 5px;
+
+  font-family: 'Pretendard', sans-serif;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  color: #111111;
+}
+
+.signup-email-domain-direct .input:focus {
+  border-color: #78aac3;
+}
+
+.signup-email-domain-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+
+  background-color: transparent;
+
+  color: #828585;
+
+  cursor: pointer;
 }
 
 /* =========================

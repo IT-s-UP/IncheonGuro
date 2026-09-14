@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { PointerEvent as ReactPointerEvent } from 'react';
 
@@ -9,11 +9,71 @@ import BackHeader from '@/components/Header/BackHeader';
 import LineTab from '@/components/Tab/LineTab';
 import Typography from '@/components/Typography/Typography';
 
-import { FESTIVAL_DISTRICTS, FESTIVAL_MOCK_DATA, FEATURED_FESTIVALS } from './mockData';
-
-import type { FestivalItem } from './types';
-
 import './FestivalListPage.css';
+
+/* =========================
+   API 설정
+========================= */
+
+const API_BASE_URL = 'http://localhost:8080';
+
+/* =========================
+   축제 타입
+========================= */
+
+interface FestivalItem {
+  id: string;
+  name: string;
+  posterUrl: string;
+  address: string;
+  startDate: string;
+  endDate: string;
+}
+
+/* =========================
+   구 / 군
+========================= */
+
+const FESTIVAL_DISTRICTS = [
+  '전체',
+  '제물포구',
+  '영종구',
+  '미추홀구',
+  '연수구',
+  '남동구',
+  '부평구',
+  '계양구',
+  '서해구',
+  '검단구',
+  '강화군',
+  '옹진군',
+];
+
+/*
+ * 실제 축제 API 조회용 지역
+ *
+ * 현재 FestivalService에서
+ * 새 행정구역명을 받아 실제 지역으로 변환하므로
+ * 프론트에서는 우선 동일한 이름을 전달
+ */
+const FESTIVAL_API_REGIONS: Record<string, string> = {
+  전체: '전체',
+
+  제물포구: '제물포구',
+  영종구: '영종구',
+
+  미추홀구: '미추홀구',
+  연수구: '연수구',
+  남동구: '남동구',
+  부평구: '부평구',
+  계양구: '계양구',
+
+  서해구: '서해구',
+  검단구: '검단구',
+
+  강화군: '강화군',
+  옹진군: '옹진군',
+};
 
 /* =========================
    캐러셀 설정
@@ -50,6 +110,14 @@ function FestivalPoster({ festival, className = '' }: FestivalPosterProps) {
   );
 }
 
+function formatFestivalDate(date: string) {
+  if (!date || date.length !== 8) {
+    return date;
+  }
+
+  return `${date.slice(0, 4)}.${date.slice(4, 6)}.${date.slice(6, 8)}`;
+}
+
 /* =========================
    FestivalListPage
 ========================= */
@@ -61,6 +129,8 @@ function FestivalListPage() {
      상단 캐러셀
   ========================= */
 
+  const [featuredFestivals, setFeaturedFestivals] = useState<FestivalItem[]>([]);
+
   const [activePosterIndex, setActivePosterIndex] = useState(0);
 
   const [dragOffset, setDragOffset] = useState(0);
@@ -68,6 +138,10 @@ function FestivalListPage() {
   const [isDragging, setIsDragging] = useState(false);
 
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
+
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
 
   const pointerStartX = useRef<number | null>(null);
 
@@ -79,6 +153,7 @@ function FestivalListPage() {
      구 / 군
   ========================= */
 
+  // 처음에는 "전체"가 선택됨
   const [activeDistrictIndex, setActiveDistrictIndex] = useState(0);
 
   const activeDistrict = FESTIVAL_DISTRICTS[activeDistrictIndex];
@@ -87,11 +162,136 @@ function FestivalListPage() {
      구/군별 축제
   ========================= */
 
-  const districtFestivals = useMemo(() => {
-    return FESTIVAL_MOCK_DATA.filter((festival) => festival.district === activeDistrict);
+  const [districtFestivals, setDistrictFestivals] = useState<FestivalItem[]>([]);
+
+  const [isDistrictLoading, setIsDistrictLoading] = useState(true);
+
+  const [districtError, setDistrictError] = useState<string | null>(null);
+
+  /* =========================
+     인기 축제 TOP5 조회
+  ========================= */
+
+  useEffect(() => {
+    const fetchPopularFestivals = async () => {
+      try {
+        setIsFeaturedLoading(true);
+        setFeaturedError(null);
+
+        const response = await fetch(`${API_BASE_URL}/festivals/popular`);
+
+        if (!response.ok) {
+          throw new Error(`인기 축제 조회 실패 (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        const festivals: FestivalItem[] = data.map(
+          (item: {
+            contentId: string;
+            title: string;
+            imageUrl: string;
+            startDate: string;
+            endDate: string;
+          }) => ({
+            id: item.contentId,
+            name: item.title,
+            posterUrl: item.imageUrl,
+            address: '',
+            startDate: item.startDate,
+            endDate: item.endDate,
+          }),
+        );
+
+        setFeaturedFestivals(festivals);
+
+        setActivePosterIndex(0);
+      } catch (error) {
+        console.error('인기 축제 조회 실패:', error);
+
+        setFeaturedError('인기 축제 / 행사 정보를 불러오지 못했습니다.');
+
+        setFeaturedFestivals([]);
+      } finally {
+        setIsFeaturedLoading(false);
+      }
+    };
+
+    fetchPopularFestivals();
+  }, []);
+
+  /* =========================
+     축제 조회
+  ========================= */
+
+  useEffect(() => {
+    if (!activeDistrict) {
+      return;
+    }
+
+    const fetchDistrictFestivals = async () => {
+      try {
+        setIsDistrictLoading(true);
+        setDistrictError(null);
+
+        /*
+         * 전체를 선택한 경우
+         *
+         * GET /festivals?region=전체
+         *
+         * 백엔드에서 "전체"는 구/군 코드로 매칭되지 않으므로
+         * lDongSignguCd 없이 인천 전체를 조회하게 됨.
+         */
+
+        const apiRegion = FESTIVAL_API_REGIONS[activeDistrict];
+
+        const response = await fetch(
+          `${API_BASE_URL}/festivals?region=${encodeURIComponent(apiRegion)}`,
+        );
+        if (!response.ok) {
+          throw new Error(`축제 조회 실패 (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        const festivals: FestivalItem[] = data.map(
+          (item: {
+            contentId: string;
+            title: string;
+            imageUrl: string;
+            location: string;
+            startDate: string;
+            endDate: string;
+          }) => ({
+            id: item.contentId,
+            name: item.title,
+            posterUrl: item.imageUrl,
+            address: item.location,
+            startDate: item.startDate,
+            endDate: item.endDate,
+          }),
+        );
+
+        setDistrictFestivals(festivals);
+      } catch (error) {
+        console.error('축제 조회 실패:', error);
+
+        setDistrictError('축제 / 행사 정보를 불러오지 못했습니다.');
+
+        setDistrictFestivals([]);
+      } finally {
+        setIsDistrictLoading(false);
+      }
+    };
+
+    fetchDistrictFestivals();
   }, [activeDistrict]);
 
-  const posterCount = FEATURED_FESTIVALS.length;
+  /* =========================
+     인기 축제 개수
+  ========================= */
+
+  const posterCount = featuredFestivals.length;
 
   /* =========================
      순환 index
@@ -116,7 +316,7 @@ function FestivalListPage() {
 
     const index = getWrappedIndex(activePosterIndex + offset);
 
-    return FEATURED_FESTIVALS[index];
+    return featuredFestivals[index];
   };
 
   /* =========================
@@ -137,18 +337,10 @@ function FestivalListPage() {
 
     setIsAnimating(true);
 
-    /*
-     * 다음으로 이동
-     * → 전체 포스터가 왼쪽으로
-     */
     if (direction === 1) {
       setDragOffset(-SLIDE_DISTANCE);
     }
 
-    /*
-     * 이전으로 이동
-     * → 전체 포스터가 오른쪽으로
-     */
     if (direction === -1) {
       setDragOffset(SLIDE_DISTANCE);
     }
@@ -165,31 +357,14 @@ function FestivalListPage() {
 
     const direction = pendingDirection.current;
 
-    /*
-     * 실제 index 변경
-     *
-     * 첫 번째 → 이전
-     * = 마지막
-     *
-     * 마지막 → 다음
-     * = 첫 번째
-     *
-     * 모듈러 연산으로 자연스럽게 처리
-     */
     if (direction !== 0) {
       setActivePosterIndex((current) => getWrappedIndex(current + direction));
     }
 
-    /*
-     * 현재 화면 모습은 그대로인데
-     * 내부 좌표만 중앙으로 초기화
-     *
-     * transition 클래스를 동시에 제거하므로
-     * 순간이동이 눈에 보이지 않음
-     */
     pendingDirection.current = 0;
 
     setIsAnimating(false);
+
     setDragOffset(0);
   };
 
@@ -222,9 +397,6 @@ function FestivalListPage() {
 
     const difference = event.clientX - pointerStartX.current;
 
-    /*
-     * 너무 멀리 끌리는 것 방지
-     */
     const maxOffset = SLIDE_DISTANCE * 1.15;
 
     const limitedOffset = Math.max(-maxOffset, Math.min(maxOffset, difference));
@@ -251,34 +423,23 @@ function FestivalListPage() {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    /*
-     * 왼쪽으로 충분히 밀었음
-     * → 다음 포스터
-     */
     if (dragOffset < -SWIPE_THRESHOLD) {
       startSlide(1);
       return;
     }
 
-    /*
-     * 오른쪽으로 충분히 밀었음
-     * → 이전 포스터
-     */
     if (dragOffset > SWIPE_THRESHOLD) {
       startSlide(-1);
       return;
     }
 
-    /*
-     * 기준만큼 밀지 않았으면
-     * 원래 위치로 복귀
-     */
     setIsDragging(false);
 
     if (Math.abs(dragOffset) > 2) {
       pendingDirection.current = 0;
 
       setIsAnimating(true);
+
       setDragOffset(0);
     } else {
       setDragOffset(0);
@@ -295,6 +456,7 @@ function FestivalListPage() {
     pendingDirection.current = 0;
 
     setIsDragging(false);
+
     setDragOffset(0);
   };
 
@@ -303,18 +465,8 @@ function FestivalListPage() {
   ========================= */
 
   const getSlideStyle = (offset: number) => {
-    /*
-     * 각 포스터의 실제 화면 위치
-     */
     const x = offset * SLIDE_DISTANCE + dragOffset;
 
-    /*
-     * 중앙에 가까울수록
-     * scale = 1
-     *
-     * 옆으로 갈수록
-     * scale = 0.88
-     */
     const distanceFromCenter = Math.abs(x);
 
     const progress = Math.min(distanceFromCenter / SLIDE_DISTANCE, 1);
@@ -331,36 +483,24 @@ function FestivalListPage() {
      상단 포스터 클릭
   ========================= */
 
-  const handleFeaturedClick = (offset: number, festivalId: number) => {
-    /*
-     * 드래그 직후 클릭 방지
-     */
+  const handleFeaturedClick = (offset: number, festivalId: string) => {
     if (hasDragged.current) {
       hasDragged.current = false;
       return;
     }
 
-    /*
-     * 가운데 포스터
-     * → 상세페이지
-     */
     if (offset === 0) {
       navigate(`/festivals/${festivalId}`);
 
       return;
     }
 
-    /*
-     * 왼쪽 포스터
-     */
     if (offset < 0) {
       startSlide(-1);
+
       return;
     }
 
-    /*
-     * 오른쪽 포스터
-     */
     startSlide(1);
   };
 
@@ -377,28 +517,32 @@ function FestivalListPage() {
 
     const nextIndex = getWrappedIndex(activePosterIndex + 1);
 
-    /*
-     * 바로 이전
-     */
     if (targetIndex === previousIndex) {
       startSlide(-1);
+
       return;
     }
 
-    /*
-     * 바로 다음
-     */
     if (targetIndex === nextIndex) {
       startSlide(1);
+
       return;
     }
 
-    /*
-     * 멀리 있는 점 클릭은
-     * 해당 위치로 바로 이동
-     */
     setActivePosterIndex(targetIndex);
   };
+
+  /* =========================
+     구 / 군 변경
+  ========================= */
+
+  const handleDistrictChange = (index: number) => {
+    setActiveDistrictIndex(index);
+  };
+
+  /* =========================
+     렌더링
+  ========================= */
 
   return (
     <div className="festival-list-page">
@@ -417,7 +561,19 @@ function FestivalListPage() {
             추천 축제 캐러셀
         ========================= */}
 
-        {posterCount > 0 && (
+        {isFeaturedLoading ? (
+          <section className="festival-featured-section">
+            <div className="festival-empty">
+              <Typography variant="p2">인기 축제 / 행사 정보를 불러오는 중입니다.</Typography>
+            </div>
+          </section>
+        ) : featuredError ? (
+          <section className="festival-featured-section">
+            <div className="festival-empty">
+              <Typography variant="p2">{featuredError}</Typography>
+            </div>
+          </section>
+        ) : posterCount > 0 ? (
           <section className="festival-featured-section">
             <div
               className={[
@@ -462,11 +618,33 @@ function FestivalListPage() {
             </div>
 
             {/* =========================
+    현재 축제 정보
+========================= */}
+
+            {getFestivalAtOffset(0) && (
+              <div className="festival-featured-info">
+                <Typography variant="head3" className="festival-featured-info__name">
+                  {getFestivalAtOffset(0)?.name}
+                </Typography>
+
+                <Typography
+                  variant="caption1"
+                  color="#828585"
+                  className="festival-featured-info__date"
+                >
+                  {formatFestivalDate(getFestivalAtOffset(0)?.startDate ?? '')}
+                  {' ~ '}
+                  {formatFestivalDate(getFestivalAtOffset(0)?.endDate ?? '')}
+                </Typography>
+              </div>
+            )}
+
+            {/* =========================
                 위치 표시
             ========================= */}
 
             <div className="festival-carousel-dots">
-              {FEATURED_FESTIVALS.map((festival, index) => (
+              {featuredFestivals.map((festival, index) => (
                 <button
                   key={festival.id}
                   type="button"
@@ -481,6 +659,12 @@ function FestivalListPage() {
               ))}
             </div>
           </section>
+        ) : (
+          <section className="festival-featured-section">
+            <div className="festival-empty">
+              <Typography variant="p2">현재 인기 축제 / 행사가 없습니다.</Typography>
+            </div>
+          </section>
         )}
 
         {/* =========================
@@ -491,7 +675,7 @@ function FestivalListPage() {
           <LineTab
             items={FESTIVAL_DISTRICTS}
             activeIndex={activeDistrictIndex}
-            onChange={setActiveDistrictIndex}
+            onChange={handleDistrictChange}
           />
         </div>
 
@@ -500,7 +684,21 @@ function FestivalListPage() {
         ========================= */}
 
         <section className="festival-grid">
-          {districtFestivals.length > 0 ? (
+          {isDistrictLoading ? (
+            <div className="festival-empty">
+              <Typography variant="p2" color="#828585">
+                {activeDistrict === '전체'
+                  ? '전체 축제 / 행사 정보를 불러오는 중입니다.'
+                  : `${activeDistrict}의 축제 / 행사 정보를 불러오는 중입니다.`}
+              </Typography>
+            </div>
+          ) : districtError ? (
+            <div className="festival-empty">
+              <Typography variant="p2" color="#828585">
+                {districtError}
+              </Typography>
+            </div>
+          ) : districtFestivals.length > 0 ? (
             districtFestivals.map((festival) => (
               <button
                 key={festival.id}
