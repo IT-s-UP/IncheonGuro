@@ -19,23 +19,24 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PlaceGuideService {
 
-  // 한국관광공사 국문 관광정보 서비스(KorService2)의 기본 주소
   private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
   private static final String INCHEON_REGN_CD = "28";
-
-  // 기본 반경 - "내 주변" 조회 시 사용 (미터 단위)
-  private static final int DEFAULT_RADIUS_METERS = 2000;
 
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
   private final PlaceBookmarkRepository placeBookmarkRepository;
   private final CourseRepository courseRepository;
+
+  // 상세조회(detailCommon2/Intro2/Image2/Info2) 캐싱을 전담하는 서비스
+  // (목록/검색 계열은 조건 조합이 매번 달라서 캐싱 효과가 적어 그대로 두고, 상세 조회만 캐싱함)
+  private final PlaceCacheService placeCacheService;
 
   @Value("${kto.service-key}")
   private String serviceKey;
@@ -44,30 +45,32 @@ public class PlaceGuideService {
   // 목록 / 필터
   // ==========================================
 
-  // 주요 장소 안내 - 구/카테고리 필터 조회. districts, categories가 비어있으면 인천 전체/전체 카테고리
   public List<PlaceSummaryResponse> getPlaces(List<District> districts, List<PlaceCategory> categories) {
-    List<String> signguCds = (districts == null || districts.isEmpty())
+    boolean isAllDistrictsSelected = districts != null && districts.size() == District.values().length;
+
+    List<String> signguCds = (districts == null || districts.isEmpty() || isAllDistrictsSelected)
         ? List.of("")
         : districts.stream()
-            .flatMap(district -> district.getSignguCds().stream())
-            .distinct()
+            .map(District::getSignguCd)
             .collect(Collectors.toList());
 
     List<PlaceCategory> targetCategories = (categories == null || categories.isEmpty())
         ? List.of(PlaceCategory.values())
         : categories;
 
+    Set<String> contentTypeIds = targetCategories.stream()
+        .flatMap(category -> category.toContentTypeIds().stream())
+        .collect(Collectors.toSet());
+
     List<PlaceSummaryResponse> result = new ArrayList<>();
 
     for (String signguCd : signguCds) {
-      for (PlaceCategory category : targetCategories) {
-        for (String contentTypeId : category.toContentTypeIds()) {
-          JsonNode items = callAreaBasedList(signguCd, contentTypeId);
-          for (JsonNode item : items) {
-            PlaceSummaryResponse response = PlaceSummaryResponse.from(item);
-            if (response.getCategory() == category) {
-              result.add(response);
-            }
+      for (String contentTypeId : contentTypeIds) {
+        JsonNode items = callAreaBasedList(signguCd, contentTypeId);
+        for (JsonNode item : items) {
+          PlaceSummaryResponse response = PlaceSummaryResponse.from(item);
+          if (targetCategories.contains(response.getCategory())) {
+            result.add(response);
           }
         }
       }
@@ -76,8 +79,6 @@ public class PlaceGuideService {
     return result;
   }
 
-  // 내 주변 장소 조회 - 사용자의 실제 좌표(latitude, longitude) 기준 반경 이내 장소를 조회
-  // district 기준이 아니라, 관광공사의 locationBasedList2(위치기반 조회)를 사용
   public List<PlaceSummaryResponse> getPlacesNearMe(double latitude, double longitude) {
     JsonNode items = callLocationBasedList(latitude, longitude);
 
@@ -88,15 +89,14 @@ public class PlaceGuideService {
     return result;
   }
 
-  // 해당 장소의 주변 장소 조회 - 같은 구에 속한 다른 장소 중 최대 4개 (자기 자신 제외)
   public List<PlaceSummaryResponse> getNearbyPlaces(String contentId) {
     PlaceDetailResponse target = getPlaceDetailWithoutBookmark(contentId);
 
-    if (target.getDistrict() == null) {
+    if (target.getDistrict() == null || target.getCategory() == null) {
       return List.of();
     }
 
-    return getPlaces(List.of(target.getDistrict()), null).stream()
+    return getPlaces(List.of(target.getDistrict()), List.of(target.getCategory())).stream()
         .filter(place -> !place.getPlaceId().equals(contentId))
         .limit(4)
         .collect(Collectors.toList());
@@ -137,7 +137,7 @@ public class PlaceGuideService {
   }
 
   // ==========================================
-  // 상세 / 이미지
+  // 상세 / 이미지 (PlaceCacheService를 통해 캐싱된 원본 데이터를 사용)
   // ==========================================
 
   public PlaceDetailResponse getPlaceDetail(String contentId, Long userId) {
@@ -148,23 +148,35 @@ public class PlaceGuideService {
 
     return new PlaceDetailResponse(
         base.getPlaceId(), base.getTitle(), base.getSubtitle(), base.getDescription(),
-        base.getDistrict(), base.getCategory(), isBookmarked, base.getTags());
+        base.getDistrict(), base.getCategory(), isBookmarked, base.getTags(),
+        base.getLatitude(), base.getLongitude(),
+        base.getUsageTime(), base.getRestDate(), base.getParking(), base.getInfoCenter(),
+        base.getExtraInfoTexts());
   }
 
-  // 북마크 여부를 모른 채로(false 고정), detailCommon2 API 하나만 호출해서 상세 정보 조립
   private PlaceDetailResponse getPlaceDetailWithoutBookmark(String contentId) {
-    String url = BASE_URL + "/detailCommon2"
-        + "?serviceKey=" + serviceKey
-        + "&MobileOS=WEB"
-        + "&MobileApp=IncheonGuro"
-        + "&_type=json"
-        + "&contentId=" + contentId;
-
-    JsonNode item = callApi(url);
+    JsonNode item = placeCacheService.getDetailCommon(contentId);
 
     String contentTypeId = item.path("contenttypeid").asText();
     String lclsSystm2 = item.path("lclsSystm2").asText();
-    String lclsSystm3Nm = item.path("lclsSystm3").asText();
+
+    PlaceCategory category = PlaceCategory.fromApiCode(contentTypeId, lclsSystm2);
+
+    IntroInfo introInfo = fetchIntroInfo(contentId, contentTypeId);
+
+    boolean allIntroInfoEmpty = introInfo.usageTime().isBlank()
+        && introInfo.restDate().isBlank()
+        && introInfo.parking().isBlank()
+        && introInfo.infoCenter().isBlank();
+    List<String> extraInfoTexts = allIntroInfoEmpty
+        ? fetchExtraInfoTexts(contentId, contentTypeId)
+        : List.of();
+
+    List<String> tags = new ArrayList<>();
+    if (category != null) {
+      tags.add(toKoreanCategoryTag(category));
+    }
+    tags.addAll(introInfo.tags());
 
     return new PlaceDetailResponse(
         contentId,
@@ -172,21 +184,118 @@ public class PlaceGuideService {
         item.path("addr1").asText(),
         item.path("overview").asText(),
         District.fromSignguCd(item.path("lDongSignguCd").asText()),
-        PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
+        category,
         false,
-        lclsSystm3Nm.isBlank() ? List.of() : List.of(lclsSystm3Nm));
+        tags,
+        item.path("mapy").asDouble(),
+        item.path("mapx").asDouble(),
+        introInfo.usageTime(),
+        introInfo.restDate(),
+        introInfo.parking(),
+        introInfo.infoCenter(),
+        extraInfoTexts);
+  }
+
+  private IntroInfo fetchIntroInfo(String contentId, String contentTypeId) {
+    JsonNode item = placeCacheService.getDetailIntro(contentId, contentTypeId);
+
+    String usageTime = switch (contentTypeId) {
+      case "12" -> item.path("usetime").asText("");
+      case "14" -> item.path("usetimeculture").asText("");
+      case "28" -> item.path("usetimeleports").asText("");
+      case "32" -> item.path("checkintime").asText("");
+      case "38" -> item.path("opentime").asText("");
+      case "39" -> item.path("opentimefood").asText("");
+      default -> "";
+    };
+
+    String restDate = switch (contentTypeId) {
+      case "12" -> item.path("restdate").asText("");
+      case "14" -> item.path("restdateculture").asText("");
+      case "28" -> item.path("restdateleports").asText("");
+      case "38" -> item.path("restdateshopping").asText("");
+      case "39" -> item.path("restdatefood").asText("");
+      default -> "";
+    };
+
+    String parking = switch (contentTypeId) {
+      case "12" -> item.path("parking").asText("");
+      case "14" -> item.path("parkingculture").asText("");
+      case "28" -> item.path("parkingleports").asText("");
+      case "32" -> item.path("parkinglodging").asText("");
+      case "38" -> item.path("parkingshopping").asText("");
+      case "39" -> item.path("parkingfood").asText("");
+      default -> "";
+    };
+
+    String infoCenter = switch (contentTypeId) {
+      case "12" -> item.path("infocenter").asText("");
+      case "14" -> item.path("infocenterculture").asText("");
+      case "28" -> item.path("infocenterleports").asText("");
+      case "32" -> item.path("infocenterlodging").asText("");
+      case "38" -> item.path("infocentershopping").asText("");
+      case "39" -> item.path("infocenterfood").asText("");
+      default -> "";
+    };
+
+    List<String> tags = new ArrayList<>();
+    switch (contentTypeId) {
+      case "39" -> {
+        addIfNotBlank(tags, item.path("firstmenu").asText(""));
+        addIfNotBlank(tags, item.path("treatmenu").asText(""));
+      }
+      case "38" -> addIfNotBlank(tags, item.path("saleitem").asText(""));
+      default -> {
+      }
+    }
+
+    return new IntroInfo(usageTime, restDate, parking, infoCenter, tags);
+  }
+
+  private void addIfNotBlank(List<String> tags, String value) {
+    if (value == null || value.isBlank())
+      return;
+    for (String part : value.split(",")) {
+      String trimmed = part.trim();
+      if (!trimmed.isEmpty()) {
+        tags.add(trimmed);
+      }
+    }
+  }
+
+  private String toKoreanCategoryTag(PlaceCategory category) {
+    return switch (category) {
+      case ATTRACTION -> "관광지";
+      case CAFE -> "카페";
+      case RESTAURANT -> "식당";
+      case LODGING -> "숙소";
+      case SHOPPING -> "쇼핑";
+    };
+  }
+
+  private record IntroInfo(String usageTime, String restDate, String parking, String infoCenter,
+      List<String> tags) {
+  }
+
+  private List<String> fetchExtraInfoTexts(String contentId, String contentTypeId) {
+    List<String> result = new ArrayList<>();
+    try {
+      JsonNode items = placeCacheService.getDetailInfo(contentId, contentTypeId);
+      for (JsonNode item : items) {
+        String name = item.path("infoname").asText("").trim();
+        String text = item.path("infotext").asText("").trim();
+        if (!name.isBlank() && !text.isBlank()) {
+          result.add(name + " : " + text);
+        }
+      }
+    } catch (Exception e) {
+      // 이 오퍼레이션을 지원하지 않는 카테고리(숙박/여행코스 등)일 수 있으므로, 실패해도 조용히 빈 목록 반환
+    }
+    return result;
   }
 
   public List<PlaceImageResponse> getPlaceImages(String contentId) {
-    String url = BASE_URL + "/detailImage2"
-        + "?serviceKey=" + serviceKey
-        + "&MobileOS=WEB"
-        + "&MobileApp=IncheonGuro"
-        + "&_type=json"
-        + "&contentId=" + contentId
-        + "&imageYN=Y";
-
-    JsonNode items = callApiForItems(url);
+    JsonNode items = placeCacheService.getDetailImages(contentId);
 
     List<PlaceImageResponse> images = new ArrayList<>();
     for (JsonNode item : items) {
@@ -204,8 +313,7 @@ public class PlaceGuideService {
 
     List<PlaceSummaryResponse> result = new ArrayList<>();
     for (PlaceBookmark bookmark : bookmarks) {
-      // detailCommon2로 상세를 받아온 다음, 그 안의 좌표까지 그대로 넘겨서 요약 DTO로 변환
-      JsonNode item = fetchDetailCommonRaw(bookmark.getContentId());
+      JsonNode item = placeCacheService.getDetailCommon(bookmark.getContentId());
 
       String contentTypeId = item.path("contenttypeid").asText();
       String lclsSystm2 = item.path("lclsSystm2").asText();
@@ -217,7 +325,8 @@ public class PlaceGuideService {
           District.fromSignguCd(item.path("lDongSignguCd").asText()),
           PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
           item.path("mapy").asDouble(),
-          item.path("mapx").asDouble()));
+          item.path("mapx").asDouble(),
+          item.path("firstimage").asText("")));
     }
     return result;
   }
@@ -234,11 +343,9 @@ public class PlaceGuideService {
         .ifPresent(placeBookmarkRepository::delete);
   }
 
-  /**
-   * ==========================================
-   * 관광공사 API 호출 헬퍼
-   * ==========================================
-   */
+  // ==========================================
+  // 관광공사 API 호출 헬퍼 (목록/검색 계열 - 캐싱 대상 아님, 그대로 유지)
+  // ==========================================
 
   private JsonNode callAreaBasedList(String signguCd, String contentTypeId) {
     StringBuilder url = new StringBuilder(BASE_URL + "/areaBasedList2")
@@ -259,7 +366,6 @@ public class PlaceGuideService {
     return callApiForItems(url.toString());
   }
 
-  // 위치기반 목록 조회(locationBasedList2) 호출 - "내 주변" 탭에서 사용
   private JsonNode callLocationBasedList(double latitude, double longitude) {
     String url = BASE_URL + "/locationBasedList2"
         + "?serviceKey=" + serviceKey
@@ -268,10 +374,10 @@ public class PlaceGuideService {
         + "&MobileOS=WEB"
         + "&MobileApp=IncheonGuro"
         + "&_type=json"
-        + "&arrange=E" // 거리순 정렬
-        + "&mapX=" + longitude // 관광공사 API의 mapX = 경도
-        + "&mapY=" + latitude // 관광공사 API의 mapY = 위도
-        + "&radius=" + DEFAULT_RADIUS_METERS;
+        + "&arrange=E"
+        + "&mapX=" + longitude
+        + "&mapY=" + latitude
+        + "&radius=2000";
 
     return callApiForItems(url);
   }
@@ -293,18 +399,6 @@ public class PlaceGuideService {
     return callApiForItems(url);
   }
 
-  // 북마크 목록 조회에서 좌표까지 필요해서, item(JsonNode) 자체를 그대로 반환하는 버전
-  private JsonNode fetchDetailCommonRaw(String contentId) {
-    String url = BASE_URL + "/detailCommon2"
-        + "?serviceKey=" + serviceKey
-        + "&MobileOS=WEB"
-        + "&MobileApp=IncheonGuro"
-        + "&_type=json"
-        + "&contentId=" + contentId;
-
-    return callApi(url);
-  }
-
   private JsonNode callApiForItems(String url) {
     String response = restTemplate.getForObject(URI.create(url), String.class);
 
@@ -317,10 +411,5 @@ public class PlaceGuideService {
     } catch (Exception e) {
       throw new RuntimeException("관광공사 API 응답 파싱 실패", e);
     }
-  }
-
-  private JsonNode callApi(String url) {
-    JsonNode item = callApiForItems(url);
-    return item.isArray() ? item.get(0) : item;
   }
 }
