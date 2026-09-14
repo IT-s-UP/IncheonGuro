@@ -19,6 +19,7 @@ import StampTourPage from './pages/StampTourPage/StampTourPage';
 import PlaceGuideMainPage from '@/pages/PlaceGuidePage/PlaceGuideMainPage';
 import PlaceGuideSearchPage from '@/pages/PlaceGuidePage/PlaceGuideSearchPage';
 import PlaceGuideDetailPage from '@/pages/PlaceGuidePage/PlaceGuideDetailPage';
+import PlaceGuideAddToCoursePage from '@/pages/PlaceGuidePage/PlaceGuideAddToCoursePage';
 
 import MyPage from '@/pages/MyPage/MyPage';
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/place-guide" element={<PlaceGuideMainPage />} />
         <Route path="/place-guide/search" element={<PlaceGuideSearchPage />} />
         <Route path="/place-guide/:placeId" element={<PlaceGuideDetailPage />} />
+        <Route path="/place-guide/:placeId/add-to-course" element={<PlaceGuideAddToCoursePage />} />
 
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/policies" element={<PoliciesPage />} />

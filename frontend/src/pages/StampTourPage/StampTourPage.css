@@ -90,22 +90,6 @@
 }
 
 /* =========================
-   RoundTab
-========================= */
-
-.stamp-tour-tabs {
-  box-sizing: border-box;
-
-  width: 100%;
-
-  padding: 28px 28px 0;
-}
-
-.stamp-tour-tabs .round-tab {
-  width: 100%;
-}
-
-/* =========================
    누적 스탬프
 ========================= */
 
@@ -163,7 +147,7 @@
 }
 
 /* =========================
-   시작 원
+   시작점
 ========================= */
 
 .stamp-tour-start {
@@ -176,24 +160,19 @@
   width: 112px;
   height: 112px;
 
-  border-radius: 50%;
-
   display: flex;
 
   align-items: center;
   justify-content: center;
+}
 
-  background-color: #78aac3;
+.stamp-tour-start__image {
+  display: block;
 
-  text-align: center;
+  width: 112px;
+  height: 112px;
 
-  font-family: 'Pretendard', sans-serif;
-
-  font-size: 14px;
-
-  font-weight: 600;
-
-  color: #111111;
+  object-fit: contain;
 }
 
 /* =========================
@@ -222,7 +201,7 @@
 }
 
 /* =========================
-   스탬프 원
+   스탬프 이미지
 ========================= */
 
 .stamp-tour-stamp__mark {
@@ -233,211 +212,58 @@
 
   flex: 0 0 auto;
 
-  border-radius: 50%;
-
   display: flex;
 
   align-items: center;
   justify-content: center;
 
-  background-color: #c4deee;
+  background-color: transparent;
 }
 
-/* =========================
-   스탬프 내부
-========================= */
+.stamp-tour-stamp__image {
+  display: block;
 
-.stamp-tour-stamp__inner {
-  box-sizing: border-box;
+  width: 104px;
+  height: 104px;
 
-  width: 66px;
-  height: 66px;
-
-  border: 2px solid #d45d4c;
-
-  border-radius: 50%;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-}
-
-.stamp-tour-stamp__icon {
-  font-family: 'Pretendard', sans-serif;
-
-  font-size: 10px;
-
-  font-weight: 600;
-
-  color: #d45d4c;
-}
-
-/* =========================
-   지역명
-========================= */
-
-.stamp-tour-stamp__region {
-  width: 100%;
-
-  text-align: center;
+  object-fit: contain;
 }
 
 /* =========================
    보유한 스탬프
 ========================= */
 
-.stamp-tour-stamp--owned .stamp-tour-stamp__mark {
-  background-color: #c4deee;
-}
+.stamp-tour-stamp--owned .stamp-tour-stamp__image {
+  opacity: 1;
 
-.stamp-tour-stamp--owned .stamp-tour-stamp__inner {
-  border-color: #d45d4c;
-}
-
-.stamp-tour-stamp--owned .stamp-tour-stamp__icon {
-  color: #d45d4c;
-}
-
-.stamp-tour-stamp--owned .stamp-tour-stamp__region {
-  color: #111111;
+  filter: none;
 }
 
 /* =========================
    미보유 스탬프
 ========================= */
 
-.stamp-tour-stamp--locked .stamp-tour-stamp__mark {
-  background-color: #dddddd;
+.stamp-tour-stamp--locked .stamp-tour-stamp__image {
+  opacity: 0.75;
 
-  opacity: 1;
-
-  filter: none;
-}
-
-.stamp-tour-stamp--locked .stamp-tour-stamp__inner {
-  border-color: #a6a6a6;
-}
-
-.stamp-tour-stamp--locked .stamp-tour-stamp__icon {
-  color: #999999;
-}
-
-.stamp-tour-stamp--locked .stamp-tour-stamp__region {
-  color: #999999;
-
-  opacity: 1;
+  filter: grayscale(1);
 }
 
 /* =========================
-   내 배지
+   스탬프 조회 오류
 ========================= */
 
-.stamp-tour-badges {
+.stamp-tour-error {
   box-sizing: border-box;
 
   width: 100%;
 
-  padding: 28px 24px 0;
-}
-
-.stamp-tour-badge-grid {
-  width: 100%;
-
-  display: grid;
-
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-
-  column-gap: 20px;
-  row-gap: 24px;
-}
-
-/* =========================
-   배지
-========================= */
-
-.stamp-tour-badge {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  align-items: center;
-
-  gap: 8px;
-}
-
-.stamp-tour-badge__image {
-  width: 100%;
-
-  aspect-ratio: 1 / 1;
-
-  overflow: hidden;
-
-  border-radius: 18px;
+  min-height: 120px;
 
   display: flex;
 
   align-items: center;
   justify-content: center;
 
-  background-color: #d9d9d9;
-}
-
-.stamp-tour-badge__image img {
-  display: block;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-}
-
-.stamp-tour-badge__placeholder {
-  font-family: 'Pretendard', sans-serif;
-
-  font-size: 11px;
-  font-weight: 600;
-
-  color: #828585;
-}
-
-.stamp-tour-badge__name {
-  width: 100%;
-
-  overflow: hidden;
-
   text-align: center;
-
-  text-overflow: ellipsis;
-
-  white-space: nowrap;
-}
-
-/* =========================
-   보유 배지
-========================= */
-
-.stamp-tour-badge--owned .stamp-tour-badge__image {
-  opacity: 1;
-
-  filter: none;
-}
-
-.stamp-tour-badge--owned .stamp-tour-badge__name {
-  opacity: 1;
-}
-
-/* =========================
-   미보유 배지
-========================= */
-
-.stamp-tour-badge--locked .stamp-tour-badge__image {
-  opacity: 0.35;
-
-  filter: grayscale(1);
-}
-
-.stamp-tour-badge--locked .stamp-tour-badge__name {
-  opacity: 0.35;
 }

@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Dropdown from '@/components/Dropdown/Dropdown';
-import type { Place } from '@/mocks/place';
+import type { PlaceSummary } from '@/api/placeGuide';
 import './PlaceGuideNearbyPanel.css';
 
-// 패널이 멈출 수 있는 3단계 높이(px)
-const SNAP_POINTS = [80, 240, 400];
+// 패널이 멈출 수 있는 3단계 높이 - 부모(지도 영역) 높이 기준 퍼센트(%)
+const SNAP_POINTS = [20, 55, 90];
 const CLICK_THRESHOLD = 5;
 
 const SORT_OPTIONS = [
@@ -14,7 +15,7 @@ const SORT_OPTIONS = [
 ];
 
 interface PlaceGuideNearbyPanelProps {
-  places: Place[];
+  places: PlaceSummary[];
 }
 
 function getClosestSnapPoint(current: number): number {
@@ -24,37 +25,65 @@ function getClosestSnapPoint(current: number): number {
 }
 
 function PlaceGuideNearbyPanel({ places }: PlaceGuideNearbyPanelProps) {
-  const [height, setHeight] = useState(SNAP_POINTS[1]);
+  const navigate = useNavigate();
+  const [heightPercent, setHeightPercent] = useState(SNAP_POINTS[1]);
   const [sortValue, setSortValue] = useState('near');
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  const parentHeightRef = useRef(0); // 부모(지도 영역)의 실제 픽셀 높이, 드래그 계산용으로만 사용
+
   const dragStartY = useRef(0);
-  const dragStartHeight = useRef(0);
+  const dragStartHeightPercent = useRef(0);
   const isDragging = useRef(false);
   const hasMoved = useRef(false);
 
-  const minHeight = SNAP_POINTS[0];
-  const maxHeight = SNAP_POINTS[SNAP_POINTS.length - 1];
+  const minHeightPercent = SNAP_POINTS[0];
+  const maxHeightPercent = SNAP_POINTS[SNAP_POINTS.length - 1];
+
+  // 부모 요소의 실제 높이를 측정해서 저장해둠 (드래그 시 px -> % 환산에 필요)
+  // 화면 크기가 바뀔 수도 있으니 ResizeObserver로 계속 갱신
+  useEffect(() => {
+    const parentEl = panelRef.current?.parentElement;
+    if (!parentEl) return;
+
+    const updateParentHeight = () => {
+      parentHeightRef.current = parentEl.clientHeight;
+    };
+
+    updateParentHeight();
+
+    const resizeObserver = new ResizeObserver(updateParentHeight);
+    resizeObserver.observe(parentEl);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const handlePointerDown = (event: PointerEvent<HTMLSpanElement>) => {
     isDragging.current = true;
     hasMoved.current = false;
     dragStartY.current = event.clientY;
-    dragStartHeight.current = height;
+    dragStartHeightPercent.current = heightPercent;
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLSpanElement>) => {
     if (!isDragging.current) return;
 
-    const delta = dragStartY.current - event.clientY;
+    const parentHeight = parentHeightRef.current;
+    if (!parentHeight) return;
 
-    if (Math.abs(delta) > CLICK_THRESHOLD) {
+    const deltaPx = dragStartY.current - event.clientY;
+
+    if (Math.abs(deltaPx) > CLICK_THRESHOLD) {
       hasMoved.current = true;
     }
 
-    const nextHeight = dragStartHeight.current + delta;
-    const clamped = Math.min(maxHeight, Math.max(minHeight, nextHeight));
-    setHeight(clamped);
+    // 움직인 픽셀 거리를, 부모 높이 기준 퍼센트로 환산
+    const deltaPercent = (deltaPx / parentHeight) * 100;
+
+    const nextHeightPercent = dragStartHeightPercent.current + deltaPercent;
+    const clamped = Math.min(maxHeightPercent, Math.max(minHeightPercent, nextHeightPercent));
+    setHeightPercent(clamped);
   };
 
   const handlePointerUp = () => {
@@ -62,9 +91,9 @@ function PlaceGuideNearbyPanel({ places }: PlaceGuideNearbyPanelProps) {
     isDragging.current = false;
 
     if (hasMoved.current) {
-      setHeight((current) => getClosestSnapPoint(current));
+      setHeightPercent((current) => getClosestSnapPoint(current));
     } else {
-      setHeight((current) => {
+      setHeightPercent((current) => {
         const currentIndex = SNAP_POINTS.indexOf(getClosestSnapPoint(current));
         const nextIndex = (currentIndex + 1) % SNAP_POINTS.length;
         return SNAP_POINTS[nextIndex];
@@ -72,8 +101,16 @@ function PlaceGuideNearbyPanel({ places }: PlaceGuideNearbyPanelProps) {
     }
   };
 
+  // 정렬 방식에 따라 목록을 다시 배열 (가까운순은 백엔드가 이미 거리순으로 내려주므로 그대로 사용)
+  const sortedPlaces =
+    sortValue === 'name' ? [...places].sort((a, b) => a.title.localeCompare(b.title)) : places;
+
   return (
-    <div className="place-guide-nearby-panel" style={{ height }}>
+    <div
+      ref={panelRef}
+      className="place-guide-nearby-panel"
+      style={{ height: `${heightPercent}%` }}
+    >
       <span
         className="place-guide-nearby-panel__handle"
         onPointerDown={handlePointerDown}
@@ -85,14 +122,26 @@ function PlaceGuideNearbyPanel({ places }: PlaceGuideNearbyPanelProps) {
       <div className="place-guide-nearby-panel__content">
         <Dropdown options={SORT_OPTIONS} value={sortValue} onChange={setSortValue} />
 
-        <ul className="place-guide-nearby-panel__list">
-          {places.map((place) => (
-            <li key={place.id} className="place-guide-nearby-panel__item">
-              <p className="place-guide-nearby-panel__item-title">{place.title}</p>
-              <p className="place-guide-nearby-panel__item-subtitle">주소 : {place.subtitle}</p>
-            </li>
-          ))}
-        </ul>
+        {sortedPlaces.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#888888', marginTop: 20 }}>
+            주변에 장소가 없습니다.
+          </p>
+        ) : (
+          <ul className="place-guide-nearby-panel__list">
+            {sortedPlaces.map((place) => (
+              <li key={place.placeId} className="place-guide-nearby-panel__item">
+                <button
+                  type="button"
+                  className="place-guide-nearby-panel__item-button"
+                  onClick={() => navigate(`/place-guide/${place.placeId}`)}
+                >
+                  <p className="place-guide-nearby-panel__item-title">{place.title}</p>
+                  <p className="place-guide-nearby-panel__item-subtitle">주소 : {place.subtitle}</p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

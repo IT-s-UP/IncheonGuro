@@ -1,0 +1,72 @@
+.place-guide-add-to-course-page {
+  position: relative;
+  width: 393px;
+  margin: 0 auto;
+  background: #ffffff;
+  font-family: 'Pretendard', system-ui, sans-serif;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100vh;
+}
+
+.place-guide-add-to-course-page > .back-header {
+  padding: 16px 20px 12px;
+  margin-bottom: 12px;
+}
+
+.place-guide-add-to-course-page__empty {
+  margin: 40px 20px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #888888;
+}
+
+.place-guide-add-to-course-page__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 20px 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.place-guide-add-to-course-page__course-btn {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.08);
+
+  font-family: inherit;
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.place-guide-add-to-course-page__course-btn:hover {
+  border-color: #78aac3;
+  background: #f5fafc;
+}
+
+.place-guide-add-to-course-page__course-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.place-guide-add-to-course-page__day-count {
+  font-size: 13px;
+  color: #6e6e6e;
+}

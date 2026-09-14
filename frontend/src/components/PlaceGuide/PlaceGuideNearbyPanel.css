@@ -2,6 +2,7 @@
   position: absolute;
   left: 0;
   bottom: 0;
+  z-index: 10;
   width: 100%;
   box-sizing: border-box;
 
@@ -79,4 +80,15 @@
   font-weight: 400;
   font-size: 13px;
   color: #6e6e6e;
+}
+
+.place-guide-nearby-panel__item-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
 }

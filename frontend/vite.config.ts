@@ -25,6 +25,11 @@ export default defineConfig(({ mode }) => {
           target: env.BACKEND_URL || 'http://localhost:8080',
           changeOrigin: true,
         },
+
+        '/stamp/': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
       },
     },
   };

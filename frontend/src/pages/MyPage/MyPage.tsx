@@ -7,7 +7,7 @@ import BackHeader from '@/components/Header/BackHeader';
 import Typography from '@/components/Typography/Typography';
 import BottomSheet from '@/components/BottomSheet/BottomSheet';
 import { apiFetch } from '@/auth/api';
-import { mascotImageOf } from '@/assets/mascots';
+import { mascotImageOf, mascotKeyOfRegionName } from '@/assets/mascots';
 import NameSheet from './sheets/NameSheet';
 import NicknameSheet from './sheets/NicknameSheet';
 import BirthdateSheet from './sheets/BirthdateSheet';
@@ -138,7 +138,7 @@ function MyPage() {
           socialAccount: data.socialAccount,
         });
 
-        setMascot(data.profileMascot);
+        setMascot(data.profileMascot ?? mascotKeyOfRegionName(data.interestedRegionName));
       })
       .catch(() => {});
 
