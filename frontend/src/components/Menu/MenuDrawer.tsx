@@ -46,8 +46,8 @@ const MENU_GROUP_1: MenuRowItem[] = [
 ];
 
 const MENU_GROUP_2: MenuRowItem[] = [
-  { key: 'notification', icon: MegaphoneIcon, label: '알림' },
-  { key: 'info', icon: InfoCircleIcon, label: '이용안내' },
+  { key: 'contact', icon: MegaphoneIcon, label: '문의하기', to: '/contact' },
+  { key: 'policies', icon: InfoCircleIcon, label: '약관 및 정책', to: '/policies' },
 ];
 
 const STAMP_TOTAL = 9;

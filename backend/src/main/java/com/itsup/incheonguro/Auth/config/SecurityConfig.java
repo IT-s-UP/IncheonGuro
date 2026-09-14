@@ -16,47 +16,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(
-                        HttpSecurity http,
-                        JwtDecoder jwtDecoder) throws Exception {
-
-                http
-                                .csrf(csrf -> csrf.disable())
-
-                                .sessionManagement(session -> session.sessionCreationPolicy(
-                                                SessionCreationPolicy.STATELESS))
-
-                                .authorizeHttpRequests(auth -> auth
-                                                .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR)
-                                                .permitAll()
-
-                                                .requestMatchers(
-                                                                "/auth/signup",
-                                                                "/auth/login",
-                                                                "/api/health",
-                                                                "/api/auth/kakao", "/api/auth/kakao/callback",
-                                                                "/api/auth/google", "/api/auth/google/callback",
-                                                                "/api/auth/me", "/api/auth/logout",
-                                                                "/swagger-ui/**",
-                                                                "/v3/api-docs/**")
-                                                .permitAll()
-
-                                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/festivals",
-                                                                "/festivals/**")
-                                                .permitAll()
-
-                                                .requestMatchers("/api/**", "/stamp/**")
-                                                .authenticated()
-
-                                                .anyRequest()
-                                                .authenticated())
-
-                                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));
-
-                return http.build();
-        }
-
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -76,6 +35,7 @@ public class SecurityConfig {
 
                 // URL별 접근 권한
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
 
                         // 회원가입 / 로그인
                         .requestMatchers(
@@ -87,20 +47,23 @@ public class SecurityConfig {
                                 "/api/health",
                                 "/api/auth/kakao", "/api/auth/kakao/callback",
                                 "/api/auth/google", "/api/auth/google/callback",
-                                "/api/auth/me", "/api/auth/logout")
+                                "/api/auth/me", "/api/auth/logout",
+                                "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
 
                         // 축제 API
                         .requestMatchers(
                                 "/festivals/**")
                         .permitAll()
-                                    
+
                         // 지역 추천 조회 API
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/region")
-                        .permitAll()               
-                                       
+                        .permitAll()
+
                         // CORS preflight 요청
                         .requestMatchers(
                                 HttpMethod.OPTIONS,
