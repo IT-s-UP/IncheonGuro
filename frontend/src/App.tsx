@@ -22,6 +22,8 @@ import PlaceGuideDetailPage from '@/pages/PlaceGuidePage/PlaceGuideDetailPage';
 
 import MyPage from '@/pages/MyPage/MyPage';
 
+import { ContactPage, PoliciesPage, PolicyDetailPage } from '@/pages/ServicePages/ServicePages';
+
 function App() {
   return (
     <AuthProvider>
@@ -43,6 +45,9 @@ function App() {
         <Route path="/place-guide/search" element={<PlaceGuideSearchPage />} />
         <Route path="/place-guide/:placeId" element={<PlaceGuideDetailPage />} />
 
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/policies" element={<PoliciesPage />} />
+        <Route path="/policies/:policyId" element={<PolicyDetailPage />} />
         <Route path="/my-page" element={<MyPage />} />
       </Routes>
     </AuthProvider>

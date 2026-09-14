@@ -68,6 +68,7 @@ textarea {
 
 /* 전체 페이지 컨테이너 */
 
+.service-page,
 .main-page,
 .login-page,
 .signup-page,
@@ -1053,6 +1054,7 @@ textarea {
     background: #ffffff;
   }
 
+  .service-page,
   .main-page,
   .login-page,
   .signup-page,
@@ -1092,6 +1094,7 @@ textarea {
     background: #f4f8f8;
   }
 
+  .service-page,
   .main-page,
   .login-page,
   .signup-page,
