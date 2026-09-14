@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Pencil } from 'lucide-react';
 
@@ -7,6 +6,8 @@ import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
 import Typography from '@/components/Typography/Typography';
 import BottomSheet from '@/components/BottomSheet/BottomSheet';
+import { apiFetch } from '@/auth/api';
+import { mascotImageOf, mascotKeyOfRegionName } from '@/assets/mascots';
 import NameSheet from './sheets/NameSheet';
 import NicknameSheet from './sheets/NicknameSheet';
 import BirthdateSheet from './sheets/BirthdateSheet';
@@ -15,9 +16,11 @@ import GenderSheet from './sheets/GenderSheet';
 import type { Gender } from './sheets/GenderSheet';
 import PhoneSheet from './sheets/PhoneSheet';
 import RegionSheet from './sheets/RegionSheet';
+import type { RegionValue } from './sheets/RegionSheet';
 import EmailSheet from './sheets/EmailSheet';
 import type { EmailValue } from './sheets/EmailSheet';
 import PasswordSheet from './sheets/PasswordSheet';
+import MascotSheet from './sheets/MascotSheet';
 import './MyPage.css';
 
 type FieldKey =
@@ -28,7 +31,8 @@ type FieldKey =
   | 'phone'
   | 'region'
   | 'email'
-  | 'password';
+  | 'password'
+  | 'mascot';
 
 const FIELDS_GROUP_1: { key: FieldKey; label: string }[] = [
   { key: 'name', label: '이름' },
@@ -49,8 +53,22 @@ interface ProfileState {
   birthdate: Birthdate;
   gender: Gender;
   phone: string;
-  region: string;
+  interestedRegion: RegionValue;
   email: EmailValue;
+  socialAccount: boolean;
+}
+
+interface MyPageApiData {
+  nickname: string;
+  name: string;
+  birth: string | null;
+  gender: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  interestedRegion: number | null;
+  interestedRegionName: string | null;
+  profileMascot: string | null;
+  socialAccount: boolean;
 }
 
 const INITIAL_PROFILE: ProfileState = {
@@ -59,16 +77,75 @@ const INITIAL_PROFILE: ProfileState = {
   birthdate: { year: 2000, month: 1, day: 1 },
   gender: '남성',
   phone: '',
-  region: '없음',
-  email: { id: 'incheonguro', domain: 'gmail.com' },
+  interestedRegion: { id: null, name: '없음' },
+  email: { id: '', domain: 'gmail.com' },
+  socialAccount: false,
 };
+
+function splitEmail(email: string | null): EmailValue {
+  if (!email) return { id: '', domain: 'gmail.com' };
+  const [id, domain] = email.split('@');
+  return { id: id ?? '', domain: domain ?? '' };
+}
+
+function joinEmail(value: EmailValue) {
+  return `${value.id}@${value.domain}`;
+}
+
+function birthToBirthdate(birth: string | null): Birthdate {
+  if (!birth) return INITIAL_PROFILE.birthdate;
+  const [year, month, day] = birth.split('-').map(Number);
+  return { year, month, day };
+}
+
+function birthdateToBirth(value: Birthdate) {
+  const month = String(value.month).padStart(2, '0');
+  const day = String(value.day).padStart(2, '0');
+  return `${value.year}-${month}-${day}`;
+}
+
+async function readErrorMessage(response: Response, fallback: string) {
+  const body = await response.json().catch(() => null);
+  return (body?.message as string | undefined) ?? fallback;
+}
 
 function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [mascot, setMascot] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch('/api/mypage')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { data: MyPageApiData } | null) => {
+        if (cancelled || !body) return;
+        const data = body.data;
+
+        setProfile({
+          name: data.name ?? '',
+          nickname: data.nickname,
+          birthdate: birthToBirthdate(data.birth),
+          gender: (data.gender as Gender) || INITIAL_PROFILE.gender,
+          phone: data.phoneNumber ?? '',
+          interestedRegion: {
+            id: data.interestedRegion,
+            name: data.interestedRegionName ?? '없음',
+          },
+          email: splitEmail(data.email),
+          socialAccount: data.socialAccount,
+        });
+
+        setMascot(data.profileMascot ?? mascotKeyOfRegionName(data.interestedRegionName));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const closeSheet = () => setOpenField(null);
 
@@ -85,7 +162,7 @@ function MyPage() {
       case 'phone':
         return profile.phone || '미입력';
       case 'region':
-        return profile.region;
+        return profile.interestedRegion.name;
       case 'email':
         return '변경하기';
       case 'password':
@@ -95,17 +172,53 @@ function MyPage() {
     }
   };
 
-  const handleSave = () => {
-    navigate(-1);
+  const handleSave = async () => {
+    if (profile.interestedRegion.id === null) {
+      alert('관심 구/군을 선택해주세요.');
+      return;
+    }
+
+    try {
+      const response = await apiFetch('/api/mypage', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: profile.name,
+          nickname: profile.nickname,
+          birth: birthdateToBirth(profile.birthdate),
+          gender: profile.gender,
+          phoneNumber: profile.phone,
+          interestedRegion: profile.interestedRegion.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, '내 정보 저장에 실패했습니다.'));
+      }
+
+      navigate(-1);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '내 정보 저장에 실패했습니다.');
+    }
   };
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setAvatarUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(file);
-    });
+  const handleMascotSave = async (nextMascot: string) => {
+    try {
+      const response = await apiFetch('/api/mypage/profile-mascot', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mascot: nextMascot }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, '프로필 마스코트 변경에 실패했습니다.'));
+      }
+
+      setMascot(nextMascot);
+      closeSheet();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '프로필 마스코트 변경에 실패했습니다.');
+    }
   };
 
   return (
@@ -118,23 +231,16 @@ function MyPage() {
 
       <section className="my-page__profile">
         <div className="my-page__avatar-wrap">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="my-page__avatar" />
+          {mascotImageOf(mascot) ? (
+            <img src={mascotImageOf(mascot) ?? ''} alt="" className="my-page__avatar" />
           ) : (
             <span className="my-page__avatar" aria-hidden="true" />
           )}
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/*"
-            className="my-page__avatar-input"
-            onChange={handleAvatarChange}
-          />
           <button
             type="button"
             className="my-page__avatar-edit-btn"
-            aria-label="프로필 사진 변경"
-            onClick={() => avatarInputRef.current?.click()}
+            aria-label="프로필 마스코트 변경"
+            onClick={() => setOpenField('mascot')}
           >
             <Camera size={14} color="#ffffff" />
           </button>
@@ -170,19 +276,26 @@ function MyPage() {
       </nav>
 
       <nav className="my-page__group">
-        {FIELDS_GROUP_2.map((field) => (
-          <button
-            key={field.key}
-            type="button"
-            className="my-page__row"
-            onClick={() => setOpenField(field.key)}
-          >
-            <Typography variant="head3">{field.label}</Typography>
-            <Typography variant="p2" color="#878787" className="my-page__row-value">
-              {getFieldValue(field.key)}
-            </Typography>
-          </button>
-        ))}
+        {FIELDS_GROUP_2.map((field) => {
+          const isEmailLocked = field.key === 'email' && profile.socialAccount;
+
+          return (
+            <button
+              key={field.key}
+              type="button"
+              className="my-page__row"
+              onClick={() => {
+                if (!isEmailLocked) setOpenField(field.key);
+              }}
+              disabled={isEmailLocked}
+            >
+              <Typography variant="head3">{field.label}</Typography>
+              <Typography variant="p2" color="#878787" className="my-page__row-value">
+                {isEmailLocked ? '소셜 로그인 계정' : getFieldValue(field.key)}
+              </Typography>
+            </button>
+          );
+        })}
       </nav>
 
       <div className="my-page__bottom-bar">
@@ -245,9 +358,9 @@ function MyPage() {
 
       <BottomSheet open={openField === 'region'} onClose={closeSheet}>
         <RegionSheet
-          value={profile.region}
-          onSave={(region) => {
-            setProfile((prev) => ({ ...prev, region }));
+          value={profile.interestedRegion}
+          onSave={(interestedRegion) => {
+            setProfile((prev) => ({ ...prev, interestedRegion }));
             closeSheet();
           }}
         />
@@ -256,15 +369,51 @@ function MyPage() {
       <BottomSheet open={openField === 'email'} onClose={closeSheet}>
         <EmailSheet
           value={profile.email}
-          onSave={(email) => {
-            setProfile((prev) => ({ ...prev, email }));
-            closeSheet();
+          onSave={async (email) => {
+            try {
+              const response = await apiFetch('/api/mypage/email', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: joinEmail(email) }),
+              });
+
+              if (!response.ok) {
+                throw new Error(await readErrorMessage(response, '이메일 변경에 실패했습니다.'));
+              }
+
+              setProfile((prev) => ({ ...prev, email }));
+              closeSheet();
+            } catch (err) {
+              alert(err instanceof Error ? err.message : '이메일 변경에 실패했습니다.');
+            }
           }}
         />
       </BottomSheet>
 
+      <BottomSheet open={openField === 'mascot'} onClose={closeSheet}>
+        <MascotSheet value={mascot} onSave={handleMascotSave} />
+      </BottomSheet>
+
       <BottomSheet open={openField === 'password'} onClose={closeSheet}>
-        <PasswordSheet onSave={closeSheet} />
+        <PasswordSheet
+          onSave={async (currentPassword, newPassword) => {
+            try {
+              const response = await apiFetch('/api/mypage/password', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword }),
+              });
+
+              if (!response.ok) {
+                throw new Error(await readErrorMessage(response, '비밀번호 변경에 실패했습니다.'));
+              }
+
+              closeSheet();
+            } catch (err) {
+              alert(err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.');
+            }
+          }}
+        />
       </BottomSheet>
     </div>
   );

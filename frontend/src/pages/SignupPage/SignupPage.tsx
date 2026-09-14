@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff } from 'lucide-react';
 
 import Header from '@/components/Header/Header';
 import Button from '@/components/Button/Button';
@@ -10,6 +10,13 @@ import Typography from '@/components/Typography/Typography';
 
 import signup1 from '@/assets/signup1.png';
 import signup2 from '@/assets/signup2.png';
+import {
+  confirmEmailVerificationCode,
+  isLoginIdAvailable,
+  sendEmailVerificationCode,
+  signup,
+} from '@/auth/api';
+import type { SignupPayload } from '@/auth/api';
 
 import './SignupPage.css';
 
@@ -17,23 +24,10 @@ type SignupStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 const GENDER_OPTIONS = ['남', '여'];
 
-const REGION_OPTIONS = [
-  '제물포구',
-  '영종구',
-  '미추홀구',
-  '연수구',
-  '남동구',
-  '부평구',
-  '계양구',
-  '서해구',
-  '검단구',
-  '강화군',
-  '옹진군',
-  '없음',
-];
-
-/* 프론트 테스트용 이메일 인증번호 */
-const MOCK_VERIFICATION_CODE = '123456';
+interface RegionOption {
+  id: number;
+  regionName: string;
+}
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -89,7 +83,23 @@ function SignupPage() {
      4. 관심 지역
   ========================= */
 
-  const [region, setRegion] = useState('');
+  const [regions, setRegions] = useState<RegionOption[]>([]);
+  const [regionId, setRegionId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/region')
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data: RegionOption[]) => {
+        if (!cancelled) setRegions(data);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /* =========================
      5. 약관
@@ -141,20 +151,24 @@ function SignupPage() {
      ID 중복 확인
   ========================= */
 
-  const handleIdCheck = () => {
+  const handleIdCheck = async () => {
     if (!userId.trim()) {
       setIsIdChecked(false);
       setIdCheckMessage('ID를 입력해주세요.');
       return;
     }
 
-    /*
-     * 프론트 테스트용
-     * API 연결 후 교체
-     */
-    const isDuplicate = userId === 'test';
+    let available: boolean;
 
-    if (isDuplicate) {
+    try {
+      available = await isLoginIdAvailable(userId);
+    } catch (err) {
+      setIsIdChecked(false);
+      setIdCheckMessage(err instanceof Error ? err.message : 'ID 확인에 실패했습니다.');
+      return;
+    }
+
+    if (!available) {
       setIsIdChecked(false);
       setIdCheckMessage('이미 사용 중인 ID입니다.');
       return;
@@ -179,7 +193,7 @@ function SignupPage() {
      이메일 인증
   ========================= */
 
-  const handleEmailVerification = () => {
+  const handleEmailVerification = async () => {
     /*
      * 인증번호 최초 전송
      */
@@ -189,7 +203,12 @@ function SignupPage() {
         return;
       }
 
-      // TODO: 인증번호 전송 API 연결
+      try {
+        await sendEmailVerificationCode(`${emailId}@${emailDomain}`);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+        return;
+      }
 
       setIsEmailCodeSent(true);
       setIsEmailVerified(false);
@@ -221,8 +240,10 @@ function SignupPage() {
       return;
     }
 
-    if (verificationCode !== MOCK_VERIFICATION_CODE) {
-      alert('인증번호가 일치하지 않습니다.');
+    try {
+      await confirmEmailVerificationCode(`${emailId}@${emailDomain}`, verificationCode);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '인증번호가 일치하지 않습니다.');
       return;
     }
 
@@ -234,12 +255,17 @@ function SignupPage() {
      이메일 인증 재전송
   ========================= */
 
-  const handleEmailResend = () => {
+  const handleEmailResend = async () => {
     if (!emailId || !emailDomain) {
       return;
     }
 
-    // TODO: 인증번호 재전송 API 연결
+    try {
+      await sendEmailVerificationCode(`${emailId}@${emailDomain}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '인증번호 재전송에 실패했습니다.');
+      return;
+    }
 
     setVerificationCode('');
     setIsEmailVerified(false);
@@ -329,7 +355,7 @@ function SignupPage() {
     }
 
     if (step === 3) {
-      if (!region) {
+      if (regionId === null) {
         alert('관심 지역을 선택해주세요.');
         return;
       }
@@ -356,27 +382,35 @@ function SignupPage() {
      회원가입 완료
   ========================= */
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!allAgree) {
       alert('필수 약관에 모두 동의해주세요.');
       return;
     }
 
-    /*
-     * 추후 API 연결
-     *
-     * const request = {
-     *   userId,
-     *   password,
-     *   name,
-     *   birth,
-     *   gender,
-     *   phone,
-     *   email: `${emailId}@${emailDomain}`,
-     *   nickname,
-     *   region,
-     * };
-     */
+    if (regionId === null) {
+      alert('관심 지역을 선택해주세요.');
+      return;
+    }
+
+    const payload: SignupPayload = {
+      loginId: userId,
+      password,
+      phoneNumber: phone,
+      name,
+      birth: `${birth.slice(0, 4)}-${birth.slice(4, 6)}-${birth.slice(6, 8)}`,
+      gender,
+      email: `${emailId}@${emailDomain}`,
+      nickname,
+      interestedRegion: regionId,
+    };
+
+    try {
+      await signup(payload);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
+      return;
+    }
 
     setStep(5);
   };
@@ -692,49 +726,68 @@ function SignupPage() {
                   <span>@</span>
 
                   {emailDomainOption === 'direct' ? (
-                    <Input
-                      variant="box"
-                      size="small"
-                      value={emailDomain}
-                      placeholder="도메인 입력"
-                      onChange={(event) => {
-                        const value = event.target.value.replace(/@/g, '').replace(/\s/g, '');
+                    <div className="signup-email-domain-direct">
+                      <Input
+                        variant="box"
+                        size="small"
+                        value={emailDomain}
+                        placeholder="도메인 입력"
+                        onChange={(event) => {
+                          const value = event.target.value.replace(/@/g, '').replace(/\s/g, '');
 
-                        setEmailDomain(value);
+                          setEmailDomain(value);
 
-                        resetEmailVerification();
-                      }}
-                    />
-                  ) : (
-                    <select
-                      className="signup-email-select"
-                      value={emailDomainOption}
-                      onChange={(event) => {
-                        const selectedValue = event.target.value;
+                          resetEmailVerification();
+                        }}
+                      />
 
-                        setEmailDomainOption(selectedValue);
-
-                        if (selectedValue === 'direct') {
+                      <button
+                        type="button"
+                        className="signup-email-domain-toggle"
+                        aria-label="도메인 목록에서 선택"
+                        onClick={() => {
+                          setEmailDomainOption('');
                           setEmailDomain('');
-                        } else {
-                          setEmailDomain(selectedValue);
-                        }
+                          resetEmailVerification();
+                        }}
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="signup-email-domain-select">
+                      <select
+                        className="signup-email-select"
+                        value={emailDomainOption}
+                        onChange={(event) => {
+                          const selectedValue = event.target.value;
 
-                        resetEmailVerification();
-                      }}
-                    >
-                      <option value="">선택</option>
+                          setEmailDomainOption(selectedValue);
 
-                      <option value="naver.com">naver.com</option>
+                          if (selectedValue === 'direct') {
+                            setEmailDomain('');
+                          } else {
+                            setEmailDomain(selectedValue);
+                          }
 
-                      <option value="gmail.com">gmail.com</option>
+                          resetEmailVerification();
+                        }}
+                      >
+                        <option value="">선택</option>
 
-                      <option value="daum.net">daum.net</option>
+                        <option value="naver.com">naver.com</option>
 
-                      <option value="kakao.com">kakao.com</option>
+                        <option value="gmail.com">gmail.com</option>
 
-                      <option value="direct">직접 입력</option>
-                    </select>
+                        <option value="daum.net">daum.net</option>
+
+                        <option value="kakao.com">kakao.com</option>
+
+                        <option value="direct">직접 입력</option>
+                      </select>
+
+                      <ChevronDown className="signup-email-select-icon" size={16} />
+                    </div>
                   )}
                 </div>
 
@@ -784,7 +837,7 @@ function SignupPage() {
                         className="signup-small-button"
                         onClick={handleEmailVerification}
                       >
-                        {isEmailCodeSent ? '인증 확인' : '인증하기'}
+                        {isEmailCodeSent ? '확인' : '전송'}
                       </Button>
                     )}
 
@@ -881,13 +934,13 @@ function SignupPage() {
             </div>
 
             <div className="signup-region-grid">
-              {REGION_OPTIONS.map((option) => (
+              {regions.map((option) => (
                 <OptionTab
-                  key={option}
-                  label={option}
+                  key={option.id}
+                  label={option.regionName}
                   size="small"
-                  active={region === option}
-                  onClick={() => setRegion(option)}
+                  active={regionId === option.id}
+                  onClick={() => setRegionId(option.id)}
                 />
               ))}
             </div>

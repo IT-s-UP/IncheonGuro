@@ -1,32 +1,44 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Typography from '@/components/Typography/Typography';
 import Button from '@/components/Button/Button';
 import OptionTab from '@/components/Tab/OptionTab';
+import { apiFetch } from '@/auth/api';
 import './ProfileSheets.css';
 
-const REGION_OPTIONS = [
-  '제물포구',
-  '영종구',
-  '미추홀구',
-  '연수구',
-  '남동구',
-  '부평구',
-  '계양구',
-  '서해구',
-  '검단구',
-  '강화군',
-  '옹진군',
-  '없음',
-];
+export interface RegionValue {
+  id: number | null;
+  name: string;
+}
+
+interface RegionOption {
+  id: number;
+  regionName: string;
+}
 
 interface RegionSheetProps {
-  value: string;
-  onSave: (value: string) => void;
+  value: RegionValue;
+  onSave: (value: RegionValue) => void;
 }
 
 function RegionSheet({ value, onSave }: RegionSheetProps) {
-  const [draft, setDraft] = useState(value);
+  const [options, setOptions] = useState<RegionOption[]>([]);
+  const [draft, setDraft] = useState<RegionValue>(value);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch('/api/region')
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data: RegionOption[]) => {
+        if (!cancelled) setOptions(data);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div>
@@ -35,17 +47,22 @@ function RegionSheet({ value, onSave }: RegionSheetProps) {
       </Typography>
 
       <div className="profile-sheet__region-grid">
-        {REGION_OPTIONS.map((option) => (
+        {options.map((option) => (
           <OptionTab
-            key={option}
-            label={option}
-            active={draft === option}
-            onClick={() => setDraft(option)}
+            key={option.id}
+            label={option.regionName}
+            active={draft.id === option.id}
+            onClick={() => setDraft({ id: option.id, name: option.regionName })}
           />
         ))}
       </div>
 
-      <Button size="middle" className="profile-sheet__confirm-btn" onClick={() => onSave(draft)}>
+      <Button
+        size="middle"
+        className="profile-sheet__confirm-btn"
+        onClick={() => onSave(draft)}
+        disabled={draft.id === null}
+      >
         확인
       </Button>
     </div>

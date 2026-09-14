@@ -2,6 +2,7 @@ package com.itsup.incheonguro.RegionRecommendPage.service;
 
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendRequest;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendResponse;
+import com.itsup.incheonguro.RegionRecommendPage.dto.RegionSummaryResponse;
 import com.itsup.incheonguro.RegionRecommendPage.entity.Region;
 import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
 
@@ -18,6 +19,15 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RegionRecommendService {
 
     private final RegionRepository regionRepository;
+
+    /**
+     * 관심 구/군 선택 등에 쓰이는 지역 목록(id, 이름)을 조회합니다.
+     */
+    public List<RegionSummaryResponse> findAll() {
+        return regionRepository.findAll().stream()
+                .map(RegionSummaryResponse::from)
+                .toList();
+    }
 
     /**
      * 사용자의 선택을 기준으로

@@ -1,6 +1,7 @@
 package com.itsup.incheonguro.Auth.service;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,9 @@ import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.exception.LoginFailedException;
 import com.itsup.incheonguro.Auth.exception.SignupFailedException;
 import com.itsup.incheonguro.Auth.repository.MemberRepository;
+import com.itsup.incheonguro.RegionRecommendPage.entity.Region;
+import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
+import com.itsup.incheonguro.emailverification.service.EmailVerificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,9 +26,32 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AuthService {
 
+    private static final Map<String, String> REGION_MASCOTS = Map.ofEntries(
+            Map.entry("강화군", "ganghwa"),
+            Map.entry("검단구", "geomdan"),
+            Map.entry("계양구", "gyeyang"),
+            Map.entry("남동구", "namdong"),
+            Map.entry("미추홀구", "michuhol"),
+            Map.entry("부평구", "bupyeong"),
+            Map.entry("서해구", "seohae"),
+            Map.entry("연수구", "yeonsu"),
+            Map.entry("영종구", "yeongjong"),
+            Map.entry("옹진군", "ongjin"),
+            Map.entry("제물포구", "jemulpo"));
+
     private final MemberRepository memberRepository;
+    private final RegionRepository regionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailVerificationService emailVerificationService;
+
+    // ==========================================
+    // 로그인 ID 중복 확인
+    // ==========================================
+
+    public boolean isLoginIdAvailable(String loginId) {
+        return !loginId.startsWith("oauth:") && !memberRepository.existsByLoginId(loginId);
+    }
 
     // ==========================================
     // 회원가입
@@ -36,6 +63,11 @@ public class AuthService {
         // 아이디 중복 확인
         if (request.getLoginId().startsWith("oauth:")
                 || memberRepository.existsByLoginId(request.getLoginId())) {
+            throw new SignupFailedException();
+        }
+
+        // 이메일 인증 완료 확인
+        if (!emailVerificationService.isVerified(request.getEmail())) {
             throw new SignupFailedException();
         }
 
@@ -63,7 +95,13 @@ public class AuthService {
                 request.getNickname(),
                 request.getInterestedRegion());
 
+        regionRepository.findById(request.getInterestedRegion())
+                .map(Region::getRegionName)
+                .map(REGION_MASCOTS::get)
+                .ifPresent(member::changeProfileMascot);
+
         memberRepository.save(member);
+        emailVerificationService.consume(request.getEmail());
 
         SignupResponse.Data data = new SignupResponse.Data(
                 member.getName(),
