@@ -33,3 +33,7 @@ export const MASCOTS: Mascot[] = [
 export function mascotImageOf(key: string | null): string | null {
   return MASCOTS.find((mascot) => mascot.key === key)?.imageUrl ?? null;
 }
+
+export function mascotKeyOfRegionName(regionName: string | null): string | null {
+  return MASCOTS.find((mascot) => mascot.name === regionName)?.key ?? null;
+}
