@@ -9,29 +9,20 @@ import lombok.Getter;
 @Getter
 public class PlaceSummaryResponse {
 
-  // 한국관광공사 콘텐츠 고유번호 (contentId)
   private String placeId;
-
-  // 장소 이름
   private String title;
-  // 주소
   private String subtitle;
-
-  // 장소가 속한 구
   private District district;
-
-  // 장소가 속한 유형
   private PlaceCategory category;
-
-  // GPS 위도(latitude) - 카카오맵에 마커 찍을 때 사용
   private double latitude;
-
-  // GPS 경도(longitude) - 카카오맵에 마커 찍을 때 사용
   private double longitude;
+
+  // 대표 이미지 URL (목록 카드에 썸네일로 표시) - 없는 장소도 많아서 빈 문자열일 수 있음
+  private String imageUrl;
 
   // Service에서 이미 조립된 값들로 직접 생성할 때 사용 (getBookmarkedPlaces, getNearbyPlaces 등)
   public PlaceSummaryResponse(String placeId, String title, String subtitle,
-      District district, PlaceCategory category, double latitude, double longitude) {
+      District district, PlaceCategory category, double latitude, double longitude, String imageUrl) {
     this.placeId = placeId;
     this.title = title;
     this.subtitle = subtitle;
@@ -39,6 +30,7 @@ public class PlaceSummaryResponse {
     this.category = category;
     this.latitude = latitude;
     this.longitude = longitude;
+    this.imageUrl = imageUrl;
   }
 
   // 관광공사 API 응답의 item 하나(JsonNode)를 받아서 우리 DTO로 변환
@@ -53,7 +45,8 @@ public class PlaceSummaryResponse {
         item.path("addr1").asText(),
         District.fromSignguCd(signguCd),
         PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
-        item.path("mapy").asDouble(), // 관광공사 API에서 mapy = 위도
-        item.path("mapx").asDouble()); // 관광공사 API에서 mapx = 경도
+        item.path("mapy").asDouble(),
+        item.path("mapx").asDouble(),
+        item.path("firstimage").asText("")); // 없으면 빈 문자열
   }
 }
