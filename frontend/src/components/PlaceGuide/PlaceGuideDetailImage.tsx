@@ -7,7 +7,7 @@ const SNAP_POINTS = [40, 300, 560];
 const CLICK_THRESHOLD = 5;
 
 interface PlaceGuideDetailImageProps {
-  imageCount?: number;
+  imageUrls: string[];
   onClose: () => void;
 }
 
@@ -17,7 +17,7 @@ function getClosestSnapPoint(current: number): number {
   );
 }
 
-function PlaceGuideDetailImage({ imageCount = 4, onClose }: PlaceGuideDetailImageProps) {
+function PlaceGuideDetailImage({ imageUrls, onClose }: PlaceGuideDetailImageProps) {
   const [height, setHeight] = useState(SNAP_POINTS[1]);
 
   const dragStartY = useRef(0);
@@ -85,11 +85,19 @@ function PlaceGuideDetailImage({ imageCount = 4, onClose }: PlaceGuideDetailImag
       />
 
       <div className="place-guide-detail-image__content">
-        {Array.from({ length: imageCount }).map((_, index) => (
-          <div key={index} className="place-guide-detail-image__item">
-            장소 이미지
-          </div>
-        ))}
+        {imageUrls.length === 0 ? (
+          <div className="place-guide-detail-image__item">이미지가 없습니다.</div>
+        ) : (
+          imageUrls.map((url, index) => (
+            <div key={url} className="place-guide-detail-image__item">
+              <img
+                src={url}
+                alt={`장소 이미지 ${index + 1}`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
