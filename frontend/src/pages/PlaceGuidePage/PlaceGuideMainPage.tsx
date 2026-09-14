@@ -1,5 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Search } from 'lucide-react';
 
@@ -11,17 +11,48 @@ import OptionTab from '@/components/Tab/OptionTab';
 import Dropdown from '@/components/Dropdown/Dropdown';
 import PlaceCard from '@/components/PlaceGuide/PlaceCard';
 import PlaceGuideNearbyPanel from '@/components/PlaceGuide/PlaceGuideNearbyPanel';
-import { mockPlaces } from '@/mocks/place';
-import { mockCourses } from '@/mocks/courseguide';
+import {
+  getPlaces,
+  getPlacesNearMe,
+  getBookmarkedPlaces,
+  getAutocomplete,
+  addBookmark,
+  removeBookmark,
+} from '@/api/placeGuide';
+import type { District, PlaceCategory, PlaceSummary } from '@/api/placeGuide';
+import { loadKakaoMap } from '@/pages/MyCourses/CourseEdit/kakaoMap';
+import type { MapInstance } from '@/pages/MyCourses/CourseEdit/kakaoMap';
 
 import './PlaceGuideMainPage.css';
 
 const TAB_ITEMS = ['장소 목록', '내주변', '북마크'];
-const DISTRICTS = ['중구', '서구', '계양구', '부평구', '동구', '미추홀구', '남동구', '연수구'];
-const PLACE_FILTERS = ['관광지', '카페', '식당', '숙소', '쇼핑'];
+
+// 화면에 보여줄 한글 라벨과, 백엔드 enum 값을 짝지어둠
+const DISTRICTS: { label: string; value: District }[] = [
+  { label: '제물포구', value: 'JEMULPO' },
+  { label: '영종구', value: 'YEONGJONG' },
+  { label: '서해구', value: 'SEOHAE' },
+  { label: '검단구', value: 'GEOMDAN' },
+  { label: '계양구', value: 'GYEYANG' },
+  { label: '부평구', value: 'BUPYEONG' },
+  { label: '미추홀구', value: 'MICHUHOL' },
+  { label: '남동구', value: 'NAMDONG' },
+  { label: '연수구', value: 'YEONSU' },
+  { label: '강화군', value: 'GANGHWA' },
+  { label: '옹진군', value: 'ONGJIN' },
+];
+
+const PLACE_FILTERS: { label: string; value: PlaceCategory }[] = [
+  { label: '관광지', value: 'ATTRACTION' },
+  { label: '카페', value: 'CAFE' },
+  { label: '식당', value: 'RESTAURANT' },
+  { label: '숙소', value: 'LODGING' },
+  { label: '쇼핑', value: 'SHOPPING' },
+];
+
 const SORT_OPTIONS = [
-  { label: '가까운순', value: 'near' },
   { label: '이름순', value: 'name' },
+  { label: '가까운순', value: 'near' },
 ];
 
 const MAX_SUGGESTIONS = 6;
@@ -33,98 +64,258 @@ function PlaceGuideMainPage() {
 
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // ===== 현재 위치 텍스트 (역지오코딩) =====
+  const [currentAddressText, setCurrentAddressText] = useState('현재 위치를 확인하는 중...');
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        loadKakaoMap()
+          .then((maps) => {
+            const geocoder = new maps.services.Geocoder();
+
+            (geocoder as any).coord2Address(
+              longitude,
+              latitude,
+              (result: any[], status: string) => {
+                if (status === maps.services.Status.OK && result[0]) {
+                  const addr =
+                    result[0].road_address?.address_name ?? result[0].address?.address_name;
+                  setCurrentAddressText(
+                    addr ? `현재 위치 : ${addr}` : '현재 위치를 확인할 수 없습니다.',
+                  );
+                } else {
+                  setCurrentAddressText('현재 위치를 확인할 수 없습니다.');
+                }
+              },
+            );
+          })
+          .catch((error) => {
+            console.error('주소 변환 실패:', error);
+            setCurrentAddressText('현재 위치를 확인할 수 없습니다.');
+          });
+      },
+      (error) => {
+        console.error('위치 정보 조회 실패:', error);
+        setCurrentAddressText('위치 권한을 허용해주세요.');
+      },
+    );
+  }, []);
+
+  // ===== 검색창 (다른 탭들이 query를 참조하므로 먼저 선언) =====
+  const [query, setQuery] = useState(initialQuery);
+  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  // ===== 장소 목록 탭 =====
   const [activeDistricts, setActiveDistricts] = useState<Set<number>>(new Set());
+  const [activePlaceFilters, setActivePlaceFilters] = useState<Set<number>>(new Set());
+  const [sortValue, setSortValue] = useState('name');
+  const [places, setPlaces] = useState<PlaceSummary[]>([]);
+  const [isPlacesLoading, setIsPlacesLoading] = useState(true);
 
   const handleDistrictToggle = (index: number) => {
     setActiveDistricts((prev) => {
       const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
       return next;
     });
   };
-
-  const [activePlaceFilters, setActivePlaceFilters] = useState<Set<number>>(new Set());
 
   const handlePlaceFilterToggle = (index: number) => {
     setActivePlaceFilters((prev) => {
       const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
       return next;
     });
   };
-
-  const [sortValue, setSortValue] = useState('near');
 
   const selectedDistrictLabel =
     activeDistricts.size === 0
       ? '전체'
-      : DISTRICTS.filter((_, index) => activeDistricts.has(index)).join(', ');
+      : DISTRICTS.filter((_, index) => activeDistricts.has(index))
+          .map((d) => d.label)
+          .join(', ');
 
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    if (activeIndex !== 0) return;
 
-  const handleBookmarkToggle = (id: number) => {
-    setBookmarkedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
+    const selectedDistrictValues = DISTRICTS.filter((_, index) => activeDistricts.has(index)).map(
+      (d) => d.value,
+    );
+    const selectedCategoryValues = PLACE_FILTERS.filter((_, index) =>
+      activePlaceFilters.has(index),
+    ).map((f) => f.value);
+
+    setIsPlacesLoading(true);
+    getPlaces(selectedDistrictValues, selectedCategoryValues)
+      .then((data) => {
+        const sorted =
+          sortValue === 'name' ? [...data].sort((a, b) => a.title.localeCompare(b.title)) : data;
+        setPlaces(sorted);
+      })
+      .catch((error) => console.error('장소 목록 조회 실패:', error))
+      .finally(() => setIsPlacesLoading(false));
+  }, [activeIndex, activeDistricts, activePlaceFilters, sortValue]);
+
+  // ===== 내 주변 탭 =====
+  const [nearbyPlaces, setNearbyPlaces] = useState<PlaceSummary[]>([]);
+  const [isNearbyLoading, setIsNearbyLoading] = useState(false);
+  const [nearbyError, setNearbyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeIndex !== 1) return;
+
+    setIsNearbyLoading(true);
+    setNearbyError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserPosition({ lat: latitude, lng: longitude });
+
+        getPlacesNearMe(latitude, longitude)
+          .then(setNearbyPlaces)
+          .catch((error) => {
+            console.error('내 주변 장소 조회 실패:', error);
+            setNearbyError('주변 장소를 불러오지 못했습니다.');
+          })
+          .finally(() => setIsNearbyLoading(false));
+      },
+      (error) => {
+        console.error('위치 정보 조회 실패:', error);
+        setNearbyError('위치 정보를 가져올 수 없습니다. 위치 권한을 허용해주세요.');
+        setIsNearbyLoading(false);
+      },
+    );
+  }, [activeIndex]);
+
+  // ===== 내 주변 탭 - 지도 =====
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<MapInstance | null>(null);
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (!userPosition || !mapContainerRef.current) return;
+
+    loadKakaoMap()
+      .then((maps) => {
+        if (!mapContainerRef.current) return;
+
+        const center = new maps.LatLng(userPosition.lat, userPosition.lng);
+        const map = new maps.Map(mapContainerRef.current, { center, level: 5 });
+        mapInstanceRef.current = map;
+
+        const myPositionEl = document.createElement('div');
+        myPositionEl.style.cssText =
+          'width:14px;height:14px;border-radius:50%;background:#4285f4;border:2px solid #ffffff;box-shadow:0 0 4px rgba(0,0,0,0.3);';
+        new maps.CustomOverlay({ position: center, content: myPositionEl, yAnchor: 0.5 });
+
+        nearbyPlaces.forEach((place) => {
+          const markerEl = document.createElement('div');
+          markerEl.textContent = place.title;
+          markerEl.style.cssText =
+            'padding:4px 8px;background:#ffffff;border:1px solid #78aac3;border-radius:12px;font-size:11px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.2);';
+
+          const position = new maps.LatLng(place.latitude, place.longitude);
+          new maps.CustomOverlay({ position, content: markerEl, yAnchor: 1.2 });
+        });
+
+        // 컨테이너 크기가 늦게 확정되는 경우를 대비해, 지도 생성 직후 강제로 다시 계산시킴
+        setTimeout(() => {
+          map.relayout();
+          map.setCenter(center);
+        }, 0);
+      })
+      .catch((error) => console.error('카카오맵 로드 실패:', error));
+  }, [userPosition, nearbyPlaces]);
+
+  // ===== 북마크 탭 =====
+  const [bookmarkedPlaces, setBookmarkedPlaces] = useState<PlaceSummary[]>([]);
+  const [isBookmarksLoading, setIsBookmarksLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeIndex !== 2) return;
+
+    setIsBookmarksLoading(true);
+    getBookmarkedPlaces()
+      .then(setBookmarkedPlaces)
+      .catch((error) => console.error('북마크 목록 조회 실패:', error))
+      .finally(() => setIsBookmarksLoading(false));
+  }, [activeIndex]);
+
+  // 북마크 탭에서는 API 호출 없이, 이미 불러온 목록 안에서만 클라이언트 필터링
+  const filteredBookmarkedPlaces = query.trim()
+    ? bookmarkedPlaces.filter(
+        (place) => place.title.includes(query) || place.subtitle.includes(query),
+      )
+    : bookmarkedPlaces;
+
+  // ===== 북마크 토글 (공통) =====
+  const isBookmarked = (placeId: string) =>
+    bookmarkedPlaces.some((place) => place.placeId === placeId);
+
+  const handleBookmarkToggle = async (placeId: string) => {
+    const wasBookmarked = isBookmarked(placeId);
+
+    try {
+      if (wasBookmarked) {
+        await removeBookmark(placeId);
+        setBookmarkedPlaces((prev) => prev.filter((place) => place.placeId !== placeId));
       } else {
-        next.add(id);
+        await addBookmark(placeId);
+        const found =
+          places.find((p) => p.placeId === placeId) ??
+          nearbyPlaces.find((p) => p.placeId === placeId);
+        if (found) {
+          setBookmarkedPlaces((prev) => [...prev, found]);
+        }
       }
-      return next;
-    });
+    } catch (error) {
+      console.error('북마크 처리 실패:', error);
+      window.alert('로그인이 필요한 기능입니다.');
+    }
   };
 
-  const selectedDistrictNames = DISTRICTS.filter((_, index) => activeDistricts.has(index));
-  const selectedCategoryNames = PLACE_FILTERS.filter((_, index) => activePlaceFilters.has(index));
+  // ===== 검색 관련 동작 =====
+  // 자동완성은 "장소 목록" / "내 주변" 탭에서만 API 호출 (북마크 탭은 클라이언트 필터링이라 불필요)
+  useEffect(() => {
+    if (activeIndex === 2) {
+      setSuggestions([]);
+      return;
+    }
 
-  const filteredPlaces = mockPlaces.filter((place) => {
-    const matchesDistrict =
-      selectedDistrictNames.length === 0 || selectedDistrictNames.includes(place.district);
-    const matchesCategory =
-      selectedCategoryNames.length === 0 || selectedCategoryNames.includes(place.category);
-    return matchesDistrict && matchesCategory;
-  });
+    if (query.trim() === '') {
+      setSuggestions([]);
+      return;
+    }
 
-  const bookmarkedPlaces = mockPlaces.filter((place) => bookmarkedIds.has(place.id));
+    const timeoutId = setTimeout(() => {
+      getAutocomplete(query)
+        .then((data) => setSuggestions(data.slice(0, MAX_SUGGESTIONS)))
+        .catch((error) => console.error('자동완성 조회 실패:', error));
+    }, 200);
 
-  const [query, setQuery] = useState(initialQuery);
-  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
-
-  // 연관 검색어: 장소 이름 + 코스 이름 중 query 포함하는 것들
-  const suggestions =
-    query.trim() === ''
-      ? []
-      : [
-          ...mockPlaces.filter((place) => place.title.includes(query)).map((place) => place.title),
-          ...mockCourses
-            .filter((course) => course.name.includes(query))
-            .map((course) => course.name),
-        ]
-          // 중복 제거
-          .filter((label, index, arr) => arr.indexOf(label) === index)
-          .slice(0, MAX_SUGGESTIONS);
+    return () => clearTimeout(timeoutId);
+  }, [query, activeIndex]);
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
     setIsSuggestionOpen(true);
   };
 
-  // 연관 검색어 클릭 -> input에 채우기만, 검색 실행 X
   const handleSuggestionClick = (label: string) => {
     setQuery(label);
     setIsSuggestionOpen(false);
   };
 
-  // 실제 검색 실행 -> 돋보기 클릭 또는 Enter -> 검색 결과 페이지로 이동
   const handleSearchSubmit = () => {
+    // 북마크 탭은 이미 실시간으로 필터링되고 있어서, 별도 페이지 이동이 필요 없음
+    if (activeIndex === 2) return;
     if (query.trim() === '') return;
     navigate(`/place-guide/search?q=${encodeURIComponent(query)}`);
   };
@@ -140,7 +331,6 @@ function PlaceGuideMainPage() {
       <Header />
       <BackHeader title="주요 장소 안내" onBack={() => navigate(-1)} />
       <LineTab items={TAB_ITEMS} activeIndex={activeIndex} onChange={setActiveIndex} />
-
       <div className="place-guide-search-box">
         <div className="place-guide-search-box__inner">
           <Input
@@ -160,7 +350,7 @@ function PlaceGuideMainPage() {
             style={{ pointerEvents: 'auto', cursor: 'pointer' }}
           />
 
-          {isSuggestionOpen && suggestions.length > 0 && (
+          {activeIndex !== 2 && isSuggestionOpen && suggestions.length > 0 && (
             <ul className="place-guide-suggestion-list">
               {suggestions.map((label) => (
                 <li key={label}>
@@ -177,9 +367,7 @@ function PlaceGuideMainPage() {
           )}
         </div>
       </div>
-
-      <p className="place-guide-location">현재 위치 : 인천광역시 완정로 ~~</p>
-
+      <p className="place-guide-location">{currentAddressText}</p>
       {activeIndex === 0 && (
         <>
           <h3 className="place-guide-section-title">각 구별 주요 장소 안내</h3>
@@ -187,8 +375,8 @@ function PlaceGuideMainPage() {
           <div className="place-guide-district-grid">
             {DISTRICTS.map((district, index) => (
               <OptionTab
-                key={district}
-                label={district}
+                key={district.value}
+                label={district.label}
                 size="small"
                 active={activeDistricts.has(index)}
                 onClick={() => handleDistrictToggle(index)}
@@ -201,8 +389,8 @@ function PlaceGuideMainPage() {
           <div className="place-guide-filter-row">
             {PLACE_FILTERS.map((filter, index) => (
               <OptionTab
-                key={filter}
-                label={filter}
+                key={filter.value}
+                label={filter.label}
                 size="small"
                 active={activePlaceFilters.has(index)}
                 onClick={() => handlePlaceFilterToggle(index)}
@@ -216,41 +404,61 @@ function PlaceGuideMainPage() {
 
           <h4 className="place-guide-result-title">주요 장소 : {selectedDistrictLabel}</h4>
 
-          <div className="place-guide-card-list">
-            {filteredPlaces.map((place) => (
-              <PlaceCard
-                key={place.id}
-                title={place.title}
-                subtitle={place.subtitle}
-                bookmarked={bookmarkedIds.has(place.id)}
-                onClick={() => navigate(`/place-guide/${place.id}`)}
-                onBookmarkClick={() => handleBookmarkToggle(place.id)}
-              />
-            ))}
-          </div>
+          {isPlacesLoading ? (
+            <p className="place-guide-empty">불러오는 중...</p>
+          ) : places.length === 0 ? (
+            <p className="place-guide-empty">해당 조건의 장소가 없습니다.</p>
+          ) : (
+            <div className="place-guide-card-list">
+              {places.map((place) => (
+                <PlaceCard
+                  key={place.placeId}
+                  title={place.title}
+                  subtitle={place.subtitle}
+                  imageUrl={place.imageUrl}
+                  bookmarked={isBookmarked(place.placeId)}
+                  onClick={() => navigate(`/place-guide/${place.placeId}`)}
+                  onBookmarkClick={() => handleBookmarkToggle(place.placeId)}
+                />
+              ))}
+            </div>
+          )}
         </>
       )}
 
       {activeIndex === 1 && (
-        <div className="place-guide-map-area">
-          <div className="place-guide-map-placeholder">내 주변 지도</div>
-          <PlaceGuideNearbyPanel places={mockPlaces} />
+        <div className="place-guide-nearby-tab">
+          <div className="place-guide-map-area">
+            {isNearbyLoading || nearbyError ? (
+              <div className="place-guide-map-placeholder">
+                {isNearbyLoading ? '위치를 확인하는 중...' : nearbyError}
+              </div>
+            ) : (
+              <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+            )}
+            <PlaceGuideNearbyPanel places={nearbyPlaces} />
+          </div>
         </div>
       )}
 
       {activeIndex === 2 && (
         <div className="place-guide-card-list">
-          {bookmarkedPlaces.length === 0 ? (
-            <p className="place-guide-empty">북마크한 장소가 없습니다.</p>
+          {isBookmarksLoading ? (
+            <p className="place-guide-empty">불러오는 중...</p>
+          ) : filteredBookmarkedPlaces.length === 0 ? (
+            <p className="place-guide-empty">
+              {query.trim() ? '검색 결과가 없습니다.' : '북마크한 장소가 없습니다.'}
+            </p>
           ) : (
-            bookmarkedPlaces.map((place) => (
+            filteredBookmarkedPlaces.map((place) => (
               <PlaceCard
-                key={place.id}
+                key={place.placeId}
                 title={place.title}
                 subtitle={place.subtitle}
-                bookmarked={bookmarkedIds.has(place.id)}
-                onClick={() => navigate(`/place-guide/${place.id}`)}
-                onBookmarkClick={() => handleBookmarkToggle(place.id)}
+                imageUrl={place.imageUrl}
+                bookmarked
+                onClick={() => navigate(`/place-guide/${place.placeId}`)}
+                onBookmarkClick={() => handleBookmarkToggle(place.placeId)}
               />
             ))
           )}
