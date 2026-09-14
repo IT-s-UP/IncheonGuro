@@ -1,14 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
-import RoundTab from '@/components/Tab/RoundTab';
 import Typography from '@/components/Typography/Typography';
+
+import { apiFetch } from '@/auth/api';
+import { useAuth } from '@/auth/AuthContext';
 
 import stampTourImage from '@/assets/StampTour/StampTour.png';
 
-import { BADGE_MOCK_DATA, STAMP_MOCK_DATA, STAMP_USER } from './mockData';
+import stampTourStartPoint from '@/assets/StampTour/StampTour StartPoint.png';
+import jemulpoStamp from '@/assets/StampTour/제물포구 스탬프.png';
+import yeongjongStamp from '@/assets/StampTour/영종구 스탬프.png';
+import michuholStamp from '@/assets/StampTour/미추홀구 스탬프.png';
+import yeonsuStamp from '@/assets/StampTour/연수구 스탬프.png';
+import namdongStamp from '@/assets/StampTour/남동구 스탬프.png';
+import bupyeongStamp from '@/assets/StampTour/부평구 스탬프.png';
+import gyeyangStamp from '@/assets/StampTour/계양구 스탬프.png';
+import seohaeStamp from '@/assets/StampTour/서해구 스탬프.png';
+import geomdanStamp from '@/assets/StampTour/검단구 스탬프.png';
+import ganghwaStamp from '@/assets/StampTour/강화군 스탬프.png';
+import ongjinStamp from '@/assets/StampTour/옹진군 스탬프.png';
 
 import './StampTourPage.css';
 
@@ -18,56 +31,78 @@ import './StampTourPage.css';
 
 const PATH_WIDTH = 360;
 
-/*
- * 시작 원 중심
- */
 const START_POINT = {
   x: 70,
   y: 60,
 };
 
-/*
- * 시작 원 → 첫 번째 스탬프 거리
- *
- * 너무 멀지 않도록 별도 설정
- */
 const FIRST_STAMP_GAP = 160;
 
-/*
- * 첫 번째 이후
- * 모든 스탬프 사이의 실제 거리
- */
 const STAMP_GAP = 170;
 
-/*
- * S 곡선 좌우 끝
- */
 const LEFT_X = 60;
 const CENTER_X = 160;
 const RIGHT_X = 290;
 
-/*
- * S가 얼마나 세로로 길게
- * 이어질지 결정
- *
- * 작을수록 더 자주 꾸불거림
- * 클수록 더 완만함
- */
 const CURVE_STEP_Y = 170;
 
-/*
- * 곡선을 얼마나 촘촘하게
- * 계산할지 결정
- */
 const CURVE_RESOLUTION = 20;
 
-/*
- * 곡선 부드러움
- *
- * 값이 너무 크면 휘어짐이 과해지고,
- * 너무 작으면 직선처럼 보임
- */
 const CURVE_TENSION = 0.9;
+
+/* =========================
+   전체 스탬프 지역
+========================= */
+
+const STAMP_REGIONS = [
+  '제물포구',
+  '영종구',
+  '미추홀구',
+  '연수구',
+  '남동구',
+  '부평구',
+  '계양구',
+  '서해구',
+  '검단구',
+  '강화군',
+  '옹진군',
+];
+
+const STAMP_IMAGE_MAP: Record<string, string> = {
+  제물포구: jemulpoStamp,
+  영종구: yeongjongStamp,
+  미추홀구: michuholStamp,
+  연수구: yeonsuStamp,
+  남동구: namdongStamp,
+  부평구: bupyeongStamp,
+  계양구: gyeyangStamp,
+  서해구: seohaeStamp,
+  검단구: geomdanStamp,
+  강화군: ganghwaStamp,
+  옹진군: ongjinStamp,
+};
+
+/* =========================
+   API Response
+========================= */
+
+interface MyStampResponse {
+  regionId: number;
+  regionName: string;
+  imageUrl: string;
+  achievedAt: string;
+}
+
+/* =========================
+   화면에서 사용할 Stamp
+========================= */
+
+interface Stamp {
+  id: number;
+  region: string;
+  owned: boolean;
+  imageSrc: string;
+}
 
 /* =========================
    Point
@@ -85,26 +120,14 @@ interface PathPoint {
 function createGuidePoints(stampCount: number): PathPoint[] {
   const points: PathPoint[] = [
     START_POINT,
-
-    /*
-     * 시작점에서 첫 번째 방향은
-     * 거의 수평에 가깝게 오른쪽으로
-     */
     {
       x: 180,
       y: 80,
     },
   ];
 
-  /*
-   * 첫 번째 굴곡 시작
-   */
   let y = 190;
 
-  /*
-   * 실제 필요한 길보다
-   * 조금 더 길게 생성
-   */
   const guideCount = stampCount * 2 + 6;
 
   for (let index = 0; index < guideCount; index += 1) {
@@ -112,10 +135,6 @@ function createGuidePoints(stampCount: number): PathPoint[] {
 
     let x = CENTER_X;
 
-    /*
-     * 오른쪽 → 중앙 → 왼쪽 → 중앙
-     * 반복
-     */
     if (patternIndex === 0) {
       x = RIGHT_X;
     }
@@ -144,7 +163,6 @@ function createGuidePoints(stampCount: number): PathPoint[] {
 }
 
 /* =========================
-   Cardinal / Catmull 형태의
    부드러운 곡선 보간
 ========================= */
 
@@ -158,35 +176,25 @@ function interpolateCurve(
   const t2 = t * t;
   const t3 = t2 * t;
 
-  /*
-   * 시작점과 끝점의 tangent
-   */
   const m1x = (p2.x - p0.x) * CURVE_TENSION;
-
   const m1y = (p2.y - p0.y) * CURVE_TENSION;
 
   const m2x = (p3.x - p1.x) * CURVE_TENSION;
-
   const m2y = (p3.y - p1.y) * CURVE_TENSION;
 
   const h00 = 2 * t3 - 3 * t2 + 1;
-
   const h10 = t3 - 2 * t2 + t;
-
   const h01 = -2 * t3 + 3 * t2;
-
   const h11 = t3 - t2;
 
   return {
     x: h00 * p1.x + h10 * m1x + h01 * p2.x + h11 * m2x,
-
     y: h00 * p1.y + h10 * m1y + h01 * p2.y + h11 * m2y,
   };
 }
 
 /* =========================
-   기준점들을 실제로 촘촘한
-   부드러운 곡선으로 변환
+   촘촘한 곡선 생성
 ========================= */
 
 function createDenseCurve(guidePoints: PathPoint[]): PathPoint[] {
@@ -198,11 +206,8 @@ function createDenseCurve(guidePoints: PathPoint[]): PathPoint[] {
 
   for (let index = 0; index < guidePoints.length - 1; index += 1) {
     const p0 = guidePoints[Math.max(0, index - 1)];
-
     const p1 = guidePoints[index];
-
     const p2 = guidePoints[index + 1];
-
     const p3 = guidePoints[Math.min(guidePoints.length - 1, index + 2)];
 
     for (let step = 0; step < CURVE_RESOLUTION; step += 1) {
@@ -218,8 +223,7 @@ function createDenseCurve(guidePoints: PathPoint[]): PathPoint[] {
 }
 
 /* =========================
-   곡선을 따라 실제 거리가
-   일정하도록 스탬프 위치 생성
+   곡선을 따라 스탬프 위치 생성
 ========================= */
 
 function createStampPoints(curve: PathPoint[], stampCount: number): PathPoint[] {
@@ -238,16 +242,8 @@ function createStampPoints(curve: PathPoint[], stampCount: number): PathPoint[] 
 
     const segmentEnd = curve[index];
 
-    let remainingSegment = Math.hypot(
-      segmentEnd.x - segmentStart.x,
+    let remainingSegment = Math.hypot(segmentEnd.x - segmentStart.x, segmentEnd.y - segmentStart.y);
 
-      segmentEnd.y - segmentStart.y,
-    );
-
-    /*
-     * 한 segment 안에
-     * 스탬프 위치가 존재하는 경우
-     */
     while (stamps.length < stampCount && accumulatedDistance + remainingSegment >= targetDistance) {
       const neededDistance = targetDistance - accumulatedDistance;
 
@@ -261,15 +257,8 @@ function createStampPoints(curve: PathPoint[], stampCount: number): PathPoint[] 
 
       stamps.push(stampPoint);
 
-      /*
-       * 이번 스탬프 이후부터는
-       * 모든 간격 동일
-       */
       targetDistance = STAMP_GAP;
 
-      /*
-       * 남아있는 segment 계산
-       */
       remainingSegment -= neededDistance;
 
       segmentStart = stampPoint;
@@ -284,38 +273,7 @@ function createStampPoints(curve: PathPoint[], stampCount: number): PathPoint[] 
 }
 
 /* =========================
-   전체 곡선 생성
-========================= */
-
-const GUIDE_POINTS = createGuidePoints(STAMP_MOCK_DATA.length);
-
-const DENSE_CURVE = createDenseCurve(GUIDE_POINTS);
-
-const STAMP_POINTS = createStampPoints(DENSE_CURVE, STAMP_MOCK_DATA.length);
-
-/* =========================
-   마지막 스탬프
-========================= */
-
-const LAST_STAMP = STAMP_POINTS[STAMP_POINTS.length - 1];
-
-/* =========================
-   마지막 스탬프까지만
-   연결선 표시
-========================= */
-
-const DISPLAY_CURVE = LAST_STAMP
-  ? [...DENSE_CURVE.filter((point) => point.y < LAST_STAMP.y), LAST_STAMP]
-  : DENSE_CURVE;
-
-/* =========================
-   경로 높이
-========================= */
-
-const PATH_HEIGHT = (LAST_STAMP?.y ?? START_POINT.y) + 100;
-
-/* =========================
-   SVG path 생성
+   SVG Path 생성
 ========================= */
 
 function createPath(points: PathPoint[]) {
@@ -339,19 +297,106 @@ function createPath(points: PathPoint[]) {
 function StampTourPage() {
   const navigate = useNavigate();
 
+  const { user, isLoading: authLoading } = useAuth();
+
   /* =========================
-     탭
+     스탬프 상태
   ========================= */
 
-  const [activeTabIndex, setActiveTabIndex] = useState<0 | 1>(0);
+  const [stamps, setStamps] = useState<Stamp[]>([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState('');
+
+  /* =========================
+     내 스탬프 조회
+  ========================= */
+
+  useEffect(() => {
+    // AuthContext에서 로그인 상태 확인이 끝날 때까지 기다림
+    if (authLoading) {
+      return;
+    }
+
+    // 로그인하지 않은 상태라면 API 호출하지 않음
+    if (!user) {
+      setLoading(false);
+      setStamps([]);
+      return;
+    }
+
+    const fetchMyStamps = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const response = await apiFetch('/stamp/my');
+
+        if (!response.ok) {
+          throw new Error(`스탬프 조회 실패 (${response.status})`);
+        }
+
+        const data = (await response.json()) as MyStampResponse[];
+
+        const nextStamps: Stamp[] = STAMP_REGIONS.map((regionName, index) => {
+          const ownedStamp = data.find((stamp) => stamp.regionName === regionName);
+
+          return {
+            id: ownedStamp?.regionId ?? index + 1,
+            region: regionName,
+            owned: ownedStamp !== undefined,
+            imageSrc: STAMP_IMAGE_MAP[regionName],
+          };
+        });
+
+        setStamps(nextStamps);
+      } catch (error) {
+        console.error('내 스탬프 조회 실패:', error);
+
+        setError('스탬프 정보를 불러오지 못했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchMyStamps();
+  }, [authLoading, user]);
 
   /* =========================
      획득한 스탬프 개수
   ========================= */
 
-  const ownedStampCount = STAMP_MOCK_DATA.filter((stamp) => stamp.owned).length;
+  const ownedStampCount = stamps.filter((stamp) => stamp.owned).length;
 
-  const stampPath = createPath(DISPLAY_CURVE);
+  /* =========================
+     경로 생성
+  ========================= */
+
+  const guidePoints = createGuidePoints(stamps.length);
+
+  const denseCurve = createDenseCurve(guidePoints);
+
+  const stampPoints = createStampPoints(denseCurve, stamps.length);
+
+  const lastStamp = stampPoints[stampPoints.length - 1];
+
+  /* =========================
+     마지막 스탬프까지만
+     연결선 표시
+  ========================= */
+
+  const displayCurve = lastStamp
+    ? [...denseCurve.filter((point) => point.y < lastStamp.y), lastStamp]
+    : denseCurve;
+
+  /* =========================
+     경로 높이
+  ========================= */
+
+  const pathHeight = (lastStamp?.y ?? START_POINT.y) + 100;
+
+  const stampPath = createPath(displayCurve);
 
   return (
     <div className="stamp-tour-page">
@@ -367,7 +412,7 @@ function StampTourPage() {
         </div>
 
         {/* =========================
-            상단
+            상단 이미지
         ========================= */}
 
         <section className="stamp-tour-hero">
@@ -375,75 +420,72 @@ function StampTourPage() {
 
           <div className="stamp-tour-hero__info">
             <Typography variant="p1" className="stamp-tour-hero__description" color="#56504B">
-              {STAMP_USER.nickname} 님의 이번 달 스탬프
+              나의 스탬프
             </Typography>
 
             <Typography variant="head2" className="stamp-tour-hero__count" color="#56504B">
-              {ownedStampCount}개
+              {loading ? '-' : `${ownedStampCount}개`}
             </Typography>
           </div>
         </section>
 
         {/* =========================
-            RoundTab
+            스탬프
         ========================= */}
 
-        <div className="stamp-tour-tabs">
-          <RoundTab
-            options={['누적 스탬프', '내 배지']}
-            activeIndex={activeTabIndex}
-            onChange={setActiveTabIndex}
-          />
-        </div>
-
-        {/* =========================
-            누적 스탬프
-        ========================= */}
-
-        {activeTabIndex === 0 && (
-          <section className="stamp-tour-stamps">
+        <section className="stamp-tour-stamps">
+          {error ? (
+            <div className="stamp-tour-error">
+              <Typography variant="p2" color="#777777">
+                {error}
+              </Typography>
+            </div>
+          ) : (
             <div
               className="stamp-tour-path"
               style={{
-                height: `${PATH_HEIGHT}px`,
+                height: `${pathHeight}px`,
               }}
             >
-              {/* 연결선 */}
+              {/* =========================
+                  연결선
+              ========================= */}
 
-              <svg
-                className="stamp-tour-path__line"
-                viewBox={`0 0 ${PATH_WIDTH} ${PATH_HEIGHT}`}
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                <path d={stampPath} />
-              </svg>
+              {stamps.length > 0 && (
+                <svg
+                  className="stamp-tour-path__line"
+                  viewBox={`0 0 ${PATH_WIDTH} ${pathHeight}`}
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path d={stampPath} />
+                </svg>
+              )}
 
               {/* =========================
-                  시작 원
-              ========================= */}
+    시작점
+========================= */}
 
               <div
                 className="stamp-tour-start"
                 style={{
                   left: `${(START_POINT.x / PATH_WIDTH) * 100}%`,
-
                   top: `${START_POINT.y}px`,
                 }}
               >
-                <span>
-                  스탬프 투어
-                  <br />
-                  시작!
-                </span>
+                <img
+                  src={stampTourStartPoint}
+                  alt="스탬프 투어 시작"
+                  className="stamp-tour-start__image"
+                />
               </div>
 
               {/* =========================
-                  전체 스탬프
+                  스탬프
               ========================= */}
 
-              {STAMP_MOCK_DATA.map((stamp, index) => {
-                const point = STAMP_POINTS[index];
+              {stamps.map((stamp, index) => {
+                const point = stampPoints[index];
 
                 if (!point) {
                   return null;
@@ -466,55 +508,18 @@ function StampTourPage() {
                     }}
                   >
                     <div className="stamp-tour-stamp__mark">
-                      <div className="stamp-tour-stamp__inner">
-                        <span className="stamp-tour-stamp__icon">STAMP</span>
-                      </div>
+                      <img
+                        src={stamp.imageSrc}
+                        alt={`${stamp.region} 스탬프`}
+                        className="stamp-tour-stamp__image"
+                      />
                     </div>
-
-                    <Typography variant="p3" className="stamp-tour-stamp__region">
-                      {stamp.region}
-                    </Typography>
                   </div>
                 );
               })}
             </div>
-          </section>
-        )}
-
-        {/* =========================
-            내 배지
-        ========================= */}
-
-        {activeTabIndex === 1 && (
-          <section className="stamp-tour-badges">
-            <div className="stamp-tour-badge-grid">
-              {BADGE_MOCK_DATA.map((badge) => (
-                <div
-                  key={badge.id}
-                  className={[
-                    'stamp-tour-badge',
-
-                    badge.owned ? 'stamp-tour-badge--owned' : 'stamp-tour-badge--locked',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  <div className="stamp-tour-badge__image">
-                    {badge.imageUrl ? (
-                      <img src={badge.imageUrl} alt={badge.name} />
-                    ) : (
-                      <span className="stamp-tour-badge__placeholder">BADGE</span>
-                    )}
-                  </div>
-
-                  <Typography variant="p3" className="stamp-tour-badge__name">
-                    {badge.name}
-                  </Typography>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+          )}
+        </section>
       </main>
     </div>
   );
