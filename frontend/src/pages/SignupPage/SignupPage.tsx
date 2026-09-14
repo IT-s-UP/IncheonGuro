@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff } from 'lucide-react';
 
 import Header from '@/components/Header/Header';
 import Button from '@/components/Button/Button';
@@ -726,49 +726,68 @@ function SignupPage() {
                   <span>@</span>
 
                   {emailDomainOption === 'direct' ? (
-                    <Input
-                      variant="box"
-                      size="small"
-                      value={emailDomain}
-                      placeholder="도메인 입력"
-                      onChange={(event) => {
-                        const value = event.target.value.replace(/@/g, '').replace(/\s/g, '');
+                    <div className="signup-email-domain-direct">
+                      <Input
+                        variant="box"
+                        size="small"
+                        value={emailDomain}
+                        placeholder="도메인 입력"
+                        onChange={(event) => {
+                          const value = event.target.value.replace(/@/g, '').replace(/\s/g, '');
 
-                        setEmailDomain(value);
+                          setEmailDomain(value);
 
-                        resetEmailVerification();
-                      }}
-                    />
-                  ) : (
-                    <select
-                      className="signup-email-select"
-                      value={emailDomainOption}
-                      onChange={(event) => {
-                        const selectedValue = event.target.value;
+                          resetEmailVerification();
+                        }}
+                      />
 
-                        setEmailDomainOption(selectedValue);
-
-                        if (selectedValue === 'direct') {
+                      <button
+                        type="button"
+                        className="signup-email-domain-toggle"
+                        aria-label="도메인 목록에서 선택"
+                        onClick={() => {
+                          setEmailDomainOption('');
                           setEmailDomain('');
-                        } else {
-                          setEmailDomain(selectedValue);
-                        }
+                          resetEmailVerification();
+                        }}
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="signup-email-domain-select">
+                      <select
+                        className="signup-email-select"
+                        value={emailDomainOption}
+                        onChange={(event) => {
+                          const selectedValue = event.target.value;
 
-                        resetEmailVerification();
-                      }}
-                    >
-                      <option value="">선택</option>
+                          setEmailDomainOption(selectedValue);
 
-                      <option value="naver.com">naver.com</option>
+                          if (selectedValue === 'direct') {
+                            setEmailDomain('');
+                          } else {
+                            setEmailDomain(selectedValue);
+                          }
 
-                      <option value="gmail.com">gmail.com</option>
+                          resetEmailVerification();
+                        }}
+                      >
+                        <option value="">선택</option>
 
-                      <option value="daum.net">daum.net</option>
+                        <option value="naver.com">naver.com</option>
 
-                      <option value="kakao.com">kakao.com</option>
+                        <option value="gmail.com">gmail.com</option>
 
-                      <option value="direct">직접 입력</option>
-                    </select>
+                        <option value="daum.net">daum.net</option>
+
+                        <option value="kakao.com">kakao.com</option>
+
+                        <option value="direct">직접 입력</option>
+                      </select>
+
+                      <ChevronDown className="signup-email-select-icon" size={16} />
+                    </div>
                   )}
                 </div>
 
@@ -818,7 +837,7 @@ function SignupPage() {
                         className="signup-small-button"
                         onClick={handleEmailVerification}
                       >
-                        {isEmailCodeSent ? '인증 확인' : '인증하기'}
+                        {isEmailCodeSent ? '확인' : '전송'}
                       </Button>
                     )}
 
