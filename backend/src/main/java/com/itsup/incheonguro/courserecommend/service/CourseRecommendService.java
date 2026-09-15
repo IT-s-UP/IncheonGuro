@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,6 +48,9 @@ public class CourseRecommendService {
 
     // 코스 전체를 한 구 안에서 구성하기 위한 최소 테마 장소 후보 수
     private static final int MIN_THEME_POOL_SIZE = 2;
+
+    // 옹진군처럼 여러 섬으로 나뉜 구에서, 이 거리(km) 이내의 장소들을 "같은 섬"으로 간주해 묶습니다.
+    private static final double ISLAND_CLUSTER_RADIUS_KM = 5.0;
 
     // 쇼핑 카테고리 중 개별 브랜드 매장(아울렛 입점 매장, 마트, 올리브영 등) 코드 - 여행 코스에는 부적합해 제외
     private static final String SHOPPING_INDIVIDUAL_STORE_CODE = "SH04";
@@ -218,6 +223,25 @@ public class CourseRecommendService {
                             .filter(place -> place.getCategory() == PlaceCategory.RESTAURANT)
                             .collect(Collectors.toCollection(ArrayList::new));
 
+            // 옹진군은 다리로 연결되지 않은 여러 섬으로 이루어져 있어(백령도/연평도/대청도/자월도/덕적도 등)
+            // 서로 다른 섬의 장소가 한 코스에 섞이지 않도록, 좌표 기준으로 가장 크게 뭉친
+            // 섬(클러스터) 하나만 남깁니다.
+            if (district == District.ONGJIN) {
+                List<PlaceSummaryResponse> combined = new ArrayList<>(theme);
+                combined.addAll(meal);
+
+                Set<PlaceSummaryResponse> largestCluster =
+                        Collections.newSetFromMap(new IdentityHashMap<>());
+                largestCluster.addAll(keepLargestCluster(combined));
+
+                theme = theme.stream()
+                        .filter(largestCluster::contains)
+                        .collect(Collectors.toCollection(ArrayList::new));
+                meal = meal.stream()
+                        .filter(largestCluster::contains)
+                        .collect(Collectors.toCollection(ArrayList::new));
+            }
+
             if (theme.size() >= MIN_THEME_POOL_SIZE) {
                 Collections.shuffle(theme);
                 Collections.shuffle(meal);
@@ -236,6 +260,61 @@ public class CourseRecommendService {
         Collections.shuffle(best.themePlaces());
         Collections.shuffle(best.mealPlaces());
         return best;
+    }
+
+    /**
+     * 좌표 기준으로 서로 {@link #ISLAND_CLUSTER_RADIUS_KM} 이내에 있는 장소들을
+     * 하나의 섬(클러스터)으로 묶고, 가장 장소가 많은 클러스터만 남깁니다.
+     * (Union-Find로 연결된 장소들을 그룹화하는 방식)
+     */
+    private List<PlaceSummaryResponse> keepLargestCluster(List<PlaceSummaryResponse> places) {
+        int n = places.size();
+
+        if (n <= 1) {
+            return places;
+        }
+
+        int[] parent = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+        }
+
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (distanceKm(places.get(i), places.get(j)) <= ISLAND_CLUSTER_RADIUS_KM) {
+                    union(parent, i, j);
+                }
+            }
+        }
+
+        Map<Integer, List<PlaceSummaryResponse>> clusters = new HashMap<>();
+
+        for (int i = 0; i < n; i++) {
+            clusters.computeIfAbsent(find(parent, i), key -> new ArrayList<>()).add(places.get(i));
+        }
+
+        return clusters.values().stream()
+                .max(Comparator.comparingInt(List::size))
+                .orElse(places);
+    }
+
+    private int find(int[] parent, int i) {
+        while (parent[i] != i) {
+            parent[i] = parent[parent[i]];
+            i = parent[i];
+        }
+
+        return i;
+    }
+
+    private void union(int[] parent, int a, int b) {
+        int rootA = find(parent, a);
+        int rootB = find(parent, b);
+
+        if (rootA != rootB) {
+            parent[rootA] = rootB;
+        }
     }
 
     private Set<PlaceCategory> resolveCategories(List<String> travelStyles) {
@@ -426,6 +505,8 @@ public class CourseRecommendService {
                     .category(CATEGORY_LABEL.getOrDefault(place.getCategory(), "장소"))
                     .description(place.getSubtitle())
                     .imageUrl(place.getImageUrl())
+                    .latitude(place.getLatitude())
+                    .longitude(place.getLongitude())
                     .build());
 
             categoryCount.merge(place.getCategory(), 1, Integer::sum);

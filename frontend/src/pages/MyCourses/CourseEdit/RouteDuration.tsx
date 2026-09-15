@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CoursePlace, Transport } from '../types';
 import { loadKakaoMap, locateAddress } from './kakaoMap';
+import { apiFetch } from '@/auth/api';
 
 const modes: Record<Transport, string> = {
   도보: 'walk',
@@ -59,8 +60,7 @@ export default function RouteDuration({
         setText(cached.text);
         return;
       }
-      const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
-      const response = await fetch(`${base}/course-routes?${key}`, { signal: abort.signal });
+      const response = await apiFetch(`/api/course-routes?${key}`, { signal: abort.signal });
       if (!response.ok)
         throw new Error(
           response.status === 404

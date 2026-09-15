@@ -16,4 +16,8 @@ public class CoursePlaceResponse {
     private String description;
 
     private String imageUrl;
+
+    private double latitude;
+
+    private double longitude;
 }

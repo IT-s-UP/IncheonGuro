@@ -67,6 +67,8 @@ function toMyCourseDay(day: CourseRecommendResult['days'][number], transport: st
       id: place.id,
       name: place.name,
       address: place.description,
+      latitude: place.latitude,
+      longitude: place.longitude,
     })),
     costs,
   };
