@@ -2,6 +2,7 @@ package com.itsup.incheonguro.Auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -38,6 +39,18 @@ public class SecurityConfig {
 
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/festivals",
                                                                 "/festivals/**")
+                                                .permitAll()
+
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/courseguide", "/api/courseguide/**")
+                                                .permitAll()
+
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/placeguide", "/api/placeguide/**")
+                                                .permitAll()
+
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/course-routes", "/api/course-routes/**")
                                                 .permitAll()
 
                                                 .requestMatchers("/api/**", "/stamp/**")
