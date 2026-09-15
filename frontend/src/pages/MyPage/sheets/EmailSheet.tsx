@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Typography from '@/components/Typography/Typography';
 import Input from '@/components/Input/Input';
 import Button from '@/components/Button/Button';
+import { confirmEmailVerificationCode, sendEmailVerificationCode } from '@/auth/api';
 import './ProfileSheets.css';
 
 const DOMAIN_OPTIONS = ['gmail.com', 'naver.com', 'daum.net', '직접입력'];
@@ -34,6 +35,7 @@ function EmailSheet({ value, onSave }: EmailSheetProps) {
   const [code, setCode] = useState('');
   const [sentAt, setSentAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     if (sentAt === null) return;
@@ -53,12 +55,36 @@ function EmailSheet({ value, onSave }: EmailSheetProps) {
   const isCodeSent = sentAt !== null;
   const isCodeValid = code.trim().length === 6;
 
-  const handleSend = () => {
+  const handleSend = async () => {
+    try {
+      await sendEmailVerificationCode(`${id}@${resolvedDomain}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+      return;
+    }
+
     setSentAt(Date.now());
     setCode('');
+    setIsVerified(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!isVerified) {
+      if (!isCodeValid) {
+        alert('인증번호 6자리를 입력해주세요.');
+        return;
+      }
+
+      try {
+        await confirmEmailVerificationCode(`${id}@${resolvedDomain}`, code);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '인증번호가 일치하지 않습니다.');
+        return;
+      }
+
+      setIsVerified(true);
+    }
+
     onSave({ id, domain: resolvedDomain });
   };
 
@@ -145,7 +171,7 @@ function EmailSheet({ value, onSave }: EmailSheetProps) {
         size="middle"
         className="profile-sheet__confirm-btn"
         onClick={handleSave}
-        disabled={!isCodeValid}
+        disabled={!isEmailValid || (!isVerified && !isCodeValid)}
       >
         확인
       </Button>

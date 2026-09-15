@@ -75,6 +75,40 @@
   width: 100%;
 }
 
+/* 프로필 마스코트 그리드 */
+
+.profile-sheet__mascot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.profile-sheet__mascot-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.profile-sheet__mascot-item img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.profile-sheet__mascot-item--selected img {
+  border-color: #123040;
+}
+
 /* 생년월일 선택 */
 
 .profile-sheet__birthdate-row {

@@ -48,6 +48,9 @@ public class Member {
     @Column
     private Long interestedRegion;
 
+    @Column
+    private String profileMascot;
+
     public Member(
             String loginId,
             String password,
@@ -67,5 +70,36 @@ public class Member {
         this.email = email;
         this.nickname = nickname;
         this.interestedRegion = interestedRegion;
+    }
+
+    public void updateProfile(
+            String name,
+            String nickname,
+            LocalDate birth,
+            String gender,
+            String phoneNumber,
+            Long interestedRegion) {
+        this.name = name;
+        this.nickname = nickname;
+        this.birth = birth;
+        this.gender = gender;
+        this.phoneNumber = phoneNumber;
+        this.interestedRegion = interestedRegion;
+    }
+
+    public void changeEmail(String email) {
+        this.email = email;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void changeProfileMascot(String profileMascot) {
+        this.profileMascot = profileMascot;
+    }
+
+    public boolean isSocialAccount() {
+        return loginId != null && loginId.startsWith("oauth:");
     }
 }

@@ -36,6 +36,7 @@ class AuthFlowIntegrationTest {
     @MockitoBean GoogleClient google;
     @MockitoBean KakaoClient kakao;
     @MockitoBean com.itsup.incheonguro.Festival.service.FestivalService festivals;
+    @MockitoBean org.springframework.mail.javamail.JavaMailSender mailSender;
     private HttpClient browser() { return HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build(); }
     private HttpRequest.Builder request(String path) { return HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)); }
     private HttpResponse<String> send(HttpClient client, HttpRequest.Builder request) throws Exception {
@@ -102,6 +103,12 @@ class AuthFlowIntegrationTest {
         payload.put("birth", "2000-01-01"); payload.put("gender", "F");
         payload.put("email", "test@example.com"); payload.put("nickname", "Tester");
         payload.put("interestedRegion", 1);
+        var codeResponse = send(client, request("/auth/email/verification-code").header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(Map.of("email", "test@example.com")))));
+        assertEquals(200, codeResponse.statusCode());
+        var devCode = (String) object(codeResponse.body()).get("devCode");
+        assertEquals(204, send(client, request("/auth/email/verification-code/confirm").header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(Map.of("email", "test@example.com", "code", devCode))))).statusCode());
         assertEquals(200, send(client, request("/auth/signup").header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(payload)))).statusCode());
         var login = send(client, request("/auth/login").header("Content-Type", "application/json")

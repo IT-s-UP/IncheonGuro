@@ -20,6 +20,16 @@ export default defineConfig(({ mode }) => {
           target: env.BACKEND_URL || 'http://localhost:8080',
           changeOrigin: true,
         },
+        // /auth 요청(로그인, 회원가입)을 백엔드로 전달
+        '/auth': {
+          target: env.BACKEND_URL || 'http://localhost:8080',
+          changeOrigin: true,
+        },
+
+        '/stamp/': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
       },
     },
   };

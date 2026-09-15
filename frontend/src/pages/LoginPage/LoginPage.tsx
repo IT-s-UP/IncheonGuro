@@ -7,11 +7,13 @@ import Header from '@/components/Header/Header';
 import Button from '@/components/Button/Button';
 import Input from '@/components/Input/Input';
 import Typography from '@/components/Typography/Typography';
+import { useAuth } from '@/auth/AuthContext';
 
 import './LoginPage.css';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [params] = useSearchParams();
   const error = params.get('error');
   const provider = error?.startsWith('google_') ? '구글' : '카카오';
@@ -29,7 +31,7 @@ function LoginPage() {
      로그인
   ========================= */
 
-  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!userId || !password) {
@@ -37,18 +39,12 @@ function LoginPage() {
       return;
     }
 
-    /*
-     * TODO
-     *
-     * 추후 로그인 API 연결
-     *
-     * await login({
-     *   userId,
-     *   password,
-     * });
-     */
-
-    navigate('/');
+    try {
+      await login(userId, password);
+      navigate('/');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '로그인에 실패했습니다.');
+    }
   };
 
   /* =========================
