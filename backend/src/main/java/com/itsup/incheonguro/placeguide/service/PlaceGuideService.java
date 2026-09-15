@@ -3,7 +3,7 @@ package com.itsup.incheonguro.placeguide.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itsup.incheonguro.courseguide.dto.CourseSummaryResponse;
-import com.itsup.incheonguro.courseguide.repository.CourseRepository;
+import com.itsup.incheonguro.courseguide.service.CourseGuideService;
 import com.itsup.incheonguro.placeguide.dto.*;
 import com.itsup.incheonguro.placeguide.entity.District;
 import com.itsup.incheonguro.placeguide.entity.PlaceBookmark;
@@ -32,7 +32,9 @@ public class PlaceGuideService {
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
   private final PlaceBookmarkRepository placeBookmarkRepository;
-  private final CourseRepository courseRepository;
+  // Course/CourseRepository가 관광공사 API 기반으로 전환되면서,
+  // courseguide 도메인의 코스 검색 기능을 서비스 단위로 재사용하도록 변경함
+  private final CourseGuideService courseGuideService;
 
   // 상세조회(detailCommon2/Intro2/Image2/Info2) 캐싱을 전담하는 서비스
   // (목록/검색 계열은 조건 조합이 매번 달라서 캐싱 효과가 적어 그대로 두고, 상세 조회만 캐싱함)
@@ -112,9 +114,10 @@ public class PlaceGuideService {
       placeTitles.add(item.path("title").asText());
     }
 
-    List<String> courseNames = courseRepository.findByNameContainingOrDescriptionContaining(keyword, keyword)
-        .stream()
-        .map(course -> course.getName())
+    // 코스 이름도 자동완성 후보에 포함 (courseguide 도메인의 관광공사 검색 재사용)
+    // 북마크 여부는 자동완성에서 필요 없으므로 userId는 null로 전달
+    List<String> courseNames = courseGuideService.getCourses(keyword, null).stream()
+        .map(CourseSummaryResponse::name)
         .collect(Collectors.toList());
 
     List<String> suggestions = new ArrayList<>(placeTitles);
@@ -128,10 +131,8 @@ public class PlaceGuideService {
       places.add(PlaceSummaryResponse.from(item));
     }
 
-    List<CourseSummaryResponse> courses = courseRepository
-        .findByNameContainingOrDescriptionContaining(keyword, keyword).stream()
-        .map(CourseSummaryResponse::new)
-        .collect(Collectors.toList());
+    // 코스 검색도 courseguide 도메인에 위임. 북마크 여부는 검색 결과에서 필요 없으므로 userId는 null
+    List<CourseSummaryResponse> courses = courseGuideService.getCourses(keyword, null);
 
     return new PlaceSearchResultResponse(places, courses);
   }
