@@ -1,5 +1,6 @@
 import { accountStorage } from '@/auth/accountStorage';
 import {
+  useEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -14,7 +15,7 @@ import CourseGuideDetailTransportTabs from '@/components/CourseGuideDetail/Cours
 import CourseGuideRouteMap from '@/components/CourseGuideDetail/CourseGuideRouteMap';
 import CourseGuidePlaceSheet from '@/components/CourseGuideDetail/CourseGuidePlaceSheet';
 
-import { mockCourses } from '@/mocks/courseguide';
+import { getCourseDetail, addBookmark, removeBookmark } from '@/api/courseGuide';
 import type {
   Course,
   CourseCost,
@@ -26,8 +27,6 @@ import type {
 import './CourseGuideDetailPage.css';
 
 const MY_COURSES_STORAGE_KEY = 'incheonguro-my-courses';
-
-// 북마크된 courseId 목록을 저장하는 localStorage 키
 const BOOKMARKED_COURSE_IDS_KEY = 'incheonguro-bookmarked-course-ids';
 
 interface DragInformation {
@@ -87,56 +86,78 @@ function saveBookmarkedCourseIds(courseIds: number[]) {
 
 function CourseGuideDetailPage() {
   const navigate = useNavigate();
-  const { courseId } = useParams();
+  const { courseId } = useParams(); // 관광공사 contentId (문자열)
 
-  const numericCourseId = Number(courseId);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  const matchedCourse = mockCourses.find((course) => course.courseId === numericCourseId);
-
-  const defaultCourseName = matchedCourse ? matchedCourse.name : `코스 안내 #${courseId ?? ''}`;
-
-  const initialPlaces: CoursePlace[] = matchedCourse
-    ? matchedCourse.places.map((place, index) => ({
-        id: numericCourseId * 1000 + index + 1,
-        name: place.name,
-        address: place.address,
-      }))
-    : [];
-
-  const initialDays: CourseDay[] = [
-    {
-      id: Date.now() + 1,
-      day: 1,
-      transport: '대중교통',
-      places: initialPlaces,
-      costs: createEmptyCosts(),
-    },
-  ];
-
-  const [courseName, setCourseName] = useState(defaultCourseName);
-
-  const [previousCourseName, setPreviousCourseName] = useState(defaultCourseName);
-
+  const [courseName, setCourseName] = useState('');
+  const [previousCourseName, setPreviousCourseName] = useState('');
+  const [defaultCourseName, setDefaultCourseName] = useState('');
   const [isEditingCourseName, setIsEditingCourseName] = useState(false);
 
-  const [days, setDays] = useState<CourseDay[]>(initialDays);
-
-  const [selectedDayId, setSelectedDayId] = useState(initialDays[0].id);
+  const [days, setDays] = useState<CourseDay[]>([]);
+  const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
 
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
-
   const [actionMenuPlaceId, setActionMenuPlaceId] = useState<number | null>(null);
 
   const [sheetHeight, setSheetHeight] = useState(DEFAULT_SHEET_HEIGHT);
-
   const [isDragging, setIsDragging] = useState(false);
 
-  // 이 코스가 현재 북마크되어 있는지? 페이지 진입 시 localStorage에서 바로 읽어옴
-  const [isBookmarked, setIsBookmarked] = useState(() =>
-    loadBookmarkedCourseIds().includes(numericCourseId),
-  );
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarkPending, setIsBookmarkPending] = useState(false);
 
   const dragInformation = useRef<DragInformation | null>(null);
+
+  // 코스 상세 조회 - Day1의 초기 장소 목록 + 코스 이름을 실제 API에서 가져옴
+  // Day2부터는 이 API랑 무관하게 사용자가 직접 채워나가는 영역
+  useEffect(() => {
+    if (!courseId) return;
+
+    let isCancelled = false;
+    setIsLoading(true);
+    setLoadError(false);
+
+    getCourseDetail(courseId)
+      .then((detail) => {
+        if (isCancelled) return;
+
+        const walkPlaces = detail.routes.walk.filter((node) => node.type === 'place');
+
+        const initialPlaces: CoursePlace[] = walkPlaces.map((place, index) => ({
+          id: Date.now() + index,
+          name: place.name,
+          address: place.address,
+        }));
+
+        const initialDay: CourseDay = {
+          id: Date.now(),
+          day: 1,
+          transport: '대중교통',
+          places: initialPlaces,
+          costs: createEmptyCosts(),
+        };
+
+        setDays([initialDay]);
+        setSelectedDayId(initialDay.id);
+        setCourseName(detail.name);
+        setPreviousCourseName(detail.name);
+        setDefaultCourseName(detail.name);
+        setIsBookmarked(detail.isBookmarked);
+      })
+      .catch((error) => {
+        console.error('코스 상세 조회 실패:', error);
+        if (!isCancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!isCancelled) setIsLoading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [courseId]);
 
   const selectedDay = days.find((courseDay) => courseDay.id === selectedDayId) ?? days[0];
 
@@ -151,6 +172,8 @@ function CourseGuideDetailPage() {
   };
 
   const updateSelectedDay = (updater: (currentDay: CourseDay) => CourseDay) => {
+    if (!selectedDay) return;
+
     setDays((currentDays) =>
       currentDays.map((courseDay) =>
         courseDay.id === selectedDay.id ? updater(courseDay) : courseDay,
@@ -195,17 +218,25 @@ function CourseGuideDetailPage() {
     }
   };
 
-  // 북마크 버튼 클릭 - 켜져 있으면 끄고, 꺼져 있으면 켠 뒤 localStorage에 courseId를 저장/삭제
-  const toggleBookmark = () => {
-    const currentIds = loadBookmarkedCourseIds();
-    const alreadyBookmarked = currentIds.includes(numericCourseId);
+  // 북마크 버튼 - 실제 API 호출로 처리 (localStorage 아님)
+  const toggleBookmark = async () => {
+    if (!courseId || isBookmarkPending) return;
 
-    const nextIds = alreadyBookmarked
-      ? currentIds.filter((id) => id !== numericCourseId)
-      : [...currentIds, numericCourseId];
-
-    saveBookmarkedCourseIds(nextIds);
-    setIsBookmarked(!alreadyBookmarked);
+    setIsBookmarkPending(true);
+    try {
+      if (isBookmarked) {
+        await removeBookmark(courseId);
+        setIsBookmarked(false);
+      } else {
+        await addBookmark(courseId);
+        setIsBookmarked(true);
+      }
+    } catch (error) {
+      console.error('북마크 처리 실패:', error);
+      window.alert('로그인이 필요한 기능입니다.');
+    } finally {
+      setIsBookmarkPending(false);
+    }
   };
 
   const handleSheetPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -316,6 +347,8 @@ function CourseGuideDetailPage() {
   };
 
   const movePlace = (index: number, direction: -1 | 1) => {
+    if (!selectedDay) return;
+
     const nextIndex = index + direction;
 
     if (nextIndex < 0 || nextIndex >= selectedDay.places.length) {
@@ -378,6 +411,28 @@ function CourseGuideDetailPage() {
 
     navigate('/my-courses');
   };
+
+  if (isLoading) {
+    return (
+      <main className="course-guide-detail-page">
+        <Header />
+        <p style={{ textAlign: 'center', padding: '60px 20px', color: '#828585' }}>
+          코스를 불러오는 중...
+        </p>
+      </main>
+    );
+  }
+
+  if (loadError || !selectedDay) {
+    return (
+      <main className="course-guide-detail-page">
+        <Header />
+        <p style={{ textAlign: 'center', padding: '60px 20px', color: '#828585' }}>
+          코스를 찾을 수 없습니다.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="course-guide-detail-page">

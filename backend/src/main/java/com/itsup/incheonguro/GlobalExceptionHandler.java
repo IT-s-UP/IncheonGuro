@@ -42,4 +42,34 @@ public class GlobalExceptionHandler {
         body.put("message", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
+
+    // ==========================================
+    // 잘못된 요청 값 (예: 여행 종료일이 시작일보다 빠름)
+    // ==========================================
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(
+            IllegalArgumentException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "status", 400,
+                        "message", e.getMessage()));
+    }
+
+    // ==========================================
+    // 추천할 데이터를 찾지 못한 경우 등 서버 측 상태 문제
+    // ==========================================
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalStateException(
+            IllegalStateException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "status", 500,
+                        "message", e.getMessage()));
+    }
 }

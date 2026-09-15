@@ -18,45 +18,44 @@ public class CourseGuideController {
 
   private final CourseGuideService courseGuideService;
 
-  // GET /api/courseguide/recommended
+  // GET /api/courseguide/recommended - 로그인 불필요
   @GetMapping("/recommended")
-  public List<CourseSummaryResponse> getRecommendedCourses() {
-    return courseGuideService.getRecommendedCourses();
+  public List<CourseSummaryResponse> getRecommendedCourses(@AuthenticationPrincipal Jwt jwt) {
+    Long userId = (jwt != null) ? Long.valueOf(jwt.getSubject()) : null;
+    return courseGuideService.getRecommendedCourses(userId);
   }
 
-  // GET /api/courseguide?keyword=검색어
+  // GET /api/courseguide?keyword=검색어 - 로그인 불필요, 로그인 시 isBookmarked 정확
   @GetMapping
   public List<CourseSummaryResponse> getCourses(
       @RequestParam(required = false) String keyword,
       @AuthenticationPrincipal Jwt jwt) {
-    Long userId = Long.valueOf(jwt.getSubject());
+    Long userId = (jwt != null) ? Long.valueOf(jwt.getSubject()) : null;
     return courseGuideService.getCourses(keyword, userId);
   }
 
-  // GET /api/courseguide/{courseId}
-  @GetMapping("/{courseId}")
+  // GET /api/courseguide/{contentId} - 로그인 불필요, 로그인 시 isBookmarked 정확
+  @GetMapping("/{contentId}")
   public CourseDetailResponse getCourseDetail(
-      @PathVariable Long courseId,
+      @PathVariable String contentId,
       @AuthenticationPrincipal Jwt jwt) {
-    Long userId = Long.valueOf(jwt.getSubject());
-    return courseGuideService.getCourseDetail(courseId, userId);
+    Long userId = (jwt != null) ? Long.valueOf(jwt.getSubject()) : null;
+    return courseGuideService.getCourseDetail(contentId, userId);
   }
 
-  // POST /api/courseguide/{courseId}/bookmark
-  @PostMapping("/{courseId}/bookmark")
+  // POST /api/courseguide/{contentId}/bookmark - 로그인 필수
+  @PostMapping("/{contentId}/bookmark")
   public void addBookmark(
-      @PathVariable Long courseId,
+      @PathVariable String contentId,
       @AuthenticationPrincipal Jwt jwt) {
-    Long userId = Long.valueOf(jwt.getSubject());
-    courseGuideService.addBookmark(courseId, userId);
+    courseGuideService.addBookmark(contentId, Long.valueOf(jwt.getSubject()));
   }
 
-  // DELETE /api/courseguide/{courseId}/bookmark
-  @DeleteMapping("/{courseId}/bookmark")
+  // DELETE /api/courseguide/{contentId}/bookmark - 로그인 필수
+  @DeleteMapping("/{contentId}/bookmark")
   public void removeBookmark(
-      @PathVariable Long courseId,
+      @PathVariable String contentId,
       @AuthenticationPrincipal Jwt jwt) {
-    Long userId = Long.valueOf(jwt.getSubject());
-    courseGuideService.removeBookmark(courseId, userId);
+    courseGuideService.removeBookmark(contentId, Long.valueOf(jwt.getSubject()));
   }
 }

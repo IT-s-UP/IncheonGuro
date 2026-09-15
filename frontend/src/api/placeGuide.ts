@@ -1,6 +1,8 @@
 // src/api/placeGuide.ts
 // 장소 안내 페이지 전용 API 호출 함수 모음 (fetch 기반)
 
+import type { CourseSummary } from './courseGuide';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // '/api'
 
 function getAccessToken(): string | null {
@@ -86,12 +88,9 @@ export interface PlaceImage {
   imageUrl: string;
 }
 
-export interface CourseSummary {
-  courseId: number;
-  name: string;
-  description: string;
-}
-
+// CourseSummary는 courseGuide.ts로 정의를 옮김 (코스가 관광공사 API 기반으로 전환되면서
+// courseId가 number -> string(contentId)으로 바뀌었고, isBookmarked 필드도 추가됨.
+// 정의를 한 곳에 모아서 courseGuide.ts와 placeGuide.ts가 항상 같은 타입을 쓰도록 함)
 export interface PlaceSearchResult {
   places: PlaceSummary[];
   courses: CourseSummary[];

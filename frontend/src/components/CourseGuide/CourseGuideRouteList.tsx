@@ -1,4 +1,4 @@
-import type { Place } from '@/mocks/courseguide';
+import type { Place } from '@/api/courseGuide';
 import './CourseGuideRouteList.css';
 
 // CourseGuideListPage.tsx로부터 내려받는 props
