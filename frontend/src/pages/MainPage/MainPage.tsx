@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { ArrowRight } from 'lucide-react';
 
+import { useAuth } from '@/auth/AuthContext';
+
 import Header from '@/components/Header/Header';
 
 import OptionTab from '@/components/Tab/OptionTab';
@@ -24,13 +26,15 @@ function MainPage() {
   const navigate = useNavigate();
 
   /* =========================
-     임시 사용자 닉네임
+     사용자 닉네임
 
-     나중에 사용자 정보 API로
-     교체하면 됨
+     비로그인 상태에서는
+     게스트 문구로 대체
   ========================= */
 
-  const nickname = 'OO';
+  const { user } = useAuth();
+
+  const nickname = user?.nickname ?? '게스트';
 
   /* =========================
      추천 지역 탭

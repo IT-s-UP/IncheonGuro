@@ -1,0 +1,318 @@
+.service-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100svh;
+  margin: 0 auto;
+  background: #fff;
+  color: #123040;
+  color-scheme: light;
+  font-family: 'Pretendard', sans-serif;
+}
+.service-page * {
+  box-sizing: border-box;
+}
+.service-page__heading {
+  padding: 18px 22px;
+  border-bottom: 1px solid #efefef;
+}
+.service-page__body {
+  padding: 28px 22px 48px;
+}
+.service-page__body h1,
+.service-page__body h2 {
+  font-family: inherit;
+  color: #123040;
+  letter-spacing: -0.4px;
+  font-weight: 700;
+}
+.service-page__body h1 {
+  font-size: 21px;
+  line-height: 1.5;
+  margin: 18px 0 10px;
+}
+.service-page__body h2 {
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+.service-page__body p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #737b80;
+  margin: 0;
+}
+.service-page__intro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 0 35px;
+}
+.service-page__icon {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #c4deee;
+  color: #2c2c6b;
+}
+.service-page__notice {
+  padding: 22px 18px;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  background: #fafafa;
+}
+.service-page__notice h1 {
+  font-size: 18px;
+  margin-top: 0;
+}
+.service-page__description {
+  margin-bottom: 24px !important;
+}
+.service-page__list {
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.service-page__row {
+  padding: 22px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #123040;
+}
+.service-page__row + .service-page__row {
+  border-top: 1px solid #e7e7e7;
+}
+.service-page__row > span {
+  flex: 1;
+  min-width: 0;
+}
+.service-page__row strong {
+  display: block;
+  font-size: 15px;
+}
+.service-page__row span span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #737b80;
+  margin-top: 6px;
+}
+.service-page__row > svg {
+  flex-shrink: 0;
+}
+.service-page__row:hover {
+  background: #f4f8f8;
+}
+.service-page__back-link {
+  display: inline-block;
+  margin-top: 24px;
+  font-size: 14px;
+  color: #123040;
+  text-underline-offset: 4px;
+}
+.service-page a:focus-visible,
+.service-page button:focus-visible {
+  outline: 3px solid #b87845;
+  outline-offset: 3px;
+}
+
+/* Keep shared navigation typography independent from article headings. */
+.service-page__heading .back-header {
+  gap: 10px;
+  min-height: 44px;
+  height: auto;
+}
+.service-page__heading .back-header__back-btn {
+  width: 32px;
+  height: 44px;
+}
+.service-page__heading .back-header__title {
+  font-size: 20px;
+  line-height: 28px;
+  height: auto;
+  margin: 0;
+}
+.service-policy {
+  width: 100%;
+}
+.service-policy__section + .service-policy__section {
+  margin-top: 28px;
+}
+.service-page__body .service-policy__section h2 {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+.service-page__body .service-policy__section p {
+  color: #53616a;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.contact-form label,
+.contact-form__label {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #56504b;
+}
+.contact-form label span {
+  color: #2c2c6b;
+}
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #cec9c7;
+  border-radius: 10px;
+  color: #56504b;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.contact-form textarea {
+  resize: vertical;
+  min-height: 180px;
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: #828585;
+}
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  outline: 2px solid #78aac3;
+  outline-offset: 2px;
+}
+.contact-form__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #828585;
+  font-size: 12px;
+}
+.contact-form__submit {
+  margin-top: 20px;
+  padding: 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #78aac3;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.contact-form__submit:hover {
+  background: #78aac3;
+  filter: brightness(0.95);
+}
+.service-page__body .contact-form__hint {
+  color: #828585;
+  font-size: 12px;
+}
+.service-page__body .contact-form__status {
+  color: #2c2c6b;
+  font-size: 13px;
+}
+
+.contact-category {
+  position: relative;
+}
+.contact-category summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #cec9c7;
+  border-radius: 10px;
+  color: #56504b;
+  font-size: 14px;
+  line-height: 1.6;
+  cursor: pointer;
+  list-style: none;
+}
+.contact-category summary::-webkit-details-marker {
+  display: none;
+}
+.contact-category summary svg {
+  transform: rotate(90deg);
+}
+.contact-category[open] summary svg {
+  transform: rotate(-90deg);
+}
+.contact-category__options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 4px;
+  background: white;
+  border: 1px solid #cec9c7;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px #00000012;
+}
+.contact-category__options button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 5px;
+  background: white;
+  color: #56504b;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.contact-category__options button:hover,
+.contact-category__options button[aria-pressed='true'] {
+  background: #f4f8f8;
+}
+.contact-category summary:focus-visible {
+  outline: 2px solid #78aac3;
+  outline-offset: 2px;
+}
+.service-page__body .contact-form__error {
+  color: #7a3026;
+  font-size: 12px;
+}
+
+.service-page__intro-text {
+  flex: 1;
+  min-width: 0;
+}
+.service-page__body .service-page__intro-text h1 {
+  margin: 0 0 6px;
+}
+
+.contact-form__submit:disabled {
+  background: #cec9c7;
+  cursor: wait;
+  filter: none;
+}
+
+.contact-form__fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
