@@ -1,106 +1,213 @@
 package com.itsup.incheonguro.courseguide.service;
 
 import com.itsup.incheonguro.courseguide.dto.CourseDetailResponse;
+import com.itsup.incheonguro.courseguide.dto.CourseRouteResponse;
 import com.itsup.incheonguro.courseguide.dto.CourseSummaryResponse;
 import com.itsup.incheonguro.courseguide.dto.RouteNodeResponse;
-import com.itsup.incheonguro.courseguide.entity.*;
+import com.itsup.incheonguro.courseguide.dto.RouteSegmentResponse;
+import com.itsup.incheonguro.courseguide.entity.Bookmark;
+import com.itsup.incheonguro.courseguide.entity.TransportMode;
 import com.itsup.incheonguro.courseguide.repository.BookmarkRepository;
-import com.itsup.incheonguro.courseguide.repository.CourseRepository;
-import com.itsup.incheonguro.courseguide.repository.CourseSegmentRepository;
+import com.itsup.incheonguro.courseguide.service.CourseRouteAssembler.CoursePlacePoint;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CourseGuideService {
 
-  private final CourseRepository courseRepository;
-  private final CourseSegmentRepository courseSegmentRepository;
+  private final CourseCacheService courseCacheService;
+  private final DailyRecommendationCacheService dailyRecommendationCacheService;
+  private final KorTourApiCourseClient korTourApiCourseClient; // 키워드 검색은 조건이 매번 달라 캐싱 안 함
   private final BookmarkRepository bookmarkRepository;
+  private final CourseRouteCacheService courseRouteCacheService;
 
-  // 오늘의 추천 코스 목록 조회
-  public List<CourseSummaryResponse> getRecommendedCourses() {
-    return courseRepository.findByRecommendedTrue().stream()
-        .map(CourseSummaryResponse::new)
-        .collect(Collectors.toList());
+  // 오늘의 추천 코스 5개 (날짜 바뀌면 자동으로 다른 5개)
+  public List<CourseSummaryResponse> getRecommendedCourses(Long userId) {
+    try {
+      List<String> ids = dailyRecommendationCacheService.getRecommendedCourseIds(LocalDate.now());
+      return ids.stream()
+          .map(this::findCourseItem)
+          .filter(Optional::isPresent)
+          .map(Optional::get)
+          .map(item -> toSummary(item, userId))
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      log.error("추천 코스 조회 실패", e);
+      return List.of();
+    }
   }
 
-  // 코스 목록 조회 (keyword 있으면 검색, 없으면 전체)
+  // 코스 목록 조회 (keyword 없으면 인천 전체, 있으면 검색)
   public List<CourseSummaryResponse> getCourses(String keyword, Long userId) {
-    // 1) userId가 북마크한 Bookmark들을 가져와서, 그 안의 Course만 뽑아냄
-    List<Course> bookmarkedCourses = bookmarkRepository.findByUserId(userId).stream()
-        .map(bookmark -> bookmark.getCourse())
-        .collect(Collectors.toList());
+    try {
+      List<JsonNode> items = (keyword == null || keyword.isBlank())
+          ? courseCacheService.getCourseList()
+          : korTourApiCourseClient.searchCourses(keyword, 100);
 
-    // 2) keyword가 있으면, 북마크한 코스들 중에서 이름 또는 설명에 keyword가 포함된 것만 남김
-    if (keyword != null && !keyword.isBlank()) {
-      bookmarkedCourses = bookmarkedCourses.stream()
-          .filter(course -> course.getName().contains(keyword)
-              || course.getDescription().contains(keyword))
+      return items.stream()
+          .map(item -> toSummary(item, userId))
           .collect(Collectors.toList());
+    } catch (Exception e) {
+      log.error("코스 목록 조회 실패: keyword={}", keyword, e);
+      return List.of();
     }
-
-    // 3) 최종 결과를 DTO로 변환해서 반환
-    return bookmarkedCourses.stream()
-        .map(CourseSummaryResponse::new)
-        .collect(Collectors.toList());
   }
 
   // 코스 상세 경로 조회
-  public CourseDetailResponse getCourseDetail(Long courseId, Long userId) {
-    Course course = courseRepository.findById(courseId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 코스입니다. id=" + courseId));
+  public CourseDetailResponse getCourseDetail(String contentId, Long userId) {
+    JsonNode courseItem = findCourseItem(contentId)
+        .orElseGet(() -> courseCacheService.getDetailCommon(contentId)); // 목록 캐시에 없으면 개별 조회로 폴백
 
-    // userId가 있고, 그 사용자가 이 코스를 북마크했으면 true
-    boolean isBookmarked = userId != null
-        && bookmarkRepository.existsByUserIdAndCourseId(userId, courseId);
-
-    // 이동수단별(도보/대중교통/자전거/자차) 경로를 조립
-    Map<String, List<RouteNodeResponse>> routes = buildRoutes(course);
-
-    return new CourseDetailResponse(
-        course.getId(),
-        course.getName(),
-        isBookmarked,
-        routes);
-  }
-
-  // 코스 하나에 대해, 이동수단 4종류 각각의 place/segment 노드 목록을 만들어서 Map으로 반환
-  // 이동수단별 place/segment 노드 배열을 조립
-  private Map<String, List<RouteNodeResponse>> buildRoutes(Course course) {
-    Map<String, List<RouteNodeResponse>> routes = new java.util.LinkedHashMap<>();
-
-    // 이동수단(WALK, TRANSIT, BIKE, CAR) 하나씩 돌면서 각각의 경로를 제작
-    for (TransportMode mode : TransportMode.values()) {
-      List<CourseSegment> segments = courseSegmentRepository
-          .findByCourseIdAndTransportModeOrderByOrderIndexAsc(course.getId(), mode);
-
-      List<RouteNodeResponse> nodes = new ArrayList<>();
-      List<CoursePlace> places = course.getPlaces();
-
-      // 장소를 순서대로 돌면서, "장소 -> 경로 -> 장소 -> 경로 -> ... -> 장소" 순으로 노드 쌓음
-      for (int i = 0; i < places.size(); i++) {
-        CoursePlace place = places.get(i);
-        String label = toPlaceLabel(i, places.size());
-        nodes.add(RouteNodeResponse.ofPlace(place, label));
-
-        // 마지막 장소가 아니면, 그 다음에 이동구간(경로)을 끼워 넣음
-        if (i < places.size() - 1 && i < segments.size()) {
-          nodes.add(RouteNodeResponse.ofSegment(segments.get(i)));
-        }
-      }
-
-      routes.put(mode.name().toLowerCase(), nodes);
+    if (courseItem == null) {
+      throw new IllegalArgumentException("존재하지 않는 코스입니다. contentId=" + contentId);
     }
 
+    String name = courseItem.path("title").asText();
+    boolean isBookmarked = userId != null
+        && bookmarkRepository.existsByUserIdAndContentId(userId, contentId);
+
+    List<Waypoint> waypoints = resolveWaypoints(contentId);
+    Map<String, List<RouteNodeResponse>> routes = buildRoutes(contentId, waypoints);
+
+    return new CourseDetailResponse(contentId, name, isBookmarked, routes);
+  }
+
+  // 캐싱된 코스 목록에서 contentId로 항목 하나 찾기 (추가 API 호출 없이 재사용)
+  private Optional<JsonNode> findCourseItem(String contentId) {
+    return courseCacheService.getCourseList().stream()
+        .filter(item -> contentId.equals(item.path("contentid").asText()))
+        .findFirst();
+  }
+
+  private CourseSummaryResponse toSummary(JsonNode item, Long userId) {
+    String contentId = item.path("contentid").asText();
+    boolean isBookmarked = userId != null
+        && bookmarkRepository.existsByUserIdAndContentId(userId, contentId);
+
+    return new CourseSummaryResponse(
+        contentId,
+        item.path("title").asText(),
+        item.path("addr1").asText(""),
+        isBookmarked);
+  }
+
+  // 코스에 속한 정거장(이름/주소/좌표) 목록을 순서대로 조립
+  // subcontentid로 각 정거장의 실제 좌표(detailCommon2)를 가져옴
+  private List<Waypoint> resolveWaypoints(String courseContentId) {
+    List<JsonNode> subItems = courseCacheService.getCourseSubItems(courseContentId);
+    List<Waypoint> waypoints = new ArrayList<>();
+
+    for (JsonNode subItem : subItems) {
+      String name = subItem.path("subname").asText();
+      String subContentId = subItem.path("subcontentid").asText();
+
+      if (subContentId.isBlank() || "0".equals(subContentId)) {
+        log.warn("정거장이 콘텐츠와 연결 안 됨(subcontentid 없음): courseId={}, 정거장={}", courseContentId, name);
+        waypoints.add(new Waypoint(name, "", null, null));
+        continue;
+      }
+
+      JsonNode spot = courseCacheService.getDetailCommon(subContentId);
+      if (spot == null) {
+        log.warn("정거장 상세정보 조회 실패: courseId={}, subcontentid={}", courseContentId, subContentId);
+        waypoints.add(new Waypoint(name, "", null, null));
+        continue;
+      }
+
+      waypoints.add(new Waypoint(
+          name,
+          spot.path("addr1").asText(""),
+          parseNullableDouble(spot, "mapy"),
+          parseNullableDouble(spot, "mapx")));
+    }
+
+    return waypoints;
+  }
+
+  private Double parseNullableDouble(JsonNode node, String field) {
+    String value = node.path(field).asText("");
+    if (value.isBlank()) {
+      return null;
+    }
+    try {
+      return Double.parseDouble(value);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  // 이동수단 4종류 각각의 place/segment 노드 목록을 만들어서 Map으로 반환
+  private Map<String, List<RouteNodeResponse>> buildRoutes(String contentId, List<Waypoint> waypoints) {
+    Map<String, List<RouteNodeResponse>> routes = new LinkedHashMap<>();
+    for (TransportMode mode : TransportMode.values()) {
+      routes.put(mode.name().toLowerCase(), buildLiveRouteNodes(contentId, mode, waypoints));
+    }
     return routes;
+  }
+
+  // 카카오 경로 조회 API로 실시간 조회 + 캐싱. 좌표 누락/전체 실패 시 "정보 없음"으로 안전하게 대체
+  private List<RouteNodeResponse> buildLiveRouteNodes(String contentId, TransportMode mode, List<Waypoint> waypoints) {
+    if (waypoints.size() < 2) {
+      return buildUnavailableRouteNodes(waypoints, mode);
+    }
+
+    boolean hasMissingCoordinate = waypoints.stream()
+        .anyMatch(w -> w.latitude() == null || w.longitude() == null);
+
+    if (hasMissingCoordinate) {
+      log.warn("좌표 없는 정거장 포함, 경로 조회 건너뜀: courseId={}, mode={}", contentId, mode);
+      return buildUnavailableRouteNodes(waypoints, mode);
+    }
+
+    List<CoursePlacePoint> points = waypoints.stream()
+        .map(w -> new CoursePlacePoint(w.name(), w.longitude(), w.latitude()))
+        .toList();
+
+    try {
+      CourseRouteResponse routeResponse = courseRouteCacheService.getRoute(contentId, mode, points);
+
+      List<RouteNodeResponse> nodes = new ArrayList<>();
+      for (int i = 0; i < waypoints.size(); i++) {
+        Waypoint w = waypoints.get(i);
+        nodes.add(RouteNodeResponse.ofPlace(w.name(), w.address(), toPlaceLabel(i, waypoints.size())));
+
+        if (i < waypoints.size() - 1) {
+          RouteSegmentResponse seg = routeResponse.segments().get(i);
+          nodes.add(seg.available()
+              ? RouteNodeResponse.ofLiveSegment(mode, seg.distanceMeters(), seg.durationSeconds())
+              : RouteNodeResponse.ofUnavailableSegment(mode));
+        }
+      }
+      return nodes;
+    } catch (Exception e) {
+      log.error("코스 경로 조회 실패: courseId={}, mode={}", contentId, mode, e);
+      return buildUnavailableRouteNodes(waypoints, mode);
+    }
+  }
+
+  private List<RouteNodeResponse> buildUnavailableRouteNodes(List<Waypoint> waypoints, TransportMode mode) {
+    List<RouteNodeResponse> nodes = new ArrayList<>();
+    for (int i = 0; i < waypoints.size(); i++) {
+      Waypoint w = waypoints.get(i);
+      nodes.add(RouteNodeResponse.ofPlace(w.name(), w.address(), toPlaceLabel(i, waypoints.size())));
+      if (i < waypoints.size() - 1) {
+        nodes.add(RouteNodeResponse.ofUnavailableSegment(mode));
+      }
+    }
+    return nodes;
   }
 
   private String toPlaceLabel(int index, int totalSize) {
@@ -113,24 +220,21 @@ public class CourseGuideService {
 
   // 북마크 등록
   @Transactional
-  public void addBookmark(Long courseId, Long userId) {
-    if (bookmarkRepository.existsByUserIdAndCourseId(userId, courseId)) {
-      return; // 이미 북마크되어 있으면 아무것도 X
+  public void addBookmark(String contentId, Long userId) {
+    if (bookmarkRepository.existsByUserIdAndContentId(userId, contentId)) {
+      return;
     }
-
-    // 북마크할 코스를 찾고, 없으면 예외 처리
-    Course course = courseRepository.findById(courseId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 코스입니다. id=" + courseId));
-
-    // 새 북마크를 만들어서 DB에 저장
-    Bookmark bookmark = new Bookmark(userId, course);
-    bookmarkRepository.save(bookmark);
+    bookmarkRepository.save(new Bookmark(userId, contentId));
   }
 
   // 북마크 해제
   @Transactional
-  public void removeBookmark(Long courseId, Long userId) {
-    bookmarkRepository.findByUserIdAndCourseId(userId, courseId)
+  public void removeBookmark(String contentId, Long userId) {
+    bookmarkRepository.findByUserIdAndContentId(userId, contentId)
         .ifPresent(bookmarkRepository::delete);
+  }
+
+  // 정거장(장소) 하나를 나타내는 내부 record. 좌표는 못 찾은 경우 null일 수 있음
+  private record Waypoint(String name, String address, Double latitude, Double longitude) {
   }
 }
