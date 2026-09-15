@@ -55,7 +55,7 @@ const STAMP_OWNED = 3;
 const STAMP_PLACES = ['야생화단지', '개항로', '차이나타운'];
 
 function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isLoggedIn = user !== null;
   const navigate = useNavigate();
 
@@ -234,9 +234,6 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
             );
           })}
         </nav>
-        {isLoggedIn && <button type="button" onClick={() => {
-          void logout().then(() => handleNavigate('/login')).catch(() => alert('로그아웃에 실패했어요. 다시 시도해 주세요.'));
-        }}>로그아웃</button>}
       </aside>
     </div>
   );

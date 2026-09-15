@@ -1,3 +1,4 @@
+import { accountStorage } from '@/auth/accountStorage';
 import {
   useRef,
   useState,
@@ -49,7 +50,7 @@ function createEmptyCosts(): CourseCost {
 }
 
 function loadMyCourses(): Course[] {
-  const raw = localStorage.getItem(MY_COURSES_STORAGE_KEY);
+  const raw = accountStorage.getItem(MY_COURSES_STORAGE_KEY);
 
   if (!raw) {
     return [];
@@ -65,7 +66,7 @@ function loadMyCourses(): Course[] {
 
 // 북마크된 courseId 목록을 읽어옴
 function loadBookmarkedCourseIds(): number[] {
-  const raw = localStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
+  const raw = accountStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
 
   if (!raw) {
     return [];
@@ -81,7 +82,7 @@ function loadBookmarkedCourseIds(): number[] {
 
 // 북마크된 courseId 목록을 저장
 function saveBookmarkedCourseIds(courseIds: number[]) {
-  localStorage.setItem(BOOKMARKED_COURSE_IDS_KEY, JSON.stringify(courseIds));
+  accountStorage.setItem(BOOKMARKED_COURSE_IDS_KEY, JSON.stringify(courseIds));
 }
 
 function CourseGuideDetailPage() {
@@ -373,7 +374,7 @@ function CourseGuideDetailPage() {
 
     const existingCourses = loadMyCourses();
 
-    localStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify([...existingCourses, newCourse]));
+    accountStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify([...existingCourses, newCourse]));
 
     navigate('/my-courses');
   };

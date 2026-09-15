@@ -1,3 +1,4 @@
+import { accountStorage } from '@/auth/accountStorage';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark } from 'lucide-react';
@@ -7,7 +8,7 @@ import './CourseGuideCourseList.css';
 const BOOKMARKED_COURSE_IDS_KEY = 'incheonguro-bookmarked-course-ids';
 
 function loadBookmarkedCourseIds(): number[] {
-  const raw = localStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
+  const raw = accountStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
 
   if (!raw) {
     return [];

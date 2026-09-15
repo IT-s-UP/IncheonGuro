@@ -132,4 +132,104 @@ class AuthFlowIntegrationTest {
         assertEquals(401, send(client, request("/api/auth/me")).statusCode());
         verifyNoInteractions(google);
     }
+
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @Autowired com.itsup.incheonguro.Auth.service.JwtService tokens;
+    @Autowired org.springframework.security.crypto.password.PasswordEncoder passwords;
+
+    @Test void withdrawalDeletesOnlyOwnDataAndRejectsOldToken() throws Exception {
+        var target = members.saveAndFlush(new com.itsup.incheonguro.Auth.entity.Member(
+            "withdraw-local", passwords.encode("Test1234!"), null, "Tester", null, null, null, "Tester", null));
+        var other = members.saveAndFlush(new com.itsup.incheonguro.Auth.entity.Member(
+            "withdraw-other", passwords.encode("Test1234!"), null, "Other", null, null, null, "Other", null));
+        String token = tokens.createAccessToken(target);
+        jdbc.update("insert into course (name, is_recommended) values ('withdraw-test', false)");
+        Long course = jdbc.queryForObject("select id from course where name='withdraw-test'", Long.class);
+        for (Long id : java.util.List.of(target.getId(), other.getId())) {
+            jdbc.update("insert into member_stamp (member_id, region_id, achieved_at) values (?, 1, CURRENT_TIMESTAMP)", id);
+            jdbc.update("insert into member_region_stay (member_id, region_id, entered_at, activated) values (?, 1, CURRENT_TIMESTAMP, false)", id);
+            jdbc.update("insert into bookmark (user_id, course_id) values (?, ?)", id, course);
+            jdbc.update("insert into place_bookmark (user_id, content_id) values (?, '12345')", id);
+        }
+        assertEquals(401, send(browser(), request("/api/mypage").header("Content-Type", "application/json")
+            .method("DELETE", HttpRequest.BodyPublishers.ofString("{\"confirmed\":true}"))).statusCode());
+        for (String body : new String[]{"{\"confirmed\":false,\"password\":\"Test1234!\"}", "{\"confirmed\":true,\"password\":\"wrong\"}"}) {
+            assertEquals(400, send(browser(), request("/api/mypage").header("Authorization", "Bearer " + token)
+                .header("Content-Type", "application/json").method("DELETE", HttpRequest.BodyPublishers.ofString(body))).statusCode());
+            assertTrue(members.existsById(target.getId()));
+            assertEquals(1, jdbc.queryForObject("select count(*) from member_stamp where member_id=?", Integer.class, target.getId()));
+        }
+        assertEquals(204, send(browser(), request("/api/mypage").header("Authorization", "Bearer " + token)
+            .header("Content-Type", "application/json").method("DELETE",
+                HttpRequest.BodyPublishers.ofString("{\"confirmed\":true,\"password\":\"Test1234!\"}"))).statusCode());
+        assertFalse(members.existsById(target.getId()));
+        assertTrue(members.existsById(other.getId()));
+        for (String table : new String[]{"member_stamp", "member_region_stay", "bookmark", "place_bookmark"}) {
+            String key = table.startsWith("member_") ? "member_id" : "user_id";
+            assertEquals(0, jdbc.queryForObject("select count(*) from " + table + " where " + key + "=?", Integer.class, target.getId()));
+            assertEquals(1, jdbc.queryForObject("select count(*) from " + table + " where " + key + "=?", Integer.class, other.getId()));
+        }
+        assertEquals(1, jdbc.queryForObject("select count(*) from course where id=?", Integer.class, course));
+        assertEquals(401, send(browser(), request("/stamp/my").header("Authorization", "Bearer " + token)).statusCode());
+    }
+
+    @Test void socialWithdrawalInvalidatesOtherSessionAndAllowsFreshSignup() throws Exception {
+        when(google.authenticate(eq("withdraw-code"), anyString())).thenReturn(new GoogleMember("withdraw-social", "Social"));
+        var first = browser(); var second = browser();
+        for (var client : java.util.List.of(first, second)) {
+            var start = send(client, request("/api/auth/google"));
+            String state = UriComponentsBuilder.fromUriString(start.headers().firstValue("location").orElseThrow())
+                .build().getQueryParams().getFirst("state");
+            assertEquals(302, send(client, request("/api/auth/google/callback?code=withdraw-code&state=" + state)).statusCode());
+        }
+        var me = object(send(first, request("/api/auth/me")).body());
+        var token = me.get("accessToken").toString();
+        Long oldId = Long.valueOf(((Map<?,?>) me.get("user")).get("id").toString());
+        assertEquals(204, send(first, request("/api/mypage").header("Authorization", "Bearer " + token)
+            .header("Content-Type", "application/json").method("DELETE", HttpRequest.BodyPublishers.ofString("{\"confirmed\":true}"))).statusCode());
+        assertEquals(401, send(first, request("/api/auth/me")).statusCode());
+        assertEquals(401, send(second, request("/api/auth/me")).statusCode());
+        assertEquals(401, send(browser(), request("/api/test-account").header("Authorization", "Bearer " + token)).statusCode());
+        var start = send(first, request("/api/auth/google"));
+        String state = UriComponentsBuilder.fromUriString(start.headers().firstValue("location").orElseThrow())
+            .build().getQueryParams().getFirst("state");
+        send(first, request("/api/auth/google/callback?code=withdraw-code&state=" + state));
+        assertNotEquals(oldId, members.findByLoginId("oauth:google:withdraw-social").orElseThrow().getId());
+    }
+
+    @Test void coursesArePrivateAndWithdrawalDeletesDaysAndPlaces() throws Exception {
+        var owner = members.saveAndFlush(new com.itsup.incheonguro.Auth.entity.Member(
+            "course-owner", passwords.encode("Test1234!"), null, "Owner", null, null, null, "Owner", null));
+        var other = members.saveAndFlush(new com.itsup.incheonguro.Auth.entity.Member(
+            "course-other", passwords.encode("Test1234!"), null, "Other", null, null, null, "Other", null));
+        String token = tokens.createAccessToken(owner), otherToken = tokens.createAccessToken(other);
+        String payload = json.writeValueAsString(Map.of("name", "Private course", "days", java.util.List.of(
+            Map.of("day", 1, "transport", "도보", "places", java.util.List.of(Map.of("name", "Place", "address", "Incheon")),
+                "costs", Map.of("transportation", 0, "food", 0, "admission", 0, "etc", 0)))));
+        var create = send(browser(), request("/api/courses").header("Authorization", "Bearer " + token)
+            .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(payload)));
+        assertEquals(201, create.statusCode());
+        Long id = ((Number)object(create.body()).get("id")).longValue();
+        var otherCreate = send(browser(), request("/api/courses").header("Authorization", "Bearer " + otherToken)
+            .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(payload)));
+        Long otherId = ((Number)object(otherCreate.body()).get("id")).longValue();
+        jdbc.update("insert into courses (name, created_at, updated_at) values ('legacy-ownerless', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        var list = send(browser(), request("/api/courses").header("Authorization", "Bearer " + token));
+        assertEquals(1, json.readValue(list.body(), java.util.List.class).size());
+        assertEquals(200, send(browser(), request("/api/courses/" + id).header("Authorization", "Bearer " + token)).statusCode());
+        for (String method : new String[]{"GET", "PUT", "DELETE"}) {
+            assertEquals(404, send(browser(), request("/api/courses/" + id).header("Authorization", "Bearer " + otherToken)
+                .header("Content-Type", "application/json").method(method,
+                    method.equals("PUT") ? HttpRequest.BodyPublishers.ofString(payload) : HttpRequest.BodyPublishers.noBody())).statusCode());
+        }
+        Long dayId = jdbc.queryForObject("select id from course_days where course_id=?", Long.class, id);
+        assertEquals(1, jdbc.queryForObject("select count(*) from course_places where course_day_id=?", Integer.class, dayId));
+        assertEquals(204, send(browser(), request("/api/mypage").header("Authorization", "Bearer " + token)
+            .header("Content-Type", "application/json").method("DELETE",
+                HttpRequest.BodyPublishers.ofString("{\"confirmed\":true,\"password\":\"Test1234!\"}"))).statusCode());
+        assertEquals(0, jdbc.queryForObject("select count(*) from courses where id=?", Integer.class, id));
+        assertEquals(0, jdbc.queryForObject("select count(*) from course_days where course_id=?", Integer.class, id));
+        assertEquals(0, jdbc.queryForObject("select count(*) from course_places where course_day_id=?", Integer.class, dayId));
+        assertEquals(1, jdbc.queryForObject("select count(*) from courses where id=?", Integer.class, otherId));
+    }
 }
