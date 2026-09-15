@@ -21,7 +21,77 @@ import CourseRecommendLoading2 from '@/assets/CourseRecommendLoading2.png';
 import { recommendCourse } from '@/api/courseRecommend';
 import type { CourseRecommendAnswers, CourseRecommendResult } from './types';
 
+import type {
+  Course as MyCourse,
+  CourseDay as MyCourseDay,
+  Transport as MyCourseTransport,
+} from '@/pages/MyCourses/types';
+
 import './CourseRecommendPage.css';
+
+/* =========================
+   내 코스에 저장
+========================= */
+
+const MY_COURSES_STORAGE_KEY = 'incheonguro-my-courses';
+
+const TRANSPORT_MAP: Record<string, MyCourseTransport> = {
+  도보: '도보',
+  대중교통: '대중교통',
+  자전거: '자전거',
+  자차: '자차',
+  택시: '대중교통',
+  '공유차 / 렌터카': '자차',
+};
+
+function toMyCourseDay(day: CourseRecommendResult['days'][number], transport: string): MyCourseDay {
+  const costs = { transportation: 0, food: 0, admission: 0, etc: 0 };
+
+  day.costs.forEach((cost) => {
+    if (cost.label === '교통비') {
+      costs.transportation += cost.amount;
+    } else if (cost.label === '입장료') {
+      costs.admission += cost.amount;
+    } else if (cost.label === '식비' || cost.label === '카페 비용') {
+      costs.food += cost.amount;
+    } else {
+      costs.etc += cost.amount;
+    }
+  });
+
+  return {
+    id: Date.now() + day.day,
+    day: day.day,
+    transport: TRANSPORT_MAP[transport] ?? '대중교통',
+    places: day.places.map((place) => ({
+      id: place.id,
+      name: place.name,
+      address: place.description,
+    })),
+    costs,
+  };
+}
+
+function saveRecommendedCourse(result: CourseRecommendResult, transport: string) {
+  const newCourse: MyCourse = {
+    id: Date.now(),
+    name: result.title,
+    days: result.days.map((day) => toMyCourseDay(day, transport)),
+  };
+
+  let existingCourses: unknown = [];
+
+  try {
+    const raw = localStorage.getItem(MY_COURSES_STORAGE_KEY);
+    existingCourses = raw ? JSON.parse(raw) : [];
+  } catch {
+    existingCourses = [];
+  }
+
+  const nextCourses = Array.isArray(existingCourses) ? [...existingCourses, newCourse] : [newCourse];
+
+  localStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify(nextCourses));
+}
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -239,6 +309,8 @@ function CourseRecommendPage() {
     if (!courseResult) {
       return;
     }
+
+    saveRecommendedCourse(courseResult, transport);
 
     navigate('/my-courses');
   };

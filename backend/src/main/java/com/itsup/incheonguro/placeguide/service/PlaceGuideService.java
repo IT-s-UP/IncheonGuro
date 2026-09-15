@@ -326,7 +326,8 @@ public class PlaceGuideService {
           PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
           item.path("mapy").asDouble(),
           item.path("mapx").asDouble(),
-          item.path("firstimage").asText("")));
+          item.path("firstimage").asText(""),
+          lclsSystm2));
     }
     return result;
   }

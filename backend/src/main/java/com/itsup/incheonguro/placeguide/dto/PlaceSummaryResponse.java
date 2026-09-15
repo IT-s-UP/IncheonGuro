@@ -20,9 +20,13 @@ public class PlaceSummaryResponse {
   // 대표 이미지 URL (목록 카드에 썸네일로 표시) - 없는 장소도 많아서 빈 문자열일 수 있음
   private String imageUrl;
 
+  // 관광공사 API 중분류 코드 (예: 쇼핑 카테고리 내 전통시장 SH06 / 개별매장 SH04 구분 등에 사용)
+  private String lclsSystm2;
+
   // Service에서 이미 조립된 값들로 직접 생성할 때 사용 (getBookmarkedPlaces, getNearbyPlaces 등)
   public PlaceSummaryResponse(String placeId, String title, String subtitle,
-      District district, PlaceCategory category, double latitude, double longitude, String imageUrl) {
+      District district, PlaceCategory category, double latitude, double longitude, String imageUrl,
+      String lclsSystm2) {
     this.placeId = placeId;
     this.title = title;
     this.subtitle = subtitle;
@@ -31,6 +35,7 @@ public class PlaceSummaryResponse {
     this.latitude = latitude;
     this.longitude = longitude;
     this.imageUrl = imageUrl;
+    this.lclsSystm2 = lclsSystm2;
   }
 
   // 관광공사 API 응답의 item 하나(JsonNode)를 받아서 우리 DTO로 변환
@@ -47,6 +52,7 @@ public class PlaceSummaryResponse {
         PlaceCategory.fromApiCode(contentTypeId, lclsSystm2),
         item.path("mapy").asDouble(),
         item.path("mapx").asDouble(),
-        item.path("firstimage").asText("")); // 없으면 빈 문자열
+        item.path("firstimage").asText(""), // 없으면 빈 문자열
+        lclsSystm2);
   }
 }
