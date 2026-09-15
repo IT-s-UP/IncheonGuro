@@ -13,6 +13,8 @@ export interface CoursePlace {
   category: string;
   description: string;
   imageUrl?: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface CourseCost {
