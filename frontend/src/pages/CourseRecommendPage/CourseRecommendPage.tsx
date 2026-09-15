@@ -18,7 +18,7 @@ import CourseRecommendIntro from '@/assets/CourseRecommendIntro.png';
 import CourseRecommendLoading1 from '@/assets/CourseRecommendLoading1.png';
 import CourseRecommendLoading2 from '@/assets/CourseRecommendLoading2.png';
 
-import { getMockCourseResult } from './mockData';
+import { recommendCourse } from '@/api/courseRecommend';
 import type { CourseRecommendAnswers, CourseRecommendResult } from './types';
 
 import './CourseRecommendPage.css';
@@ -198,7 +198,7 @@ function CourseRecommendPage() {
      결과 생성
   ========================= */
 
-  const handleResult = () => {
+  const handleResult = async () => {
     const answers: CourseRecommendAnswers = {
       transport,
       startDate,
@@ -208,17 +208,14 @@ function CourseRecommendPage() {
       companion,
     };
 
-    /*
-     * 현재는 Mock 추천 알고리즘
-     *
-     * 나중에는:
-     *
-     * const result =
-     *   await recommendCourse(answers);
-     *
-     * 형태로 API 호출로 변경
-     */
-    const result = getMockCourseResult(answers);
+    let result: CourseRecommendResult;
+
+    try {
+      result = await recommendCourse(answers);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '코스 추천에 실패했습니다.');
+      return;
+    }
 
     setCourseResult(result);
 
