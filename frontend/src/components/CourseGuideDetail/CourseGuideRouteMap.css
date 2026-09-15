@@ -3,33 +3,22 @@
   height: calc(100svh - 220px);
   min-height: 260px;
   overflow: hidden;
-  background:
-    linear-gradient(
-      35deg,
-      transparent 45%,
-      var(--course-pale-blue) 46%,
-      var(--course-pale-blue) 48%,
-      transparent 49%
-    ),
-    linear-gradient(
-      -30deg,
-      transparent 47%,
-      var(--course-light-gray) 48%,
-      var(--course-light-gray) 50%,
-      transparent 51%
-    ),
-    #f4f8f8;
-  background-size: 120px 90px;
+  background: #f4f8f8;
 }
 
 .course-guide-detail-page__map-placeholder {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
+  background: #f4f8f8;
+  color: var(--course-gray);
+  font-size: 14px;
+  text-align: center;
 }
 
 .course-guide-detail-page__map-route {

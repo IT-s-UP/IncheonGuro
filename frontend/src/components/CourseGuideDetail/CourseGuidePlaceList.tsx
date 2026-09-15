@@ -1,4 +1,5 @@
 import Typography from '@/components/Typography/Typography';
+import CourseGuideRouteDuration from './CourseGuideRouteDuration';
 import type { CoursePlace, Transport } from '@/pages/MyCourses/types';
 
 import './CourseGuidePlaceList.css';
@@ -34,6 +35,7 @@ function CourseGuidePlaceList({
         const isFirstPlace = index === 0;
         const isLastPlace = index === places.length - 1;
         const isActionMenuOpen = actionMenuPlaceId === place.id;
+        const nextPlace = places[index + 1];
 
         const placeLabel = isFirstPlace ? '출발지' : isLastPlace ? '도착지' : `경유지 ${index}`;
 
@@ -137,7 +139,7 @@ function CourseGuidePlaceList({
               </div>
             </div>
 
-            {!isLastPlace && (
+            {!isLastPlace && nextPlace && (
               <div className="course-guide-detail-page__transport-step">
                 <div className="course-guide-detail-page__transport-timeline">
                   <span className="course-guide-detail-page__transport-marker" aria-hidden="true" />
@@ -149,7 +151,7 @@ function CourseGuidePlaceList({
                   </Typography>
 
                   <Typography as="p" variant="caption2" color="#828585">
-                    약 10분 · 예상 이동 시간
+                    <CourseGuideRouteDuration from={place} to={nextPlace} transport={transport} />
                   </Typography>
                 </div>
               </div>

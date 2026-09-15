@@ -8,23 +8,16 @@ import java.util.Map;
 @Getter
 public class CourseDetailResponse {
 
-  // 코스 고유 번호
-  private Long courseId;
+  // 코스 고유 번호 -> 관광공사 contentId로 바뀌어서 String
+  private String courseId;
 
-  // 코스 이름
   private String name;
 
-  // 로그인한 사용자가 이 코스를 북마크했는지?
   private boolean isBookmarked;
 
-  /**
-   * 이동수단별 경로
-   * - key: "walk" / "transit" / "bike" / "car"
-   * - value: 그 경로의 장소 + 구간 노드 목록
-   */
   private Map<String, List<RouteNodeResponse>> routes;
 
-  public CourseDetailResponse(Long courseId, String name, boolean isBookmarked,
+  public CourseDetailResponse(String courseId, String name, boolean isBookmarked,
       Map<String, List<RouteNodeResponse>> routes) {
     this.courseId = courseId;
     this.name = name;

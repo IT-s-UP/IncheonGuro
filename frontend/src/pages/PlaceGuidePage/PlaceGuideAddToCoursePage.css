@@ -41,6 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 
   background: #ffffff;
   border: 1px solid #eeeeee;
@@ -61,12 +62,21 @@
 }
 
 .place-guide-add-to-course-page__course-name {
+  /* 남는 공간을 전부 차지하고, 넘치면 "..."으로 생략 */
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
   font-size: 15px;
   font-weight: 700;
   color: #000000;
+  text-align: left;
 }
 
 .place-guide-add-to-course-page__day-count {
+  flex-shrink: 0;
   font-size: 13px;
   color: #6e6e6e;
 }
