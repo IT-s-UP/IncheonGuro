@@ -23,6 +23,8 @@ import PlaceGuideAddToCoursePage from '@/pages/PlaceGuidePage/PlaceGuideAddToCou
 
 import MyPage from '@/pages/MyPage/MyPage';
 
+import { ContactPage, PoliciesPage, PolicyDetailPage } from '@/pages/ServicePages/ServicePages';
+
 function App() {
   return (
     <AuthProvider>
@@ -45,6 +47,9 @@ function App() {
         <Route path="/place-guide/:placeId" element={<PlaceGuideDetailPage />} />
         <Route path="/place-guide/:placeId/add-to-course" element={<PlaceGuideAddToCoursePage />} />
 
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/policies" element={<PoliciesPage />} />
+        <Route path="/policies/:policyId" element={<PolicyDetailPage />} />
         <Route path="/my-page" element={<MyPage />} />
       </Routes>
     </AuthProvider>
