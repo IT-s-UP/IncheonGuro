@@ -182,7 +182,8 @@ public class CourseGuideService {
       List<RouteNodeResponse> nodes = new ArrayList<>();
       for (int i = 0; i < waypoints.size(); i++) {
         Waypoint w = waypoints.get(i);
-        nodes.add(RouteNodeResponse.ofPlace(w.name(), w.address(), toPlaceLabel(i, waypoints.size())));
+        nodes.add(RouteNodeResponse.ofPlace(w.name(), w.address(), toPlaceLabel(i, waypoints.size()), w.latitude(),
+            w.longitude()));
 
         if (i < waypoints.size() - 1) {
           RouteSegmentResponse seg = routeResponse.segments().get(i);
@@ -202,7 +203,8 @@ public class CourseGuideService {
     List<RouteNodeResponse> nodes = new ArrayList<>();
     for (int i = 0; i < waypoints.size(); i++) {
       Waypoint w = waypoints.get(i);
-      nodes.add(RouteNodeResponse.ofPlace(w.name(), w.address(), toPlaceLabel(i, waypoints.size())));
+      nodes.add(RouteNodeResponse.ofPlace(w.name(), w.address(), toPlaceLabel(i, waypoints.size()), w.latitude(),
+          w.longitude()));
       if (i < waypoints.size() - 1) {
         nodes.add(RouteNodeResponse.ofUnavailableSegment(mode));
       }
