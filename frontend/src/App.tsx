@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/auth/AuthContext';
+import RequireAuth from '@/auth/RequireAuth';
 import ScrollToTop from '@/components/ScrollToTop';
 
 import MainPage from '@/pages/MainPage/MainPage';
@@ -33,7 +34,14 @@ function App() {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/course-recommend" element={<CourseRecommendPage />} />
+        <Route
+          path="/course-recommend"
+          element={
+            <RequireAuth>
+              <CourseRecommendPage />
+            </RequireAuth>
+          }
+        />
         <Route path="/course-guide" element={<CourseGuideListPage />} />
         <Route path="/course-guide/:courseId" element={<CourseGuideDetailPage />} />
         <Route path="/my-courses" element={<MyCoursesPage />} />
