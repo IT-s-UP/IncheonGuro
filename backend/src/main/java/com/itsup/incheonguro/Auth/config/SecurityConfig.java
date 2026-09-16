@@ -80,6 +80,11 @@ public class SecurityConfig {
                                                                 "/api/course-routes", "/api/course-routes/**")
                                                 .permitAll()
 
+                                                // 로그인 없이도 접근 가능한 프론트 페이지(코스 추천 설문)
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/course-recommend/recommend")
+                                                .permitAll()
+
                                                 .requestMatchers(
                                                                 HttpMethod.OPTIONS,
                                                                 "/**")
