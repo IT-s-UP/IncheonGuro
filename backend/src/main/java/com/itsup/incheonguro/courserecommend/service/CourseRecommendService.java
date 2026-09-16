@@ -83,6 +83,15 @@ public class CourseRecommendService {
             "문화 / 예술 / 역사", EnumSet.of(PlaceCategory.ATTRACTION),
             "자연", EnumSet.of(PlaceCategory.ATTRACTION));
 
+    // 관광지(ATTRACTION) 안에서도 여행 스타일별로 관광공사 대분류 코드(lclsSystm1)를 제한해
+    // "관광/체험액티비티/문화예술역사/자연"이 전부 같은 후보로 뭉개지지 않게 함.
+    // NA=자연, HS=역사관광지, VE=체험·문화시설, EX/LS=레포츠.
+    // "관광"·"힐링"처럼 이 맵에 없는 스타일은 제한 없이 관광지 전체를 후보로 봄.
+    private static final Map<String, Set<String>> STYLE_TO_ATTRACTION_CODES = Map.of(
+            "자연", Set.of("NA"),
+            "문화 / 예술 / 역사", Set.of("HS", "VE"),
+            "체험 / 액티비티", Set.of("VE", "EX", "LS"));
+
     // 동행인별로 여행 스타일 테마에 추가로 고려할 카테고리
     private static final Map<String, PlaceCategory> COMPANION_EXTRA_CATEGORY = Map.of(
             "혼자", PlaceCategory.CAFE,
@@ -158,9 +167,10 @@ public class CourseRecommendService {
         }
 
         boolean foodIsTheme = themeCategories.contains(PlaceCategory.RESTAURANT);
+        Set<String> attractionCodeFilter = resolveAttractionCodeFilter(request.getTravelStyles());
 
         District preferredDistrict = resolvePreferredDistrict(member);
-        DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme, preferredDistrict);
+        DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme, preferredDistrict, attractionCodeFilter);
         String districtLabel = DISTRICT_LABEL.getOrDefault(pools.district(), "인천");
 
         // 식사는 테마에 포함되어 있지 않아도 항상 일정에 넣되,
@@ -244,7 +254,8 @@ public class CourseRecommendService {
      * 가장 먼저 시도합니다.
      */
     private DistrictPools buildDistrictPools(
-            Set<PlaceCategory> themeCategories, boolean foodIsTheme, District preferredDistrict) {
+            Set<PlaceCategory> themeCategories, boolean foodIsTheme, District preferredDistrict,
+            Set<String> attractionCodeFilter) {
         Set<PlaceCategory> fetchCategories = EnumSet.copyOf(themeCategories);
 
         if (!foodIsTheme) {
@@ -269,6 +280,9 @@ public class CourseRecommendService {
 
             List<PlaceSummaryResponse> theme = filtered.stream()
                     .filter(place -> themeCategories.contains(place.getCategory()))
+                    .filter(place -> place.getCategory() != PlaceCategory.ATTRACTION
+                            || attractionCodeFilter == null
+                            || attractionCodeFilter.contains(place.getLclsSystm1()))
                     .collect(Collectors.toCollection(ArrayList::new));
 
             List<PlaceSummaryResponse> meal = foodIsTheme
@@ -383,6 +397,29 @@ public class CourseRecommendService {
         }
 
         return categories;
+    }
+
+    /**
+     * 관광지(ATTRACTION) 후보를 제한할 lclsSystm1 코드 집합을 계산합니다.
+     * "관광"/"힐링"처럼 관광지를 제한 없이 요청하는 스타일이 하나라도 있으면
+     * 제한을 두지 않고(null), 그 외에는 선택한 스타일들이 요구하는 코드의 합집합을 씁니다.
+     */
+    private Set<String> resolveAttractionCodeFilter(List<String> travelStyles) {
+        boolean hasUnrestrictedAttractionStyle = travelStyles.stream()
+                .anyMatch(style -> STYLE_TO_CATEGORIES.getOrDefault(style, Set.of()).contains(PlaceCategory.ATTRACTION)
+                        && !STYLE_TO_ATTRACTION_CODES.containsKey(style));
+
+        if (hasUnrestrictedAttractionStyle) {
+            return null;
+        }
+
+        Set<String> codes = travelStyles.stream()
+                .map(STYLE_TO_ATTRACTION_CODES::get)
+                .filter(Objects::nonNull)
+                .flatMap(Set::stream)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return codes.isEmpty() ? null : codes;
     }
 
     /**
