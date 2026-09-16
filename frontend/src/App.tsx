@@ -44,7 +44,14 @@ function App() {
         />
         <Route path="/course-guide" element={<CourseGuideListPage />} />
         <Route path="/course-guide/:courseId" element={<CourseGuideDetailPage />} />
-        <Route path="/my-courses" element={<MyCoursesPage />} />
+        <Route
+          path="/my-courses"
+          element={
+            <RequireAuth>
+              <MyCoursesPage />
+            </RequireAuth>
+          }
+        />
         <Route path="/region-recommend" element={<RegionRecommendPage />} />
         <Route path="/festivals" element={<FestivalListPage />} />
         <Route path="/festivals/:festivalId" element={<FestivalDetailPage />} />
@@ -53,7 +60,14 @@ function App() {
         <Route path="/place-guide" element={<PlaceGuideMainPage />} />
         <Route path="/place-guide/search" element={<PlaceGuideSearchPage />} />
         <Route path="/place-guide/:placeId" element={<PlaceGuideDetailPage />} />
-        <Route path="/place-guide/:placeId/add-to-course" element={<PlaceGuideAddToCoursePage />} />
+        <Route
+          path="/place-guide/:placeId/add-to-course"
+          element={
+            <RequireAuth>
+              <PlaceGuideAddToCoursePage />
+            </RequireAuth>
+          }
+        />
 
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/policies" element={<PoliciesPage />} />
