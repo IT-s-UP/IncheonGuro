@@ -11,8 +11,11 @@ import com.itsup.incheonguro.placeguide.entity.PlaceCategory;
 import com.itsup.incheonguro.placeguide.repository.PlaceBookmarkRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -402,7 +405,13 @@ public class PlaceGuideService {
   }
 
   private JsonNode callApiForItems(String url) {
-    String response = restTemplate.getForObject(URI.create(url), String.class);
+    String response;
+
+    try {
+      response = restTemplate.getForObject(URI.create(url), String.class);
+    } catch (RestClientException e) {
+      throw upstreamError();
+    }
 
     try {
       return objectMapper.readTree(response)
@@ -411,7 +420,12 @@ public class PlaceGuideService {
           .path("items")
           .path("item");
     } catch (Exception e) {
-      throw new RuntimeException("관광공사 API 응답 파싱 실패", e);
+      throw upstreamError();
     }
+  }
+
+  private ResponseStatusException upstreamError() {
+    return new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+        "장소 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
   }
 }
