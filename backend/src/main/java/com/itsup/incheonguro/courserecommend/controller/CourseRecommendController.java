@@ -1,5 +1,7 @@
 package com.itsup.incheonguro.courserecommend.controller;
 
+import com.itsup.incheonguro.Auth.entity.Member;
+import com.itsup.incheonguro.Auth.support.CurrentMember;
 import com.itsup.incheonguro.courserecommend.dto.CourseRecommendRequest;
 import com.itsup.incheonguro.courserecommend.dto.CourseRecommendResponse;
 import com.itsup.incheonguro.courserecommend.service.CourseRecommendService;
@@ -24,8 +26,9 @@ public class CourseRecommendController {
      */
     @PostMapping("/recommend")
     public CourseRecommendResponse recommend(
-            @Valid @RequestBody CourseRecommendRequest request) {
+            @Valid @RequestBody CourseRecommendRequest request,
+            @CurrentMember Member member) {
 
-        return courseRecommendService.recommend(request);
+        return courseRecommendService.recommend(request, member);
     }
 }

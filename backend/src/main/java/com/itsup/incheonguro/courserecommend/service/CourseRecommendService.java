@@ -1,5 +1,8 @@
 package com.itsup.incheonguro.courserecommend.service;
 
+import com.itsup.incheonguro.Auth.entity.Member;
+import com.itsup.incheonguro.RegionRecommendPage.entity.Region;
+import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
 import com.itsup.incheonguro.courserecommend.dto.CourseCostResponse;
 import com.itsup.incheonguro.courserecommend.dto.CourseDayResponse;
 import com.itsup.incheonguro.courserecommend.dto.CoursePlaceResponse;
@@ -121,8 +124,9 @@ public class CourseRecommendService {
             PlaceCategory.SHOPPING, "쇼핑 비용");
 
     private final PlaceGuideService placeGuideService;
+    private final RegionRepository regionRepository;
 
-    public CourseRecommendResponse recommend(CourseRecommendRequest request) {
+    public CourseRecommendResponse recommend(CourseRecommendRequest request, Member member) {
         LocalDate startDate;
         LocalDate endDate;
 
@@ -155,7 +159,8 @@ public class CourseRecommendService {
 
         boolean foodIsTheme = themeCategories.contains(PlaceCategory.RESTAURANT);
 
-        DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme);
+        District preferredDistrict = resolvePreferredDistrict(member);
+        DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme, preferredDistrict);
         String districtLabel = DISTRICT_LABEL.getOrDefault(pools.district(), "인천");
 
         // 식사는 테마에 포함되어 있지 않아도 항상 일정에 넣되,
@@ -210,12 +215,36 @@ public class CourseRecommendService {
     }
 
     /**
+     * 회원가입 때 선택한 관심 지역을, 코스를 구성할 구로 우선 고려하기 위해
+     * District로 변환합니다. 관심 지역이 없거나 알 수 없는 지역이면 null.
+     */
+    private District resolvePreferredDistrict(Member member) {
+        if (member == null || member.getInterestedRegion() == null) {
+            return null;
+        }
+
+        return regionRepository.findById(member.getInterestedRegion())
+                .map(Region::getRegionName)
+                .flatMap(this::districtByLabel)
+                .orElse(null);
+    }
+
+    private java.util.Optional<District> districtByLabel(String label) {
+        return DISTRICT_LABEL.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(label))
+                .map(Map.Entry::getKey)
+                .findFirst();
+    }
+
+    /**
      * 선택한 여행 스타일에 해당하는 테마 장소와, 식사를 위한 식당 후보를
      * 관광공사 API에서 구 단위로 가져옵니다. 코스 전체를 하나의 구 안에서
      * 구성할 수 있도록 테마 후보가 충분한 구를 고르고, 어느 구도 충분하지
-     * 않으면 후보가 가장 많은 구로 대체합니다.
+     * 않으면 후보가 가장 많은 구로 대체합니다. 회원의 관심 지역이 있으면
+     * 가장 먼저 시도합니다.
      */
-    private DistrictPools buildDistrictPools(Set<PlaceCategory> themeCategories, boolean foodIsTheme) {
+    private DistrictPools buildDistrictPools(
+            Set<PlaceCategory> themeCategories, boolean foodIsTheme, District preferredDistrict) {
         Set<PlaceCategory> fetchCategories = EnumSet.copyOf(themeCategories);
 
         if (!foodIsTheme) {
@@ -226,6 +255,11 @@ public class CourseRecommendService {
 
         List<District> districts = new ArrayList<>(List.of(District.values()));
         Collections.shuffle(districts);
+
+        if (preferredDistrict != null) {
+            districts.remove(preferredDistrict);
+            districts.add(0, preferredDistrict);
+        }
 
         DistrictPools best = null;
 
