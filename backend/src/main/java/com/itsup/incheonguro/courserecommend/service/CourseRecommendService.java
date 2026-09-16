@@ -80,6 +80,16 @@ public class CourseRecommendService {
             "문화 / 예술 / 역사", EnumSet.of(PlaceCategory.ATTRACTION),
             "자연", EnumSet.of(PlaceCategory.ATTRACTION));
 
+    // 동행인별로 여행 스타일 테마에 추가로 고려할 카테고리
+    private static final Map<String, PlaceCategory> COMPANION_EXTRA_CATEGORY = Map.of(
+            "혼자", PlaceCategory.CAFE,
+            "연인", PlaceCategory.CAFE,
+            "친구", PlaceCategory.SHOPPING);
+
+    // 아이/부모님/반려동물과 함께하면 하루 일정 강도를 한 단계 낮춤
+    private static final Set<String> RELAXED_PACE_COMPANIONS = Set.of("아이", "부모님", "반려동물");
+    private static final int MIN_PLACES_PER_DAY = 2;
+
     // 이동 수단별 하루 교통비 추정치
     private static final Map<String, Integer> TRANSPORT_DAILY_COST = Map.of(
             "도보", 0,
@@ -132,7 +142,17 @@ public class CourseRecommendService {
         int days = (int) Math.min(totalDays, MAX_DAYS);
         int placesPerDay = "빡빡하고 바쁜, 많은 일정".equals(request.getScheduleType()) ? 4 : 3;
 
+        if (RELAXED_PACE_COMPANIONS.contains(request.getCompanion())) {
+            placesPerDay = Math.max(MIN_PLACES_PER_DAY, placesPerDay - 1);
+        }
+
         Set<PlaceCategory> themeCategories = resolveCategories(request.getTravelStyles());
+
+        PlaceCategory companionCategory = COMPANION_EXTRA_CATEGORY.get(request.getCompanion());
+        if (companionCategory != null) {
+            themeCategories.add(companionCategory);
+        }
+
         boolean foodIsTheme = themeCategories.contains(PlaceCategory.RESTAURANT);
 
         DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme);
