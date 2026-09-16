@@ -1,11 +1,9 @@
 // src/api/courseGuide.ts
 // 코스 안내 페이지 전용 API 호출 함수 모음 (fetch 기반, placeGuide.ts와 동일한 패턴)
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // '/api'
+import { getAccessToken } from '@/auth/api';
 
-function getAccessToken(): string | null {
-  return localStorage.getItem('accessToken');
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // '/api'
 
 async function request<T>(
   path: string,
@@ -73,6 +71,7 @@ export interface CourseDetail {
   routes: Record<TransportMode, RouteNode[]>;
 }
 
+// 장소 하나(출발지/경유지/도착지)를 표현. CourseGuideRouteList 등에서 사용
 export interface Place {
   name: string;
   address: string;
