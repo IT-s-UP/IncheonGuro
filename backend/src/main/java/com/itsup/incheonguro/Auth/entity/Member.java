@@ -2,11 +2,16 @@ package com.itsup.incheonguro.Auth.entity;
 
 import java.time.LocalDate;
 
+import com.itsup.incheonguro.RegionRecommendPage.entity.Region;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,6 +53,10 @@ public class Member {
     @Column
     private Long interestedRegion;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recommended_region_id")
+    private Region recommendedRegion;
+
     @Column
     private String profileMascot;
 
@@ -87,6 +96,10 @@ public class Member {
         this.interestedRegion = interestedRegion;
     }
 
+    public void updateRecommendedRegion(Region recommendedRegion) {
+        this.recommendedRegion = recommendedRegion;
+    }
+
     public void changeEmail(String email) {
         this.email = email;
     }
@@ -102,4 +115,5 @@ public class Member {
     public boolean isSocialAccount() {
         return loginId != null && loginId.startsWith("oauth:");
     }
+
 }
