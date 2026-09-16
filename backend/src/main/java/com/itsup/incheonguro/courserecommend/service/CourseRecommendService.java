@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -102,6 +103,12 @@ public class CourseRecommendService {
     private static final Set<String> RELAXED_PACE_COMPANIONS = Set.of("아이", "부모님", "반려동물");
     private static final int MIN_PLACES_PER_DAY = 2;
 
+    // 프론트에서 올 수 있는 값 검증용. 프론트 문구가 바뀌면 여기서 걸러져 400으로 응답한다.
+    private static final Set<String> KNOWN_SCHEDULE_TYPES =
+            Set.of("빡빡하고 바쁜, 많은 일정", "여유롭고 널널한, 적은 일정");
+    private static final Set<String> KNOWN_COMPANIONS =
+            Set.of("혼자", "가족", "친구", "연인", "아이", "부모님", "반려동물", "기타");
+
     // 이동 수단별 하루 교통비 추정치
     private static final Map<String, Integer> TRANSPORT_DAILY_COST = Map.of(
             "도보", 0,
@@ -136,6 +143,8 @@ public class CourseRecommendService {
     private final RegionRepository regionRepository;
 
     public CourseRecommendResponse recommend(CourseRecommendRequest request, Member member) {
+        validateChoices(request);
+
         LocalDate startDate;
         LocalDate endDate;
 
@@ -152,7 +161,11 @@ public class CourseRecommendService {
             throw new IllegalArgumentException("여행 종료일은 시작일 이후여야 합니다.");
         }
 
-        int days = (int) Math.min(totalDays, MAX_DAYS);
+        if (totalDays > MAX_DAYS) {
+            throw new IllegalArgumentException("여행 기간은 최대 " + MAX_DAYS + "일까지 추천할 수 있습니다.");
+        }
+
+        int days = (int) totalDays;
         int placesPerDay = "빡빡하고 바쁜, 많은 일정".equals(request.getScheduleType()) ? 4 : 3;
 
         if (RELAXED_PACE_COMPANIONS.contains(request.getCompanion())) {
@@ -169,21 +182,28 @@ public class CourseRecommendService {
         boolean foodIsTheme = themeCategories.contains(PlaceCategory.RESTAURANT);
         Set<String> attractionCodeFilter = resolveAttractionCodeFilter(request.getTravelStyles());
 
+        // 같은 회원이 같은 조건으로 다시 요청하면 같은 결과가 나오도록, 무작위 순서를
+        // 매 요청 새로 뽑지 않고 요청 내용에서 뽑은 시드로 고정한다. 조건이 하나라도
+        // 다르면 다른 시드가 되어 결과도 달라진다.
+        Random random = new Random(Objects.hash(member == null ? null : member.getId(),
+                request.getStartDate(), request.getEndDate(), request.getScheduleType(),
+                request.getTravelStyles(), request.getCompanion(), request.getTransport()));
+
+        // 식당이 그 자체로 테마가 아니면(예: "맛집 탐방"을 고르지 않았으면), 하루에 넣을
+        // 식당 수는 이 목표치를 넘지 않는다 - 실제 구를 찾기 전에 필요한 테마 장소 수를
+        // 미리 가늠해서, 후보가 넉넉한 구를 우선 찾는 데 씀 (같은 장소 반복 방문을 줄임)
+        int mealsTarget = foodIsTheme ? 0 : (placesPerDay >= 4 ? 2 : 1);
+        int minThemeSlotsPerDay = placesPerDay - mealsTarget;
+        int desiredThemeCount = Math.max(MIN_THEME_POOL_SIZE, days * minThemeSlotsPerDay);
+
         District preferredDistrict = resolvePreferredDistrict(member);
-        DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme, preferredDistrict, attractionCodeFilter);
+        DistrictPools pools = buildDistrictPools(
+                themeCategories, foodIsTheme, preferredDistrict, attractionCodeFilter, desiredThemeCount, random);
         String districtLabel = DISTRICT_LABEL.getOrDefault(pools.district(), "인천");
 
         // 식사는 테마에 포함되어 있지 않아도 항상 일정에 넣되,
         // 식당 후보가 부족하면 그만큼만 넣고 나머지는 테마 장소로 채움
-        int mealsPerDay;
-
-        if (foodIsTheme) {
-            mealsPerDay = 0;
-        } else {
-            int mealsTarget = placesPerDay >= 4 ? 2 : 1;
-            mealsPerDay = Math.min(mealsTarget, pools.mealPlaces().size());
-        }
-
+        int mealsPerDay = foodIsTheme ? 0 : Math.min(mealsTarget, pools.mealPlaces().size());
         int themeSlotsPerDay = placesPerDay - mealsPerDay;
 
         List<PlaceSummaryResponse> themeSequence = buildSequence(pools.themePlaces(), days * themeSlotsPerDay);
@@ -225,6 +245,30 @@ public class CourseRecommendService {
     }
 
     /**
+     * 프론트 설문 옵션 문구와 백엔드 매핑 키가 어긋나면(예: 프론트 문구만 바뀌고 백엔드는
+     * 그대로인 경우) 조용히 기본값으로 빠지지 않도록, 알려진 값인지 미리 검증한다.
+     */
+    private void validateChoices(CourseRecommendRequest request) {
+        if (!KNOWN_SCHEDULE_TYPES.contains(request.getScheduleType())) {
+            throw new IllegalArgumentException("알 수 없는 일정 강도입니다: " + request.getScheduleType());
+        }
+
+        if (!TRANSPORT_DAILY_COST.containsKey(request.getTransport())) {
+            throw new IllegalArgumentException("알 수 없는 이동 수단입니다: " + request.getTransport());
+        }
+
+        if (!KNOWN_COMPANIONS.contains(request.getCompanion())) {
+            throw new IllegalArgumentException("알 수 없는 동행인입니다: " + request.getCompanion());
+        }
+
+        for (String style : request.getTravelStyles()) {
+            if (!STYLE_TO_CATEGORIES.containsKey(style)) {
+                throw new IllegalArgumentException("알 수 없는 여행 스타일입니다: " + style);
+            }
+        }
+    }
+
+    /**
      * 회원가입 때 선택한 관심 지역을, 코스를 구성할 구로 우선 고려하기 위해
      * District로 변환합니다. 관심 지역이 없거나 알 수 없는 지역이면 null.
      */
@@ -255,7 +299,7 @@ public class CourseRecommendService {
      */
     private DistrictPools buildDistrictPools(
             Set<PlaceCategory> themeCategories, boolean foodIsTheme, District preferredDistrict,
-            Set<String> attractionCodeFilter) {
+            Set<String> attractionCodeFilter, int requiredThemeCount, Random random) {
         Set<PlaceCategory> fetchCategories = EnumSet.copyOf(themeCategories);
 
         if (!foodIsTheme) {
@@ -265,7 +309,7 @@ public class CourseRecommendService {
         List<PlaceCategory> categoryList = new ArrayList<>(fetchCategories);
 
         List<District> districts = new ArrayList<>(List.of(District.values()));
-        Collections.shuffle(districts);
+        Collections.shuffle(districts, random);
 
         if (preferredDistrict != null) {
             districts.remove(preferredDistrict);
@@ -310,9 +354,9 @@ public class CourseRecommendService {
                         .collect(Collectors.toCollection(ArrayList::new));
             }
 
-            if (theme.size() >= MIN_THEME_POOL_SIZE) {
-                Collections.shuffle(theme);
-                Collections.shuffle(meal);
+            if (theme.size() >= requiredThemeCount) {
+                Collections.shuffle(theme, random);
+                Collections.shuffle(meal, random);
                 return new DistrictPools(district, theme, meal);
             }
 
@@ -321,12 +365,12 @@ public class CourseRecommendService {
             }
         }
 
-        if (best == null || best.themePlaces().isEmpty()) {
+        if (best == null || best.themePlaces().size() < MIN_THEME_POOL_SIZE) {
             throw new IllegalStateException("추천할 장소를 찾지 못했습니다.");
         }
 
-        Collections.shuffle(best.themePlaces());
-        Collections.shuffle(best.mealPlaces());
+        Collections.shuffle(best.themePlaces(), random);
+        Collections.shuffle(best.mealPlaces(), random);
         return best;
     }
 
