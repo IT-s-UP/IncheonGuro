@@ -14,7 +14,6 @@ import {
 } from '@/api/placeGuide';
 import type { PlaceSummary } from '@/api/placeGuide';
 import type { CourseSummary } from '@/api/courseGuide';
-
 import './PlaceGuideSearchPage.css';
 
 function PlaceGuideSearchPage() {
