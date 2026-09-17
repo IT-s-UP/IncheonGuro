@@ -14,6 +14,7 @@ import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.support.CurrentMember;
 import com.itsup.incheonguro.mypage.dto.EmailChangeRequest;
 import com.itsup.incheonguro.mypage.dto.MyPageResponse;
+import com.itsup.incheonguro.mypage.dto.MyPageStatsResponse; // [추가]
 import com.itsup.incheonguro.mypage.dto.MyPageUpdateRequest;
 import com.itsup.incheonguro.mypage.dto.PasswordChangeRequest;
 import com.itsup.incheonguro.mypage.dto.ProfileMascotRequest;
@@ -38,6 +39,16 @@ public class MyPageController {
     @GetMapping
     public MyPageResponse getMyPage(@CurrentMember Member member) {
         return myPageService.getMyPage(member);
+    }
+
+    // ==========================================
+    // [추가] 마이페이지 통계 조회 (내 코스 / 북마크 / 스탬프 개수)
+    // GET /api/mypage/stats
+    // ==========================================
+
+    @GetMapping("/stats")
+    public MyPageStatsResponse getStats(@CurrentMember Member member) {
+        return myPageService.getStats(member);
     }
 
     // ==========================================
