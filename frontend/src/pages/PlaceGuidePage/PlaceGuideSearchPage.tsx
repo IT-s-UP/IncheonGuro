@@ -12,7 +12,8 @@ import {
   addBookmark,
   removeBookmark,
 } from '@/api/placeGuide';
-import type { PlaceSummary, CourseSummary } from '@/api/placeGuide';
+import type { PlaceSummary } from '@/api/placeGuide';
+import type { CourseSummary } from '@/api/courseGuide';
 
 import './PlaceGuideSearchPage.css';
 
