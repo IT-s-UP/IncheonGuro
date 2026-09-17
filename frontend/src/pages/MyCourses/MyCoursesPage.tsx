@@ -1,4 +1,3 @@
-import { accountStorage } from '@/auth/accountStorage';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,12 +6,16 @@ import Button from '@/components/Button/Button';
 import Header from '@/components/Header/Header';
 import Typography from '@/components/Typography/Typography';
 
+import {
+  createCourse as createCourseApi,
+  deleteCourse as deleteCourseApi,
+  listCourses,
+  updateCourse as updateCourseApi,
+} from '@/api/courses';
 import CourseEditPage from './CourseEdit/CourseEditPage';
-import type { Course, CourseCost, CourseDay, CoursePlace, Transport } from './types';
+import type { Course, CourseCost, CourseDay } from './types';
 
 import './MyCoursesPage.css';
-
-const STORAGE_KEY = 'incheonguro-my-courses';
 
 const EMPTY_COSTS: CourseCost = {
   transportation: 0,
@@ -21,119 +24,18 @@ const EMPTY_COSTS: CourseCost = {
   etc: 0,
 };
 
-const SAMPLE_PLACES: CoursePlace[] = [
-  {
-    id: 101,
-    name: '청라호수공원',
-    address: '인천광역시 서구 청라대로 204',
-  },
-  {
-    id: 102,
-    name: '정서진중앙시장',
-    address: '인천광역시 서구 원창로239번길 11',
-  },
-  {
-    id: 103,
-    name: '아라뱃길 전망대',
-    address: '인천광역시 서구 정서진1로 41',
-  },
-];
-
-interface LegacyCourse {
-  id?: number;
-  name?: string;
-  transport?: Transport;
-  places?: CoursePlace[];
-  days?: CourseDay[];
-}
-
-function createCourseDay(day: number, includeSamplePlaces = false): CourseDay {
+function createEmptyDay(day: number): CourseDay {
   return {
     id: Date.now() + day,
     day,
     transport: '대중교통',
-    places: includeSamplePlaces
-      ? SAMPLE_PLACES.map((place) => ({
-          ...place,
-          id: place.id + day * 100,
-        }))
-      : [],
-    costs: includeSamplePlaces
-      ? {
-          transportation: 8000,
-          food: 30000,
-          admission: 15000,
-          etc: 5000,
-        }
-      : { ...EMPTY_COSTS },
+    places: [],
+    costs: { ...EMPTY_COSTS },
   };
 }
 
-function createInitialDays(includeSamplePlaces = false): CourseDay[] {
-  return [1, 2, 3].map((day) => createCourseDay(day, includeSamplePlaces && day === 1));
-}
-
-const defaultCourses: Course[] = [];
-
-function normalizeCourse(storedCourse: LegacyCourse, index: number): Course {
-  const courseId = typeof storedCourse.id === 'number' ? storedCourse.id : Date.now() + index;
-
-  const courseName =
-    typeof storedCourse.name === 'string' ? storedCourse.name : `내 코스 ${index + 1}`;
-
-  if (Array.isArray(storedCourse.days) && storedCourse.days.length > 0) {
-    return {
-      id: courseId,
-      name: courseName,
-      days: storedCourse.days.map((courseDay, dayIndex) => ({
-        id: typeof courseDay.id === 'number' ? courseDay.id : courseId + dayIndex + 1,
-        day: dayIndex + 1,
-        transport: courseDay.transport ?? '대중교통',
-        places: Array.isArray(courseDay.places) ? courseDay.places : [],
-        costs: {
-          ...EMPTY_COSTS,
-          ...(courseDay.costs ?? {}),
-        },
-      })),
-    };
-  }
-
-  // 기존 places/transport 구조를 DAY 1 구조로 변환합니다.
-  return {
-    id: courseId,
-    name: courseName,
-    days: [
-      {
-        id: courseId * 100 + 1,
-        day: 1,
-        transport: storedCourse.transport ?? '대중교통',
-        places: Array.isArray(storedCourse.places) ? storedCourse.places : [],
-        costs: { ...EMPTY_COSTS },
-      },
-    ],
-  };
-}
-
-function loadCourses(): Course[] {
-  const savedCourses = accountStorage.getItem(STORAGE_KEY);
-
-  if (!savedCourses) {
-    return defaultCourses;
-  }
-
-  try {
-    const parsedCourses: unknown = JSON.parse(savedCourses);
-
-    if (!Array.isArray(parsedCourses)) {
-      return defaultCourses;
-    }
-
-    return parsedCourses.map((storedCourse, index) =>
-      normalizeCourse(storedCourse as LegacyCourse, index),
-    );
-  } catch {
-    return defaultCourses;
-  }
+function createInitialDays(): CourseDay[] {
+  return [1, 2, 3].map((day) => createEmptyDay(day));
 }
 
 function SearchIcon() {
@@ -183,7 +85,9 @@ function TrashIcon() {
 function MyCoursesPage() {
   const navigate = useNavigate();
 
-  const [courses, setCourses] = useState<Course[]>(loadCourses);
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
@@ -194,8 +98,11 @@ function MyCoursesPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
-    accountStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-  }, [courses]);
+    listCourses()
+      .then(setCourses)
+      .catch(() => setCourses([]))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filteredCourses = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
@@ -211,27 +118,41 @@ function MyCoursesPage() {
     setSelectedCourse({
       id: Date.now(),
       name: '새 코스',
-      days: createInitialDays(false),
+      days: createInitialDays(),
     });
   };
 
-  const saveCourse = (savedCourse: Course) => {
-    setCourses((currentCourses) => {
-      const courseExists = currentCourses.some((course) => course.id === savedCourse.id);
+  const saveCourse = async (savedCourse: Course) => {
+    const isExisting = courses.some((course) => course.id === savedCourse.id);
 
-      if (courseExists) {
-        return currentCourses.map((course) =>
-          course.id === savedCourse.id ? savedCourse : course,
-        );
-      }
+    let persisted: Course;
 
-      return [...currentCourses, savedCourse];
-    });
+    try {
+      persisted = isExisting
+        ? await updateCourseApi(savedCourse.id, savedCourse)
+        : await createCourseApi(savedCourse);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
+      return;
+    }
+
+    setCourses((currentCourses) =>
+      isExisting
+        ? currentCourses.map((course) => (course.id === persisted.id ? persisted : course))
+        : [...currentCourses, persisted],
+    );
 
     setSelectedCourse(null);
   };
 
-  const deleteCourse = (courseId: number) => {
+  const deleteCourse = async (courseId: number) => {
+    try {
+      await deleteCourseApi(courseId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '코스 삭제에 실패했습니다.');
+      return;
+    }
+
     setCourses((currentCourses) => currentCourses.filter((course) => course.id !== courseId));
 
     setDeleteTargetId(null);
@@ -295,7 +216,13 @@ function MyCoursesPage() {
       )}
 
       <section className="my-courses-page__content">
-        {filteredCourses.length === 0 ? (
+        {isLoading ? (
+          <div className="my-courses-page__empty">
+            <Typography as="p" variant="subtitle2">
+              불러오는 중...
+            </Typography>
+          </div>
+        ) : filteredCourses.length === 0 ? (
           <div className="my-courses-page__empty">
             <Typography as="p" variant="subtitle2">
               {searchKeyword ? '검색 결과가 없어요.' : '저장된 코스가 없어요.'}

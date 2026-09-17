@@ -1,30 +1,13 @@
-import { accountStorage } from '@/auth/accountStorage';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
 import { getPlaceDetail } from '@/api/placeGuide';
+import { listCourses, updateCourse } from '@/api/courses';
 import type { Course, CoursePlace } from '@/pages/MyCourses/types';
 
 import './PlaceGuideAddToCoursePage.css';
-
-const STORAGE_KEY = 'incheonguro-my-courses';
-
-function loadMyCourses(): Course[] {
-  const raw = accountStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveMyCourses(courses: Course[]) {
-  accountStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-}
 
 // 상세 페이지에서 넘어오는 최소 정보. state로 못 받으면 API로 재조회해서 채움
 interface PlaceSummaryInfo {
@@ -60,7 +43,15 @@ function PlaceGuideAddToCoursePage() {
   );
   const [isLoading, setIsLoading] = useState(!placeInfoFromState?.placeTitle);
 
-  const courses = loadMyCourses();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isCoursesLoading, setIsCoursesLoading] = useState(true);
+
+  useEffect(() => {
+    listCourses()
+      .then(setCourses)
+      .catch(() => setCourses([]))
+      .finally(() => setIsCoursesLoading(false));
+  }, []);
 
   // state로 넘어온 정보가 없을 때만(예: 새로고침으로 state가 사라진 경우) API 호출
   useEffect(() => {
@@ -86,7 +77,7 @@ function PlaceGuideAddToCoursePage() {
   // address/latitude/longitude를 실제 값으로 채워서, RouteDuration이 지오코딩 없이(또는 정상적으로)
   // 이동시간을 계산할 수 있도록 함 (기존엔 address가 빈 문자열이라 "장소를 검색해 위치를
   // 선택해주세요" 에러가 났었음)
-  const handleSelectCourse = (course: Course) => {
+  const handleSelectCourse = async (course: Course) => {
     if (!placeInfo) return;
 
     const lastDayIndex = course.days.length - 1;
@@ -105,8 +96,12 @@ function PlaceGuideAddToCoursePage() {
       ),
     };
 
-    const updatedCourses = courses.map((c) => (c.id === course.id ? updatedCourse : c));
-    saveMyCourses(updatedCourses);
+    try {
+      await updateCourse(course.id, updatedCourse);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
+      return;
+    }
 
     navigate(`/place-guide/${placeId}`);
   };
@@ -116,7 +111,7 @@ function PlaceGuideAddToCoursePage() {
       <Header />
       <BackHeader title="내 코스에 추가하기" onBack={() => navigate(`/place-guide/${placeId}`)} />
 
-      {isLoading ? (
+      {isLoading || isCoursesLoading ? (
         <p className="place-guide-add-to-course-page__empty">불러오는 중...</p>
       ) : !placeInfo ? (
         <p className="place-guide-add-to-course-page__empty">장소를 찾을 수 없습니다.</p>

@@ -19,6 +19,7 @@ import CourseRecommendLoading1 from '@/assets/CourseRecommendLoading1.png';
 import CourseRecommendLoading2 from '@/assets/CourseRecommendLoading2.png';
 
 import { recommendCourse } from '@/api/courseRecommend';
+import { createCourse } from '@/api/courses';
 import type { CourseRecommendAnswers, CourseRecommendResult } from './types';
 
 import type {
@@ -32,8 +33,6 @@ import './CourseRecommendPage.css';
 /* =========================
    내 코스에 저장
 ========================= */
-
-const MY_COURSES_STORAGE_KEY = 'incheonguro-my-courses';
 
 const TRANSPORT_MAP: Record<string, MyCourseTransport> = {
   도보: '도보',
@@ -76,23 +75,12 @@ function toMyCourseDay(day: CourseRecommendResult['days'][number], transport: st
 
 function saveRecommendedCourse(result: CourseRecommendResult, transport: string) {
   const newCourse: MyCourse = {
-    id: Date.now(),
+    id: 0, // 서버가 실제 id를 새로 발급하므로 무시됨
     name: result.title,
     days: result.days.map((day) => toMyCourseDay(day, transport)),
   };
 
-  let existingCourses: unknown = [];
-
-  try {
-    const raw = localStorage.getItem(MY_COURSES_STORAGE_KEY);
-    existingCourses = raw ? JSON.parse(raw) : [];
-  } catch {
-    existingCourses = [];
-  }
-
-  const nextCourses = Array.isArray(existingCourses) ? [...existingCourses, newCourse] : [newCourse];
-
-  localStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify(nextCourses));
+  return createCourse(newCourse);
 }
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -307,12 +295,17 @@ function CourseRecommendPage() {
     navigate('/');
   };
 
-  const handleSaveCourse = () => {
+  const handleSaveCourse = async () => {
     if (!courseResult) {
       return;
     }
 
-    saveRecommendedCourse(courseResult, transport);
+    try {
+      await saveRecommendedCourse(courseResult, transport);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
+      return;
+    }
 
     navigate('/my-courses');
   };

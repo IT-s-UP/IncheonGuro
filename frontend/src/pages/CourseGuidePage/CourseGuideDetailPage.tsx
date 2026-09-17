@@ -1,4 +1,3 @@
-import { accountStorage } from '@/auth/accountStorage';
 import {
   useEffect,
   useRef,
@@ -16,6 +15,7 @@ import CourseGuideRouteMap from '@/components/CourseGuideDetail/CourseGuideRoute
 import CourseGuidePlaceSheet from '@/components/CourseGuideDetail/CourseGuidePlaceSheet';
 
 import { getCourseDetail, addBookmark, removeBookmark } from '@/api/courseGuide';
+import { createCourse } from '@/api/courses';
 import type {
   Course,
   CourseCost,
@@ -25,9 +25,6 @@ import type {
 } from '@/pages/MyCourses/types';
 
 import './CourseGuideDetailPage.css';
-
-const MY_COURSES_STORAGE_KEY = 'incheonguro-my-courses';
-const BOOKMARKED_COURSE_IDS_KEY = 'incheonguro-bookmarked-course-ids';
 
 interface DragInformation {
   startY: number;
@@ -46,42 +43,6 @@ function createEmptyCosts(): CourseCost {
     admission: 0,
     etc: 0,
   };
-}
-
-function loadMyCourses(): Course[] {
-  const raw = accountStorage.getItem(MY_COURSES_STORAGE_KEY);
-
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Course[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-// 북마크된 courseId 목록을 읽어옴
-function loadBookmarkedCourseIds(): number[] {
-  const raw = accountStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
-
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as number[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-// 북마크된 courseId 목록을 저장
-function saveBookmarkedCourseIds(courseIds: number[]) {
-  accountStorage.setItem(BOOKMARKED_COURSE_IDS_KEY, JSON.stringify(courseIds));
 }
 
 function CourseGuideDetailPage() {
@@ -390,7 +351,7 @@ function CourseGuideDetailPage() {
   };
 
   // 내 코스 목록에 새 코스로 저장한 뒤 /my-courses로 이동
-  const saveCourse = () => {
+  const saveCourse = async () => {
     const trimmedName = courseName.trim();
 
     if (!trimmedName) {
@@ -400,14 +361,17 @@ function CourseGuideDetailPage() {
     }
 
     const newCourse: Course = {
-      id: Date.now(),
+      id: 0, // 서버가 실제 id를 새로 발급하므로 무시됨
       name: trimmedName,
       days,
     };
 
-    const existingCourses = loadMyCourses();
-
-    accountStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify([...existingCourses, newCourse]));
+    try {
+      await createCourse(newCourse);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
+      return;
+    }
 
     navigate('/my-courses');
   };
