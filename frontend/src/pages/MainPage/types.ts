@@ -12,22 +12,6 @@ export type IncheonRegion =
   | '제물포구';
 
 /* =========================
-   추천 장소
-========================= */
-
-export interface SpotCard {
-  id: number;
-
-  name: string;
-
-  tag: string;
-
-  region: IncheonRegion;
-
-  imageUrl?: string;
-}
-
-/* =========================
    지역 카드
 ========================= */
 
@@ -37,16 +21,4 @@ export interface RegionCard {
   name: IncheonRegion;
 
   mascotUrl?: string;
-}
-
-/* =========================
-   추천 코스
-========================= */
-
-export interface CourseCard {
-  id: number;
-
-  name: string;
-
-  imageUrl?: string;
 }

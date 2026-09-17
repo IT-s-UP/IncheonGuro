@@ -1,4 +1,4 @@
-import type { CourseCard, IncheonRegion, RegionCard, SpotCard } from './types';
+import type { RegionCard } from './types';
 
 /* =========================
    마스코트 이미지
@@ -15,60 +15,6 @@ import yeonsuMascot from '@/assets/Mascot/연수구마스코트.png';
 import yeongjongMascot from '@/assets/Mascot/영종구마스코트.png';
 import ongjinMascot from '@/assets/Mascot/옹진군마스코트.png';
 import jemulpoMascot from '@/assets/Mascot/제물포구마스코트.png';
-
-/* =========================
-   추천 지역
-========================= */
-
-export const RECOMMENDED_REGIONS: IncheonRegion[] = ['서해구', '제물포구'];
-
-/* =========================
-   추천 장소
-========================= */
-
-export const SPOT_CARDS: SpotCard[] = [
-  /* 서해구 */
-
-  {
-    id: 1,
-    name: '야생화 단지',
-    tag: '관광지',
-    region: '서해구',
-  },
-  {
-    id: 2,
-    name: '청라 하늘 대교',
-    tag: '관광지',
-    region: '서해구',
-  },
-  {
-    id: 3,
-    name: '정서진 중앙시장',
-    tag: '쇼핑',
-    region: '서해구',
-  },
-
-  /* 제물포구 */
-
-  {
-    id: 4,
-    name: '개항장 거리',
-    tag: '관광지',
-    region: '제물포구',
-  },
-  {
-    id: 5,
-    name: '월미도',
-    tag: '관광지',
-    region: '제물포구',
-  },
-  {
-    id: 6,
-    name: '신포국제시장',
-    tag: '쇼핑',
-    region: '제물포구',
-  },
-];
 
 /* =========================
    인천 전체 구 / 군
@@ -129,24 +75,5 @@ export const REGION_CARDS: RegionCard[] = [
     id: 11,
     name: '제물포구',
     mascotUrl: jemulpoMascot,
-  },
-];
-
-/* =========================
-   추천 코스
-========================= */
-
-export const COURSE_CARDS: CourseCard[] = [
-  {
-    id: 1,
-    name: '개항로 투어 코스',
-  },
-  {
-    id: 2,
-    name: '차이나타운 구경 코스',
-  },
-  {
-    id: 3,
-    name: '오션뷰 산책 / 액티비티 코스',
   },
 ];

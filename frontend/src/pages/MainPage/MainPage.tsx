@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -8,8 +8,6 @@ import { useAuth } from '@/auth/AuthContext';
 import { apiFetch } from '@/auth/api'; // [추가] 마이페이지 API 호출용
 
 import Header from '@/components/Header/Header';
-
-import OptionTab from '@/components/Tab/OptionTab';
 
 import Typography from '@/components/Typography/Typography';
 
@@ -24,7 +22,7 @@ import { ImageOff } from 'lucide-react';
 import { getPlaces } from '@/api/placeGuide';
 import type { District, PlaceSummary } from '@/api/placeGuide';
 
-import { COURSE_CARDS, RECOMMENDED_REGIONS, REGION_CARDS, SPOT_CARDS } from './mockData';
+import { REGION_CARDS } from './mockData';
 
 import './MainPage.css';
 
@@ -55,10 +53,6 @@ interface MyPageApiData {
 /* =========================
    MainPage
 ========================= */
-
-function formatShortAddress(fullAddress: string) {
-  return fullAddress.split(' ').slice(0, 2).join(' ');
-}
 
 function toKoreanCategoryTag(category: string) {
   const labels: Record<string, string> = {
@@ -117,10 +111,6 @@ function MainPage() {
      추천 지역 탭
   ========================= */
 
-  const [activeRegionIndex, setActiveRegionIndex] = useState(0);
-
-  const activeRegion = RECOMMENDED_REGIONS[activeRegionIndex];
-
   const [regionName, setRegionName] = useState(DEFAULT_REGION_NAME); // [추가]
 
   useEffect(() => {
@@ -152,10 +142,6 @@ function MainPage() {
   ========================= */
   const [spots, setSpots] = useState<PlaceSummary[]>([]); // [추가]
   const [isSpotsLoading, setIsSpotsLoading] = useState(true); // [추가]
-
-  // const filteredSpots = useMemo(() => {
-  //   return SPOT_CARDS.filter((spot) => spot.region === activeRegion);
-  // }, [activeRegion]);
 
   useEffect(() => {
     const district = REGION_NAME_TO_DISTRICT[regionName];
@@ -201,11 +187,6 @@ function MainPage() {
      장소 상세
   ========================= */
 
-  // const handleSpotClick = (spotId: number) => {
-  //   navigate(`/places/${spotId}`);
-  // };
-
-  // [수정] spotId: number -> placeId: string (관광공사 contentId는 문자열)
   const handleSpotClick = (placeId: string) => {
     navigate(`/place-guide/${placeId}`); // [수정] '/places/...' -> 실제 라우트 '/place-guide/...'
   };
@@ -213,10 +194,6 @@ function MainPage() {
   /* =========================
      지역별 장소
   ========================= */
-
-  // const handleRegionClick = (regionName: string) => {
-  //   navigate(`/places?region=${encodeURIComponent(regionName)}`);
-  // };
 
   const handleRegionClick = (regionCardName: string) => {
     // [수정] 한글 지역명을 District enum으로 변환해서 실제 쿼리 파라미터로 사용
@@ -302,25 +279,8 @@ function MainPage() {
             {nickname} 님의 취향을 반영한 추천 장소
           </Typography>
 
-          {/* =========================
-              [연동 수정] 추천 지역 OptionTab -> 관심 지역 단일 라벨
-              기존: RECOMMENDED_REGIONS.map으로 OptionTab 여러 개 렌더링
-              변경: regionName 하나만 표시 (더 이상 탭 아님)
-          ========================= */}
-
           <div className="main-page__region-tabs">
             <span className="main-page__region-label">{regionName}</span>
-            {/* [연동 삭제]
-            {RECOMMENDED_REGIONS.map((region, index) => (
-              <OptionTab
-                key={region}
-                label={region}
-                size="small"
-                active={index === activeRegionIndex}
-                onClick={() => setActiveRegionIndex(index)}
-              />
-            ))}
-            */}
           </div>
 
           {/* =========================
