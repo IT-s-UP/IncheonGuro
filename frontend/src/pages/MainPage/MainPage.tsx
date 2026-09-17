@@ -60,6 +60,17 @@ function formatShortAddress(fullAddress: string) {
   return fullAddress.split(' ').slice(0, 2).join(' ');
 }
 
+function toKoreanCategoryTag(category: string) {
+  const labels: Record<string, string> = {
+    ATTRACTION: '관광지',
+    CAFE: '카페',
+    RESTAURANT: '식당',
+    LODGING: '숙소',
+    SHOPPING: '쇼핑',
+  };
+  return labels[category] ?? category;
+}
+
 const SPOT_NAME_MAX_LENGTH = 7;
 
 function truncateSpotName(name: string) {
@@ -158,10 +169,11 @@ function MainPage() {
     let cancelled = false;
     setIsSpotsLoading(true);
 
-    getPlaces([district], ['ATTRACTION'])
+    getPlaces([district])
       .then((data) => {
         if (!cancelled) {
-          setSpots(data.slice(0, 6)); // 메인 화면엔 최대 6개만
+          const shuffled = [...data].sort(() => Math.random() - 0.5);
+          setSpots(shuffled.slice(0, 6));
         }
       })
       .catch((error) => {
@@ -363,8 +375,7 @@ function MainPage() {
                     {/* 장소 종류 */}
 
                     <span className="main-page__spot-tag">
-                      <Typography variant="p3">{formatShortAddress(spot.subtitle)}</Typography>
-                      {/* [수정] spot.tag -> spot.subtitle (백엔드에 카테고리 태그 대신 주소만 있음) */}
+                      <Typography variant="p3">{toKoreanCategoryTag(spot.category)}</Typography>
                     </span>
                   </button>
                 </li>
