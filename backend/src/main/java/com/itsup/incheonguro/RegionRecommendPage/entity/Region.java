@@ -49,6 +49,8 @@ public class Region {
 
     private int historyScore;
 
+    private int hotplaceScore;
+
     // ==========================================
     // 이동 방식 점수
     // ==========================================

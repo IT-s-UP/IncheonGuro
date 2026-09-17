@@ -1,5 +1,7 @@
 package com.itsup.incheonguro.RegionRecommendPage.service;
 
+import com.itsup.incheonguro.Auth.entity.Member;
+import com.itsup.incheonguro.Auth.repository.MemberRepository;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendRequest;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendResponse;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionSummaryResponse;
@@ -20,10 +22,13 @@ public class RegionRecommendService {
 
     private final RegionRepository regionRepository;
 
+    private final MemberRepository memberRepository;
+
     /**
      * 관심 구/군 선택 등에 쓰이는 지역 목록(id, 이름)을 조회합니다.
      */
     public List<RegionSummaryResponse> findAll() {
+
         return regionRepository.findAll().stream()
                 .map(RegionSummaryResponse::from)
                 .toList();
@@ -32,9 +37,16 @@ public class RegionRecommendService {
     /**
      * 사용자의 선택을 기준으로
      * 인천 지역 한 곳을 추천합니다.
+     *
+     * 추천 결과는 로그인한 회원의
+     * 가장 최근 추천 지역으로 저장됩니다.
+     *
+     * 다시 테스트하면 기존 추천 지역이
+     * 새로운 결과로 덮어써집니다.
      */
     public RegionRecommendResponse recommend(
-            RegionRecommendRequest request) {
+            RegionRecommendRequest request,
+            Long memberId) {
 
         List<Region> regions = regionRepository.findAll();
 
@@ -86,6 +98,37 @@ public class RegionRecommendService {
 
         Region region = selectedRegion.region();
 
+        /*
+         * ==========================================
+         * 로그인한 회원의 최신 추천 지역 저장
+         * ==========================================
+         *
+         * 기존에 추천 지역이 있으면
+         * 새로운 지역으로 덮어써집니다.
+         */
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "회원을 찾을 수 없습니다."));
+
+        System.out.println("===== 추천 결과 저장 시작 =====");
+        System.out.println("회원 ID = " + member.getId());
+        System.out.println("회원 닉네임 = " + member.getNickname());
+        System.out.println("추천 지역 ID = " + region.getId());
+        System.out.println("추천 지역명 = " + region.getRegionName());
+
+        member.updateRecommendedRegion(region);
+
+        System.out.println(
+                "Member에 설정된 지역 ID = "
+                        + member.getRecommendedRegion().getId());
+
+        memberRepository.saveAndFlush(member);
+
+        System.out.println("===== DB 저장 완료 =====");
+
+        /*
+         * 프론트에 추천 결과 반환
+         */
         return RegionRecommendResponse.builder()
                 .regionName(
                         region.getRegionName())
@@ -147,6 +190,10 @@ public class RegionRecommendService {
 
             case "HISTORY":
                 score += region.getHistoryScore();
+                break;
+
+            case "HOTPLACE":
+                score += region.getHotplaceScore();
                 break;
 
             default:
@@ -268,10 +315,6 @@ public class RegionRecommendService {
 
     /**
      * 지역별 대표 선택 조합에 대한 추가 점수입니다.
-     *
-     * 단순히 NATURE 같은 하나의 선택만 보고
-     * 큰 점수를 주지 않고,
-     * 여러 선택의 조합이 맞을 때 추가 점수를 줍니다.
      */
     private int calculateSpecialtyBonus(
             Region region,
@@ -289,7 +332,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 제물포구
-        // 역사 + 걷기 + 레트로 + 연인
         // ==========================================
 
         if ("제물포구".equals(regionName)) {
@@ -310,7 +352,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 영종구
-        // 바다 + 자차 + 바다/자연 + 연인
         // ==========================================
 
         if ("영종구".equals(regionName)) {
@@ -333,7 +374,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 미추홀구
-        // 문화 + 대중교통 + 도시 + 친구
         // ==========================================
 
         if ("미추홀구".equals(regionName)) {
@@ -355,7 +395,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 연수구
-        // 쇼핑 + 대중교통/자차 + 도시 + 연인
         // ==========================================
 
         if ("연수구".equals(regionName)) {
@@ -376,7 +415,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 남동구
-        // 시장 + 먹거리 + 친구
         // ==========================================
 
         if ("남동구".equals(regionName)) {
@@ -397,7 +435,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 부평구
-        // 맛집 + 활동/쇼핑 + 친구
         // ==========================================
 
         if ("부평구".equals(regionName)) {
@@ -418,7 +455,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 계양구
-        // 자연 + 걷기 + 힐링 + 혼자
         // ==========================================
 
         if ("계양구".equals(regionName)) {
@@ -441,7 +477,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 서해구
-        // 자연 + 자차 + 힐링 + 가족
         // ==========================================
 
         if ("서해구".equals(regionName)) {
@@ -464,7 +499,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 검단구
-        // 도시 + 자차 + 가족
         // ==========================================
 
         if ("검단구".equals(regionName)) {
@@ -485,7 +519,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 강화군
-        // 역사 + 자차 + 역사 분위기 + 가족
         // ==========================================
 
         if ("강화군".equals(regionName)) {
@@ -507,7 +540,6 @@ public class RegionRecommendService {
 
         // ==========================================
         // 옹진군
-        // 바다 + 자차 + 바다/자연 + 가족
         // ==========================================
 
         if ("옹진군".equals(regionName)) {
@@ -534,9 +566,6 @@ public class RegionRecommendService {
      * 회원가입 때 저장한 관심 지역에 대한 보너스입니다.
      *
      * 현재는 Request에 관심 지역을 직접 넣는 방식입니다.
-     *
-     * 나중에는 로그인 사용자 정보를 조회해서
-     * 관심 지역을 가져오도록 변경하면 됩니다.
      */
     private int calculateInterestedRegionBonus(
             Region region,
@@ -544,14 +573,12 @@ public class RegionRecommendService {
 
         String interestedRegion = request.getInterestedRegion();
 
-        // 관심 지역을 선택하지 않은 경우
         if (interestedRegion == null
                 || interestedRegion.isBlank()) {
 
             return 0;
         }
 
-        // 관심 지역과 현재 지역이 같은 경우
         if (region.getRegionName()
                 .equals(interestedRegion)) {
 

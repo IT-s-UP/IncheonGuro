@@ -5,8 +5,13 @@ import { apiFetch, loginWithPassword, setAccessToken } from './api';
 
 type User = { id: string; provider: 'kakao' | 'google' | 'local'; nickname: string };
 type Auth = {
-  user: User | null; isLoading: boolean;
+  user: User | null;
+
+  // 로그인 상태 확인 중인지 여부
+  isLoading: boolean;
+
   login: (loginId: string, password: string) => Promise<void>;
+
   logout: () => Promise<void>;
   withdraw: (password: string) => Promise<void>;
 };
@@ -80,11 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const nextUser: User = { id: String(member.memberId), provider: 'local', nickname: member.nickname };
     setStorageMember(nextUser.id);
     setAccessToken(member.accessToken);
+
+    /*
+     * 사용자 정보 저장
+     */
     setUser(nextUser);
     localStorage.setItem(TOKEN, member.accessToken);
     localStorage.setItem(USER, JSON.stringify(nextUser));
     setIsLoading(false);
   }
+  
   async function logout() {
     // Resolve the session independently of local password-login state.
     const session = await fetch('/api/auth/me', { credentials: 'same-origin' });
@@ -99,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     signedOut();
   }
+  
   async function withdraw(password: string) {
     const response = await apiFetch('/api/mypage', {
       method: 'DELETE', headers: { 'Content-Type': 'application/json' },

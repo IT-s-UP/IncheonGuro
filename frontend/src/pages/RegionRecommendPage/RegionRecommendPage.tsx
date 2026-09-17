@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
@@ -10,12 +11,32 @@ import RegionRecommendIntro from '@/assets/RegionRecommendIntro.png';
 import RegionRecommendLoading1 from '@/assets/RegionRecommendLoading1.png';
 import RegionRecommendLoading2 from '@/assets/RegionRecommendLoading2.png';
 
-import { getMockRegionResult } from '@/pages/RegionRecommendPage/mockDate';
-import type { RegionRecommendAnswers, RegionRecommendResult } from './types';
+/* =========================
+   지역 추천 결과 이미지
+========================= */
+
+import GanghwaRecommend from '@/assets/RegionRecommend/강화군 추천.png';
+import GeomdanRecommend from '@/assets/RegionRecommend/검단구 추천.png';
+import GyeyangRecommend from '@/assets/RegionRecommend/계양구 추천.png';
+import NamdongRecommend from '@/assets/RegionRecommend/남동구 추천.png';
+import MichuholRecommend from '@/assets/RegionRecommend/미추홀구 추천.png';
+import BupyeongRecommend from '@/assets/RegionRecommend/부평구 추천.png';
+import SeohaeRecommend from '@/assets/RegionRecommend/서해구 추천.png';
+import YeonsuRecommend from '@/assets/RegionRecommend/연수구 추천.png';
+import YeongjongRecommend from '@/assets/RegionRecommend/영종구 추천.png';
+import OngjinRecommend from '@/assets/RegionRecommend/옹진군 추천.png';
+import JemulpoRecommend from '@/assets/RegionRecommend/제물포구 추천.png';
+
+import { apiFetch } from '@/auth/api';
+import { useAuth } from '@/auth/AuthContext';
 
 import './RegionRecommendPage.css';
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/* =========================
+   선택지
+========================= */
 
 const PLACE_OPTIONS = [
   '해변 / 섬',
@@ -43,54 +64,177 @@ const MOOD_OPTIONS = [
 
 const COMPANION_OPTIONS = ['혼자', '연인', '친구', '가족'];
 
-function RegionRecommendPage() {
-  const [step, setStep] = useState<Step>(0);
+/* =========================
+   지역명 → District enum
+========================= */
 
-  /* =========================
-     설문 답변
-  ========================= */
+const REGION_TO_DISTRICT: Record<string, string> = {
+  제물포구: 'JEMULPO',
+  영종구: 'YEONGJONG',
+  미추홀구: 'MICHUHOL',
+  연수구: 'YEONSU',
+  남동구: 'NAMDONG',
+  부평구: 'BUPYEONG',
+  계양구: 'GYEYANG',
+  서해구: 'SEOHAE',
+  검단구: 'GEOMDAN',
+  강화군: 'GANGHWA',
+  옹진군: 'ONGJIN',
+};
+
+/* =========================
+   지역명 → 결과 이미지
+========================= */
+
+const REGION_IMAGE_MAP: Record<string, string> = {
+  강화군: GanghwaRecommend,
+  검단구: GeomdanRecommend,
+  계양구: GyeyangRecommend,
+  남동구: NamdongRecommend,
+  미추홀구: MichuholRecommend,
+  부평구: BupyeongRecommend,
+  서해구: SeohaeRecommend,
+  연수구: YeonsuRecommend,
+  영종구: YeongjongRecommend,
+  옹진군: OngjinRecommend,
+  제물포구: JemulpoRecommend,
+};
+
+/* =========================
+   지역 추천 API 응답
+========================= */
+
+type RegionRecommendResponse = {
+  regionName: string;
+  description: string;
+  imageUrl: string;
+  score: number;
+};
+
+/* =========================
+   장소 API 응답
+========================= */
+
+type PlaceSummaryResponse = {
+  placeId: string;
+  title: string;
+  subtitle: string;
+  district: string;
+  category: string;
+  latitude: number;
+  longitude: number;
+  imageUrl: string;
+  lclsSystm2: string;
+};
+
+/* =========================
+   추천 장소
+========================= */
+
+type RecommendedPlace = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
+/* =========================
+   최종 결과
+========================= */
+
+type RegionResult = {
+  regionName: string;
+  description: string;
+  imageUrl: string;
+  score: number;
+  recommendedPlaces: RecommendedPlace[];
+};
+
+function RegionRecommendPage() {
+  const navigate = useNavigate();
+
+  /*
+   * 현재 로그인 사용자와
+   * 인증 상태 확인 여부
+   */
+  const { user, isLoading } = useAuth();
+
+  const [step, setStep] = useState<Step>(0);
 
   const [place, setPlace] = useState('');
   const [moveType, setMoveType] = useState('');
   const [mood, setMood] = useState('');
   const [companion, setCompanion] = useState('');
 
-  /* =========================
-     추천 결과
-  ========================= */
-
-  const [regionResult, setRegionResult] = useState<RegionRecommendResult | null>(null);
+  const [regionResult, setRegionResult] = useState<RegionResult | null>(null);
 
   const [loadingImageIndex, setLoadingImageIndex] = useState(0);
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   /* =========================
-     로딩 → 결과
+     로그인 여부 확인
   ========================= */
 
   useEffect(() => {
-    if (step !== 5) return;
+    /*
+     * 아직 로그인 상태 확인 중이면
+     * 아무것도 하지 않음
+     */
+    if (isLoading) {
+      return;
+    }
 
-    // 로딩 화면에 들어오면 첫 번째 이미지부터 시작
+    /*
+     * 로그인하지 않은 경우
+     * 로그인 페이지로 이동
+     */
+    if (!user) {
+      navigate('/login', {
+        replace: true,
+      });
+    }
+  }, [isLoading, user, navigate]);
+
+  /* =========================
+     로딩 이미지
+  ========================= */
+
+  useEffect(() => {
+    if (step !== 5) {
+      return;
+    }
+
     setLoadingImageIndex(0);
 
-    // 1초마다 이미지 변경
     const imageInterval = window.setInterval(() => {
       setLoadingImageIndex((prev) => (prev === 0 ? 1 : 0));
     }, 1000);
 
-    // 테스트용: 3초 뒤 결과 화면으로 이동
-    const resultTimer = window.setTimeout(() => {
-      setStep(6);
-    }, 3000);
-
     return () => {
       window.clearInterval(imageInterval);
-      window.clearTimeout(resultTimer);
     };
   }, [step]);
 
   /* =========================
-     전체 초기화
+     결과 화면 이동
+  ========================= */
+
+  useEffect(() => {
+    if (step !== 5 || !regionResult) {
+      return;
+    }
+
+    const resultTimer = window.setTimeout(() => {
+      setStep(6);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(resultTimer);
+    };
+  }, [step, regionResult]);
+
+  /* =========================
+     초기화
   ========================= */
 
   const resetForm = () => {
@@ -100,6 +244,7 @@ function RegionRecommendPage() {
     setCompanion('');
 
     setRegionResult(null);
+    setErrorMessage('');
   };
 
   /* =========================
@@ -108,7 +253,9 @@ function RegionRecommendPage() {
 
   const handleNext = () => {
     setStep((prev) => {
-      if (prev >= 6) return prev;
+      if (prev >= 6) {
+        return prev;
+      }
 
       return (prev + 1) as Step;
     });
@@ -116,13 +263,6 @@ function RegionRecommendPage() {
 
   /* =========================
      이전
-
-     step 4 → 3 : 선택 유지
-     step 3 → 2 : 선택 유지
-     step 2 → 1 : 선택 유지
-
-     step 1 → 0 :
-     시작 화면으로 돌아가면서 전체 초기화
   ========================= */
 
   const handleBack = () => {
@@ -141,40 +281,166 @@ function RegionRecommendPage() {
   };
 
   /* =========================
-     결과 생성
+     장소 랜덤 3개
   ========================= */
 
-  const handleResult = () => {
-    const answers: RegionRecommendAnswers = {
-      place,
-      moveType,
-      mood,
-      companion,
-    };
+  const getRandomThreePlaces = (places: PlaceSummaryResponse[]): RecommendedPlace[] => {
+    const shuffled = [...places].sort(() => Math.random() - 0.5);
 
-    /*
-     * 현재는 목 추천 알고리즘
-     *
-     * 추후 API가 생기면
-     *
-     * const result = await recommendRegion(answers);
-     *
-     * 로 변경
-     */
-    const result = getMockRegionResult(answers);
-
-    setRegionResult(result);
-
-    /* 로딩 화면 */
-    setStep(5);
+    return shuffled.slice(0, 3).map((item) => ({
+      id: item.placeId,
+      name: item.title,
+      imageUrl: item.imageUrl,
+    }));
   };
 
   /* =========================
-     홈으로
+     지역 추천
+  ========================= */
+
+  const handleResult = async () => {
+    /*
+     * 로그인 정보가 없는 경우
+     */
+    if (!user) {
+      navigate('/login', {
+        replace: true,
+      });
+
+      return;
+    }
+
+    setErrorMessage('');
+    setRegionResult(null);
+
+    /*
+     * 결과를 계산하는 동안
+     * 로딩 화면 표시
+     */
+    setStep(5);
+
+    try {
+      /* =========================
+         1. 지역 추천 API
+
+         POST /api/region/recommend
+      ========================= */
+
+      const recommendResponse = await apiFetch('/api/region/recommend', {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          placeType: place,
+          transport: moveType,
+          mood,
+          companion,
+        }),
+      });
+
+      /*
+       * JWT 인증 실패
+       */
+      if (recommendResponse.status === 401) {
+        navigate('/login', {
+          replace: true,
+        });
+
+        return;
+      }
+
+      if (!recommendResponse.ok) {
+        throw new Error(`지역 추천 실패 (${recommendResponse.status})`);
+      }
+
+      const recommendData = (await recommendResponse.json()) as RegionRecommendResponse;
+
+      /* =========================
+         2. 추천 지역 → District 변환
+      ========================= */
+
+      const district = REGION_TO_DISTRICT[recommendData.regionName];
+
+      if (!district) {
+        throw new Error(`지역 코드를 찾을 수 없습니다: ${recommendData.regionName}`);
+      }
+
+      /* =========================
+         3. 추천 지역의 관광지 조회
+
+         기존 장소 API 사용
+
+         GET /api/placeguide
+         ?districts=YEONSU
+         &categories=ATTRACTION
+      ========================= */
+
+      const placeResponse = await apiFetch(
+        `/api/placeguide?districts=${encodeURIComponent(district)}&categories=ATTRACTION`,
+        {
+          method: 'GET',
+        },
+      );
+
+      if (placeResponse.status === 401) {
+        navigate('/login', {
+          replace: true,
+        });
+
+        return;
+      }
+
+      if (!placeResponse.ok) {
+        throw new Error(`추천 장소 조회 실패 (${placeResponse.status})`);
+      }
+
+      const places = (await placeResponse.json()) as PlaceSummaryResponse[];
+
+      /* =========================
+         4. 관광지 중 랜덤 3개
+      ========================= */
+
+      const recommendedPlaces = getRandomThreePlaces(places);
+
+      /* =========================
+         5. 최종 결과 저장
+      ========================= */
+
+      setRegionResult({
+        regionName: recommendData.regionName,
+
+        /*
+         * description은 데이터에는 보관하지만
+         * 결과 화면에서는 표시하지 않음
+         */
+        description: recommendData.description,
+
+        /*
+         * 백엔드 imageUrl 대신
+         * 프론트 assets의 구/군 이미지를 사용
+         */
+        imageUrl: REGION_IMAGE_MAP[recommendData.regionName] ?? '',
+
+        score: recommendData.score,
+
+        recommendedPlaces,
+      });
+    } catch (error) {
+      console.error('지역 추천 결과 조회 실패:', error);
+
+      setErrorMessage(error instanceof Error ? error.message : '지역 추천에 실패했습니다.');
+    }
+  };
+
+  /* =========================
+     홈
   ========================= */
 
   const handleHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   /* =========================
@@ -187,19 +453,39 @@ function RegionRecommendPage() {
   };
 
   /* =========================
+     인증 확인 중
+  ========================= */
+
+  if (isLoading) {
+    return null;
+  }
+
+  /* =========================
+     비로그인
+  ========================= */
+
+  if (!user) {
+    return null;
+  }
+
+  /* =========================
      진행도
   ========================= */
 
   const progress = step >= 1 && step <= 4 ? (step / 4) * 100 : 0;
 
+  /*
+   * 로그인한 사용자의 닉네임
+   */
+  const nickname = user.nickname;
+
   return (
     <div className="region-recommend-page">
-      {/* 공용 Header */}
       <Header />
 
       <main className="region-recommend-content">
         {/* =========================
-            0. GUMBTI 시작 화면
+            시작 화면
         ========================= */}
 
         {step === 0 && (
@@ -209,9 +495,11 @@ function RegionRecommendPage() {
             <section className="region-intro-section">
               <div className="region-intro-title">
                 <Typography variant="subtitle1">
-                  OOO 님의 취향을 담아
+                  {nickname} 님의 취향을 담아
                   <br />
-                  인천광역시의 지역을 추천드릴게요!
+                  인천광역시의 지역을
+                  <br />
+                  추천드릴게요!
                 </Typography>
               </div>
 
@@ -236,7 +524,7 @@ function RegionRecommendPage() {
         )}
 
         {/* =========================
-            질문 공통 헤더
+            질문 헤더
         ========================= */}
 
         {step >= 1 && step <= 4 && (
@@ -255,7 +543,7 @@ function RegionRecommendPage() {
         )}
 
         {/* =========================
-            1. 장소
+            질문 1
         ========================= */}
 
         {step === 1 && (
@@ -289,7 +577,7 @@ function RegionRecommendPage() {
         )}
 
         {/* =========================
-            2. 이동 방식
+            질문 2
         ========================= */}
 
         {step === 2 && (
@@ -323,7 +611,7 @@ function RegionRecommendPage() {
         )}
 
         {/* =========================
-            3. 여행 분위기
+            질문 3
         ========================= */}
 
         {step === 3 && (
@@ -357,7 +645,7 @@ function RegionRecommendPage() {
         )}
 
         {/* =========================
-            4. 동행인
+            질문 4
         ========================= */}
 
         {step === 4 && (
@@ -391,7 +679,7 @@ function RegionRecommendPage() {
         )}
 
         {/* =========================
-            5. 로딩
+            로딩
         ========================= */}
 
         {step === 5 && (
@@ -407,76 +695,92 @@ function RegionRecommendPage() {
               alt="맞춤 지역 추천 생성 중"
               className="region-loading-image"
             />
+
+            {errorMessage && <Typography variant="p2">{errorMessage}</Typography>}
           </section>
         )}
 
         {/* =========================
-            6. 결과
+            결과
         ========================= */}
 
         {step === 6 && regionResult && (
           <section className="region-result-section">
-            {/* 결과 제목 */}
-            <div className="region-result-heading">
-              <Typography variant="subtitle1">OOO 님의 GUMBTI는,</Typography>
+            {/* =========================
+                결과 제목
+            ========================= */}
 
-              <div className="region-result-name">
-                <Typography variant="head2">{regionResult.regionName}</Typography>
+            <div className="region-result-heading">
+              <div className="region-result-heading__first">
+                <Typography variant="head2">{nickname} 님의 GUMBTI는,</Typography>
               </div>
 
-              <Typography variant="subtitle1">입니다.</Typography>
+              <div className="region-result-heading__second">
+                <div className="region-result-name">
+                  <Typography variant="head1">{regionResult.regionName}</Typography>
+                </div>
+
+                <Typography variant="head2">입니다.</Typography>
+              </div>
             </div>
 
-            {/* 지역 대표 이미지
-                실제 이미지가 들어오면 img로 변경 */}
+            {/* =========================
+                지역 대표 이미지
+
+                API imageUrl 사용 X
+                → assets의 구/군 이미지 사용
+            ========================= */}
+
             <div className="region-result-image">
               {regionResult.imageUrl ? (
                 <img src={regionResult.imageUrl} alt={regionResult.regionName} />
               ) : (
-                <Typography variant="p2">{regionResult.regionName} 지역 이미지</Typography>
+                <Typography variant="p2">{regionResult.regionName}</Typography>
               )}
-            </div>
-
-            {/* 결과 설명 */}
-            <div className="region-result-description">
-              <Typography variant="subtitle2">{regionResult.title}</Typography>
-
-              <Typography variant="p2">{regionResult.description}</Typography>
             </div>
 
             {/* =========================
                 추천 장소
+
+                제목 제거
+                지역 설명 제거
             ========================= */}
 
             <section className="region-recommended-section">
-              <div className="region-recommended-title">
-                <Typography variant="subtitle2">추천 장소</Typography>
-              </div>
+              {regionResult.recommendedPlaces.length > 0 ? (
+                <div className="region-recommended-list">
+                  {regionResult.recommendedPlaces.map((place) => (
+                    <div key={place.id} className="region-recommended-item">
+                      <div className="region-recommended-image">
+                        {place.imageUrl ? (
+                          <img src={place.imageUrl} alt={place.name} />
+                        ) : (
+                          <span
+                            className="region-recommended-image-placeholder"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </div>
 
-              <div className="region-recommended-list">
-                {regionResult.recommendedPlaces.map((place) => (
-                  <div key={place.id} className="region-recommended-item">
-                    <div className="region-recommended-image">
-                      {place.imageUrl ? (
-                        <img src={place.imageUrl} alt={place.name} />
-                      ) : (
-                        <span className="region-recommended-image-placeholder" aria-hidden="true" />
-                      )}
+                      <Typography variant="p3">{place.name}</Typography>
                     </div>
-
-                    <Typography variant="p3">{place.name}</Typography>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <Typography variant="p2">추천할 관광지가 없습니다.</Typography>
+              )}
             </section>
 
-            {/* 하단 버튼 */}
+            {/* =========================
+                결과 버튼
+            ========================= */}
+
             <div className="region-result-buttons">
-              <Button size="main" variant="primary" onClick={handleHome}>
+              <Button size="middle" variant="primary" onClick={handleHome}>
                 홈으로
               </Button>
 
-              <Button size="main" variant="primary" onClick={handleRetry}>
+              <Button size="middle" variant="primary" onClick={handleRetry}>
                 다시 테스트하기
               </Button>
             </div>
