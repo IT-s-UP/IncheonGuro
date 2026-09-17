@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useAuth } from '@/auth/AuthContext';
 import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
 import Button from '@/components/Button/Button';
@@ -27,6 +28,7 @@ import type {
   CourseDay as MyCourseDay,
   Transport as MyCourseTransport,
 } from '@/pages/MyCourses/types';
+import CourseEditPage from '@/pages/MyCourses/CourseEdit/CourseEditPage';
 
 import './CourseRecommendPage.css';
 
@@ -73,14 +75,12 @@ function toMyCourseDay(day: CourseRecommendResult['days'][number], transport: st
   };
 }
 
-function saveRecommendedCourse(result: CourseRecommendResult, transport: string) {
-  const newCourse: MyCourse = {
+function toRecommendedCourse(result: CourseRecommendResult, transport: string): MyCourse {
+  return {
     id: 0, // 서버가 실제 id를 새로 발급하므로 무시됨
     name: result.title,
     days: result.days.map((day) => toMyCourseDay(day, transport)),
   };
-
-  return createCourse(newCourse);
 }
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -112,6 +112,7 @@ const COMPANION_OPTIONS = ['혼자', '가족', '친구', '연인', '아이', '�
 
 function CourseRecommendPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<Step>(0);
 
   /* =========================
@@ -295,13 +296,9 @@ function CourseRecommendPage() {
     navigate('/');
   };
 
-  const handleSaveCourse = async () => {
-    if (!courseResult) {
-      return;
-    }
-
+  const handleSaveCourse = async (course: MyCourse) => {
     try {
-      await saveRecommendedCourse(courseResult, transport);
+      await createCourse(course);
     } catch (err) {
       alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
       return;
@@ -329,6 +326,38 @@ function CourseRecommendPage() {
    * 예:
    * 교통비 10,000원 · 식비 30,000원
    */
+
+  if (step === 7 && courseResult) {
+    return (
+      <CourseEditPage
+        course={toRecommendedCourse(courseResult, transport)}
+        onBack={() => {
+          resetForm();
+          setStep(0);
+        }}
+        onSave={(course) => void handleSaveCourse(course)}
+        intro={
+          <div className="course-result-title">
+            <Typography variant="subtitle1">
+              {user?.nickname ?? '게스트'} 님을 위한 추천 코스입니다.
+            </Typography>
+            <Typography variant="p2">
+              추천 코스를 저장하시고,
+              <br />
+              인천의 여러 지역을 경험해보세요!
+            </Typography>
+          </div>
+        }
+        secondaryAction={{
+          label: '다시 테스트하기',
+          onClick: () => {
+            resetForm();
+            setStep(1);
+          },
+        }}
+      />
+    );
+  }
 
   return (
     <div className="course-recommend-page">
@@ -713,7 +742,11 @@ function CourseRecommendPage() {
                 홈으로
               </Button>
 
-              <Button size="main" variant="primary" onClick={handleSaveCourse}>
+              <Button
+                size="main"
+                variant="primary"
+                onClick={() => void handleSaveCourse(toRecommendedCourse(courseResult, transport))}
+              >
                 코스 저장하기
               </Button>
             </div>
