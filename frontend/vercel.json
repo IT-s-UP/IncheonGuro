@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/:path*", "destination": "http://13.124.176.120:8080/api/:path*" },
     { "source": "/auth/:path*", "destination": "http://13.124.176.120:8080/auth/:path*" },
-    { "source": "/stamp/:path*", "destination": "http://13.124.176.120:8080/stamp/:path*" }
+    { "source": "/stamp/:path*", "destination": "http://13.124.176.120:8080/stamp/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
