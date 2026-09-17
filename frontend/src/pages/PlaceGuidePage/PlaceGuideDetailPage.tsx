@@ -219,7 +219,14 @@ function PlaceGuideDetailPage() {
         type="button"
         className="place-guide-detail-page__add-course-btn"
         onClick={() =>
-          navigate(`/place-guide/${placeId}/add-to-course`, { state: { placeTitle: place.title } })
+          navigate(`/place-guide/${placeId}/add-to-course`, {
+            state: {
+              placeTitle: place.title,
+              placeAddress: place.subtitle,
+              placeLatitude: place.latitude,
+              placeLongitude: place.longitude,
+            },
+          })
         }
       >
         + 내 코스에 추가하기

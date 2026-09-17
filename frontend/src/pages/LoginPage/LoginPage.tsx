@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import Header from '@/components/Header/Header';
 import Button from '@/components/Button/Button';
@@ -13,8 +13,13 @@ import './LoginPage.css';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [params] = useSearchParams();
+
+  // RequireAuth가 비로그인 접근을 막으며 넘겨준, 원래 가려던 경로
+  const redirectState = location.state as { from?: { pathname: string; search: string; hash: string } } | null;
+  const redirectTo = redirectState?.from ?? '/';
   const error = params.get('error');
   const provider = error?.startsWith('google_') ? '구글' : '카카오';
   const loginError = !error ? '' : error.endsWith('_cancelled')
@@ -41,7 +46,7 @@ function LoginPage() {
 
     try {
       await login(userId, password);
-      navigate('/');
+      navigate(redirectTo);
     } catch (err) {
       alert(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     }

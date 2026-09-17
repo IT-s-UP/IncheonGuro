@@ -32,6 +32,10 @@ public class MyCourse {
     @Column(nullable = false, length = 30)
     private String name;
 
+    // Legacy rows have no known owner and are not exposed to members.
+    @Column(name = "member_id", updatable = false)
+    private Long memberId;
+
     @OrderBy("dayNumber ASC")
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<CourseDay> days = new ArrayList<>();
@@ -42,8 +46,9 @@ public class MyCourse {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public MyCourse(String name) {
+    public MyCourse(String name, Long memberId) {
         this.name = name;
+        this.memberId = java.util.Objects.requireNonNull(memberId);
     }
 
     public void update(String name, List<CourseDay> newDays) {

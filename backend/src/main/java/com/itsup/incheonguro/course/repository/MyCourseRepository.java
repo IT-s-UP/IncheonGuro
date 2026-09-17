@@ -6,5 +6,6 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MyCourseRepository extends JpaRepository<MyCourse, Long> {
-    List<MyCourse> findAllByOrderByIdDesc();
+    List<MyCourse> findAllByMemberIdOrderByIdDesc(Long memberId);
+    java.util.Optional<MyCourse> findByIdAndMemberId(Long id, Long memberId);
 }

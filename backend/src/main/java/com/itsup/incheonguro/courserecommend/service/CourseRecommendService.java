@@ -1,5 +1,8 @@
 package com.itsup.incheonguro.courserecommend.service;
 
+import com.itsup.incheonguro.Auth.entity.Member;
+import com.itsup.incheonguro.RegionRecommendPage.entity.Region;
+import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
 import com.itsup.incheonguro.courserecommend.dto.CourseCostResponse;
 import com.itsup.incheonguro.courserecommend.dto.CourseDayResponse;
 import com.itsup.incheonguro.courserecommend.dto.CoursePlaceResponse;
@@ -28,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -80,6 +84,31 @@ public class CourseRecommendService {
             "문화 / 예술 / 역사", EnumSet.of(PlaceCategory.ATTRACTION),
             "자연", EnumSet.of(PlaceCategory.ATTRACTION));
 
+    // 관광지(ATTRACTION) 안에서도 여행 스타일별로 관광공사 대분류 코드(lclsSystm1)를 제한해
+    // "관광/체험액티비티/문화예술역사/자연"이 전부 같은 후보로 뭉개지지 않게 함.
+    // NA=자연, HS=역사관광지, VE=체험·문화시설, EX/LS=레포츠.
+    // "관광"·"힐링"처럼 이 맵에 없는 스타일은 제한 없이 관광지 전체를 후보로 봄.
+    private static final Map<String, Set<String>> STYLE_TO_ATTRACTION_CODES = Map.of(
+            "자연", Set.of("NA"),
+            "문화 / 예술 / 역사", Set.of("HS", "VE"),
+            "체험 / 액티비티", Set.of("VE", "EX", "LS"));
+
+    // 동행인별로 여행 스타일 테마에 추가로 고려할 카테고리
+    private static final Map<String, PlaceCategory> COMPANION_EXTRA_CATEGORY = Map.of(
+            "혼자", PlaceCategory.CAFE,
+            "연인", PlaceCategory.CAFE,
+            "친구", PlaceCategory.SHOPPING);
+
+    // 아이/부모님/반려동물과 함께하면 하루 일정 강도를 한 단계 낮춤
+    private static final Set<String> RELAXED_PACE_COMPANIONS = Set.of("아이", "부모님", "반려동물");
+    private static final int MIN_PLACES_PER_DAY = 2;
+
+    // 프론트에서 올 수 있는 값 검증용. 프론트 문구가 바뀌면 여기서 걸러져 400으로 응답한다.
+    private static final Set<String> KNOWN_SCHEDULE_TYPES =
+            Set.of("빡빡하고 바쁜, 많은 일정", "여유롭고 널널한, 적은 일정");
+    private static final Set<String> KNOWN_COMPANIONS =
+            Set.of("혼자", "가족", "친구", "연인", "아이", "부모님", "반려동물", "기타");
+
     // 이동 수단별 하루 교통비 추정치
     private static final Map<String, Integer> TRANSPORT_DAILY_COST = Map.of(
             "도보", 0,
@@ -111,8 +140,11 @@ public class CourseRecommendService {
             PlaceCategory.SHOPPING, "쇼핑 비용");
 
     private final PlaceGuideService placeGuideService;
+    private final RegionRepository regionRepository;
 
-    public CourseRecommendResponse recommend(CourseRecommendRequest request) {
+    public CourseRecommendResponse recommend(CourseRecommendRequest request, Member member) {
+        validateChoices(request);
+
         LocalDate startDate;
         LocalDate endDate;
 
@@ -129,26 +161,49 @@ public class CourseRecommendService {
             throw new IllegalArgumentException("여행 종료일은 시작일 이후여야 합니다.");
         }
 
-        int days = (int) Math.min(totalDays, MAX_DAYS);
+        if (totalDays > MAX_DAYS) {
+            throw new IllegalArgumentException("여행 기간은 최대 " + MAX_DAYS + "일까지 추천할 수 있습니다.");
+        }
+
+        int days = (int) totalDays;
         int placesPerDay = "빡빡하고 바쁜, 많은 일정".equals(request.getScheduleType()) ? 4 : 3;
 
-        Set<PlaceCategory> themeCategories = resolveCategories(request.getTravelStyles());
-        boolean foodIsTheme = themeCategories.contains(PlaceCategory.RESTAURANT);
+        if (RELAXED_PACE_COMPANIONS.contains(request.getCompanion())) {
+            placesPerDay = Math.max(MIN_PLACES_PER_DAY, placesPerDay - 1);
+        }
 
-        DistrictPools pools = buildDistrictPools(themeCategories, foodIsTheme);
+        Set<PlaceCategory> themeCategories = resolveCategories(request.getTravelStyles());
+
+        PlaceCategory companionCategory = COMPANION_EXTRA_CATEGORY.get(request.getCompanion());
+        if (companionCategory != null) {
+            themeCategories.add(companionCategory);
+        }
+
+        boolean foodIsTheme = themeCategories.contains(PlaceCategory.RESTAURANT);
+        Set<String> attractionCodeFilter = resolveAttractionCodeFilter(request.getTravelStyles());
+
+        // 같은 회원이 같은 조건으로 다시 요청하면 같은 결과가 나오도록, 무작위 순서를
+        // 매 요청 새로 뽑지 않고 요청 내용에서 뽑은 시드로 고정한다. 조건이 하나라도
+        // 다르면 다른 시드가 되어 결과도 달라진다.
+        Random random = new Random(Objects.hash(member == null ? null : member.getId(),
+                request.getStartDate(), request.getEndDate(), request.getScheduleType(),
+                request.getTravelStyles(), request.getCompanion(), request.getTransport()));
+
+        // 식당이 그 자체로 테마가 아니면(예: "맛집 탐방"을 고르지 않았으면), 하루에 넣을
+        // 식당 수는 이 목표치를 넘지 않는다 - 실제 구를 찾기 전에 필요한 테마 장소 수를
+        // 미리 가늠해서, 후보가 넉넉한 구를 우선 찾는 데 씀 (같은 장소 반복 방문을 줄임)
+        int mealsTarget = foodIsTheme ? 0 : (placesPerDay >= 4 ? 2 : 1);
+        int minThemeSlotsPerDay = placesPerDay - mealsTarget;
+        int desiredThemeCount = Math.max(MIN_THEME_POOL_SIZE, days * minThemeSlotsPerDay);
+
+        District preferredDistrict = resolvePreferredDistrict(member);
+        DistrictPools pools = buildDistrictPools(
+                themeCategories, foodIsTheme, preferredDistrict, attractionCodeFilter, desiredThemeCount, random);
         String districtLabel = DISTRICT_LABEL.getOrDefault(pools.district(), "인천");
 
         // 식사는 테마에 포함되어 있지 않아도 항상 일정에 넣되,
         // 식당 후보가 부족하면 그만큼만 넣고 나머지는 테마 장소로 채움
-        int mealsPerDay;
-
-        if (foodIsTheme) {
-            mealsPerDay = 0;
-        } else {
-            int mealsTarget = placesPerDay >= 4 ? 2 : 1;
-            mealsPerDay = Math.min(mealsTarget, pools.mealPlaces().size());
-        }
-
+        int mealsPerDay = foodIsTheme ? 0 : Math.min(mealsTarget, pools.mealPlaces().size());
         int themeSlotsPerDay = placesPerDay - mealsPerDay;
 
         List<PlaceSummaryResponse> themeSequence = buildSequence(pools.themePlaces(), days * themeSlotsPerDay);
@@ -190,12 +245,61 @@ public class CourseRecommendService {
     }
 
     /**
+     * 프론트 설문 옵션 문구와 백엔드 매핑 키가 어긋나면(예: 프론트 문구만 바뀌고 백엔드는
+     * 그대로인 경우) 조용히 기본값으로 빠지지 않도록, 알려진 값인지 미리 검증한다.
+     */
+    private void validateChoices(CourseRecommendRequest request) {
+        if (!KNOWN_SCHEDULE_TYPES.contains(request.getScheduleType())) {
+            throw new IllegalArgumentException("알 수 없는 일정 강도입니다: " + request.getScheduleType());
+        }
+
+        if (!TRANSPORT_DAILY_COST.containsKey(request.getTransport())) {
+            throw new IllegalArgumentException("알 수 없는 이동 수단입니다: " + request.getTransport());
+        }
+
+        if (!KNOWN_COMPANIONS.contains(request.getCompanion())) {
+            throw new IllegalArgumentException("알 수 없는 동행인입니다: " + request.getCompanion());
+        }
+
+        for (String style : request.getTravelStyles()) {
+            if (!STYLE_TO_CATEGORIES.containsKey(style)) {
+                throw new IllegalArgumentException("알 수 없는 여행 스타일입니다: " + style);
+            }
+        }
+    }
+
+    /**
+     * 회원가입 때 선택한 관심 지역을, 코스를 구성할 구로 우선 고려하기 위해
+     * District로 변환합니다. 관심 지역이 없거나 알 수 없는 지역이면 null.
+     */
+    private District resolvePreferredDistrict(Member member) {
+        if (member == null || member.getInterestedRegion() == null) {
+            return null;
+        }
+
+        return regionRepository.findById(member.getInterestedRegion())
+                .map(Region::getRegionName)
+                .flatMap(this::districtByLabel)
+                .orElse(null);
+    }
+
+    private java.util.Optional<District> districtByLabel(String label) {
+        return DISTRICT_LABEL.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(label))
+                .map(Map.Entry::getKey)
+                .findFirst();
+    }
+
+    /**
      * 선택한 여행 스타일에 해당하는 테마 장소와, 식사를 위한 식당 후보를
      * 관광공사 API에서 구 단위로 가져옵니다. 코스 전체를 하나의 구 안에서
      * 구성할 수 있도록 테마 후보가 충분한 구를 고르고, 어느 구도 충분하지
-     * 않으면 후보가 가장 많은 구로 대체합니다.
+     * 않으면 후보가 가장 많은 구로 대체합니다. 회원의 관심 지역이 있으면
+     * 가장 먼저 시도합니다.
      */
-    private DistrictPools buildDistrictPools(Set<PlaceCategory> themeCategories, boolean foodIsTheme) {
+    private DistrictPools buildDistrictPools(
+            Set<PlaceCategory> themeCategories, boolean foodIsTheme, District preferredDistrict,
+            Set<String> attractionCodeFilter, int requiredThemeCount, Random random) {
         Set<PlaceCategory> fetchCategories = EnumSet.copyOf(themeCategories);
 
         if (!foodIsTheme) {
@@ -205,7 +309,12 @@ public class CourseRecommendService {
         List<PlaceCategory> categoryList = new ArrayList<>(fetchCategories);
 
         List<District> districts = new ArrayList<>(List.of(District.values()));
-        Collections.shuffle(districts);
+        Collections.shuffle(districts, random);
+
+        if (preferredDistrict != null) {
+            districts.remove(preferredDistrict);
+            districts.add(0, preferredDistrict);
+        }
 
         DistrictPools best = null;
 
@@ -215,6 +324,9 @@ public class CourseRecommendService {
 
             List<PlaceSummaryResponse> theme = filtered.stream()
                     .filter(place -> themeCategories.contains(place.getCategory()))
+                    .filter(place -> place.getCategory() != PlaceCategory.ATTRACTION
+                            || attractionCodeFilter == null
+                            || attractionCodeFilter.contains(place.getLclsSystm1()))
                     .collect(Collectors.toCollection(ArrayList::new));
 
             List<PlaceSummaryResponse> meal = foodIsTheme
@@ -242,9 +354,9 @@ public class CourseRecommendService {
                         .collect(Collectors.toCollection(ArrayList::new));
             }
 
-            if (theme.size() >= MIN_THEME_POOL_SIZE) {
-                Collections.shuffle(theme);
-                Collections.shuffle(meal);
+            if (theme.size() >= requiredThemeCount) {
+                Collections.shuffle(theme, random);
+                Collections.shuffle(meal, random);
                 return new DistrictPools(district, theme, meal);
             }
 
@@ -253,12 +365,12 @@ public class CourseRecommendService {
             }
         }
 
-        if (best == null || best.themePlaces().isEmpty()) {
+        if (best == null || best.themePlaces().size() < MIN_THEME_POOL_SIZE) {
             throw new IllegalStateException("추천할 장소를 찾지 못했습니다.");
         }
 
-        Collections.shuffle(best.themePlaces());
-        Collections.shuffle(best.mealPlaces());
+        Collections.shuffle(best.themePlaces(), random);
+        Collections.shuffle(best.mealPlaces(), random);
         return best;
     }
 
@@ -329,6 +441,29 @@ public class CourseRecommendService {
         }
 
         return categories;
+    }
+
+    /**
+     * 관광지(ATTRACTION) 후보를 제한할 lclsSystm1 코드 집합을 계산합니다.
+     * "관광"/"힐링"처럼 관광지를 제한 없이 요청하는 스타일이 하나라도 있으면
+     * 제한을 두지 않고(null), 그 외에는 선택한 스타일들이 요구하는 코드의 합집합을 씁니다.
+     */
+    private Set<String> resolveAttractionCodeFilter(List<String> travelStyles) {
+        boolean hasUnrestrictedAttractionStyle = travelStyles.stream()
+                .anyMatch(style -> STYLE_TO_CATEGORIES.getOrDefault(style, Set.of()).contains(PlaceCategory.ATTRACTION)
+                        && !STYLE_TO_ATTRACTION_CODES.containsKey(style));
+
+        if (hasUnrestrictedAttractionStyle) {
+            return null;
+        }
+
+        Set<String> codes = travelStyles.stream()
+                .map(STYLE_TO_ATTRACTION_CODES::get)
+                .filter(Objects::nonNull)
+                .flatMap(Set::stream)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return codes.isEmpty() ? null : codes;
     }
 
     /**
