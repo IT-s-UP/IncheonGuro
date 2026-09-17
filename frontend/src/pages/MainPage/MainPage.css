@@ -306,11 +306,11 @@
 
 .main-page__spot-placeholder {
   display: flex;
-
+  flex-direction: column; /* 아이콘+텍스트를 세로로 */
   align-items: center;
   justify-content: center;
-
-  background-color: #d9d9d9;
+  gap: 8px;
+  background-color: #f0f0f0; /* 기존 #d9d9d9보다 살짝 밝게 */
 }
 
 /* =========================================================
@@ -680,4 +680,16 @@
   white-space: nowrap;
 
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.main-page__region-label {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background-color: #78aac3;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
 }
