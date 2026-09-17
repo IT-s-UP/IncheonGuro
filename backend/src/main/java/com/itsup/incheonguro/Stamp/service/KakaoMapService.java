@@ -6,10 +6,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import org.springframework.web.client.RestTemplate;
-
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +26,8 @@ public class KakaoMapService {
             double longitude) {
 
         String url = "https://dapi.kakao.com/v2/local/geo/coord2regioncode.json"
-                +
-                "?x=" + longitude
-                +
-                "&y=" + latitude;
+                + "?x=" + longitude
+                + "&y=" + latitude;
 
         HttpHeaders headers = new HttpHeaders();
 
@@ -49,7 +48,5 @@ public class KakaoMapService {
                 .getDocuments()
                 .get(0)
                 .getRegion_2depth_name();
-
     }
-
 }
