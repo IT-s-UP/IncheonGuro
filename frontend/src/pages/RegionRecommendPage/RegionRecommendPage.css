@@ -194,11 +194,35 @@
 
 .region-result-heading {
   display: flex;
+  flex-direction: column;
+  align-items: center;
 
+  width: 100%;
+  margin: 0;
+
+  text-align: center;
+}
+
+.region-result-heading__first {
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+}
+
+.region-result-heading__second {
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
   align-items: baseline;
-  flex-wrap: wrap;
 
-  column-gap: 4px;
+  gap: 4px;
+
+  text-align: center;
 }
 
 .region-result-name {
@@ -213,7 +237,7 @@
   width: 100%;
   height: 160px;
 
-  margin-top: 28px;
+  margin-top: 40px;
 
   display: flex;
   align-items: center;
@@ -234,30 +258,11 @@
 }
 
 /* =========================
-   결과 설명
-========================= */
-
-.region-result-description {
-  margin-top: 22px;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-}
-
-/* =========================
    추천 장소
 ========================= */
 
 .region-recommended-section {
-  margin-top: 28px;
-}
-
-.region-recommended-title {
-  margin-bottom: 16px;
-
-  text-align: center;
+  margin-top: 40px;
 }
 
 .region-recommended-list {
@@ -267,7 +272,7 @@
 
   grid-template-columns: repeat(3, minmax(0, 1fr));
 
-  gap: 12px;
+  gap: 5px;
 }
 
 .region-recommended-item {
@@ -278,15 +283,15 @@
 
   align-items: center;
 
-  gap: 9px;
+  gap: 10px;
 
   text-align: center;
 }
 
 /* 추천 장소 원형 이미지 */
 .region-recommended-image {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
 
   display: flex;
   align-items: center;
@@ -323,15 +328,11 @@
 
 .region-result-buttons {
   width: 100%;
-
-  margin-top: 40px;
+  margin-top: 60px;
+  margin-bottom: 60px;
 
   display: flex;
   flex-direction: column;
-
-  gap: 12px;
-}
-
-.region-result-buttons .button {
-  width: 100%;
+  align-items: center;
+  gap: 10px;
 }

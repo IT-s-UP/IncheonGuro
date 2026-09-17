@@ -14,6 +14,7 @@ import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.support.CurrentMember;
 import com.itsup.incheonguro.mypage.dto.EmailChangeRequest;
 import com.itsup.incheonguro.mypage.dto.MyPageResponse;
+import com.itsup.incheonguro.mypage.dto.MyPageStatsResponse; // [추가]
 import com.itsup.incheonguro.mypage.dto.MyPageUpdateRequest;
 import com.itsup.incheonguro.mypage.dto.PasswordChangeRequest;
 import com.itsup.incheonguro.mypage.dto.ProfileMascotRequest;
@@ -29,6 +30,21 @@ import lombok.RequiredArgsConstructor;
 public class MyPageController {
 
     private final MyPageService myPageService;
+    private final com.itsup.incheonguro.mypage.service.AccountWithdrawalService withdrawal;
+
+    public record WithdrawalRequest(
+        @jakarta.validation.constraints.AssertTrue boolean confirmed,
+        @jakarta.validation.constraints.Size(max = 200) String password) {}
+
+    @DeleteMapping
+    public ResponseEntity<Void> withdraw(@CurrentMember Member member,
+            @Valid @RequestBody WithdrawalRequest body,
+            jakarta.servlet.http.HttpServletRequest request) {
+        withdrawal.withdraw(member.getId(), body.password());
+        var session = request.getSession(false);
+        if (session != null) session.invalidate();
+        return ResponseEntity.noContent().header("Cache-Control", "no-store").build();
+    }
 
     // ==========================================
     // 내 정보 조회
@@ -38,6 +54,16 @@ public class MyPageController {
     @GetMapping
     public MyPageResponse getMyPage(@CurrentMember Member member) {
         return myPageService.getMyPage(member);
+    }
+
+    // ==========================================
+    // [추가] 마이페이지 통계 조회 (내 코스 / 북마크 / 스탬프 개수)
+    // GET /api/mypage/stats
+    // ==========================================
+
+    @GetMapping("/stats")
+    public MyPageStatsResponse getStats(@CurrentMember Member member) {
+        return myPageService.getStats(member);
     }
 
     // ==========================================

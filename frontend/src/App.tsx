@@ -8,6 +8,8 @@ import MainPage from '@/pages/MainPage/MainPage';
 import LoginPage from './pages/LoginPage/LoginPage';
 import SignupPage from './pages/SignupPage/SignupPage';
 
+import BookmarkPage from '@/pages/BookmarkPage/BookmarkPage'; // [추가]
+
 import CourseGuideListPage from '@/pages/CourseGuidePage/CourseGuideListPage';
 import CourseGuideDetailPage from '@/pages/CourseGuidePage/CourseGuideDetailPage';
 import CourseRecommendPage from '@/pages/CourseRecommendPage/CourseRecommendPage';
@@ -34,6 +36,7 @@ function App() {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/bookmarks" element={<BookmarkPage />} />
         <Route
           path="/course-recommend"
           element={

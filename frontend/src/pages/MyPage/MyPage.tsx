@@ -21,6 +21,7 @@ import EmailSheet from './sheets/EmailSheet';
 import type { EmailValue } from './sheets/EmailSheet';
 import PasswordSheet from './sheets/PasswordSheet';
 import MascotSheet from './sheets/MascotSheet';
+import AccountActions from './AccountActions';
 import './MyPage.css';
 
 type FieldKey =
@@ -298,6 +299,7 @@ function MyPage() {
         })}
       </nav>
 
+      <AccountActions />
       <div className="my-page__bottom-bar">
         <button type="button" className="my-page__save-btn" onClick={handleSave}>
           <Typography variant="subtitle1" color="#fffbfb">

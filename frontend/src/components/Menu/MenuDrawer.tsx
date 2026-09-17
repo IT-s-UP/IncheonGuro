@@ -1,6 +1,9 @@
 import { useAuth } from '@/auth/AuthContext';
+import { useEffect, useState } from 'react'; // [수정] useEffect, useState 추가
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+import { apiFetch } from '@/auth/api'; // [추가] 북마크 개수 조회용
 
 import Typography from '@/components/Typography/Typography';
 import {
@@ -54,10 +57,43 @@ const STAMP_TOTAL = 9;
 const STAMP_OWNED = 3;
 const STAMP_PLACES = ['야생화단지', '개항로', '차이나타운'];
 
+// [추가] GET /api/mypage/stats 응답 형태
+// GET /api/mypage/stats 응답 형태
+interface MyPageStats {
+  bookmarkCount: number;
+}
+
 function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isLoggedIn = user !== null;
   const navigate = useNavigate();
+
+  // [추가] 북마크 개수 - /api/mypage/stats에서 실제 값 조회
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setBookmarkCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    apiFetch('/api/mypage/stats')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: MyPageStats | null) => {
+        if (!cancelled && data) {
+          setBookmarkCount(data.bookmarkCount);
+        }
+      })
+      .catch(() => {
+        // 실패해도 0으로 유지
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn]); // [추가] 전체 useEffect 블록
 
   const handleNavigate = (to?: string) => {
     if (!to) return;
@@ -168,9 +204,13 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
               내 코스
             </Typography>
           </button>
-          <button type="button" className="menu-drawer__stat">
+          <button
+            type="button"
+            className="menu-drawer__stat"
+            onClick={() => handleNavigate('/bookmarks')}
+          >
             <Typography variant="p1" color="#123040">
-              0
+              {bookmarkCount} {/* [수정] 하드코딩된 0 -> 실제 API 값 */}
             </Typography>
             <Typography variant="p3" color="rgba(18, 48, 64, 0.68)">
               북마크
@@ -234,9 +274,18 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
             );
           })}
         </nav>
-        {isLoggedIn && <button type="button" onClick={() => {
-          void logout().then(() => handleNavigate('/login')).catch(() => alert('로그아웃에 실패했어요. 다시 시도해 주세요.'));
-        }}>로그아웃</button>}
+        {isLoggedIn && (
+          <button
+            type="button"
+            onClick={() => {
+              void logout()
+                .then(() => handleNavigate('/login'))
+                .catch(() => alert('로그아웃에 실패했어요. 다시 시도해 주세요.'));
+            }}
+          >
+            로그아웃
+          </button>
+        )}
       </aside>
     </div>
   );

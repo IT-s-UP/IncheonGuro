@@ -331,7 +331,8 @@ public class PlaceGuideService {
           item.path("mapy").asDouble(),
           item.path("mapx").asDouble(),
           item.path("firstimage").asText(""),
-          lclsSystm2));
+          lclsSystm2,
+          item.path("lclsSystm1").asText()));
     }
     return result;
   }

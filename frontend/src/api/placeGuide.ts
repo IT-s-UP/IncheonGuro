@@ -1,13 +1,10 @@
 // src/api/placeGuide.ts
 // 장소 안내 페이지 전용 API 호출 함수 모음 (fetch 기반)
 
+import { getAccessToken } from '@/auth/api';
 import type { CourseSummary } from './courseGuide';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // '/api'
-
-function getAccessToken(): string | null {
-  return localStorage.getItem('accessToken');
-}
 
 async function request<T>(
   path: string,

@@ -62,6 +62,16 @@ function PlaceGuideMainPage() {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
 
+  const initialDistrictValue = searchParams.get('districts');
+  const initialActiveDistricts = new Set(
+    DISTRICTS.reduce<number[]>((indices, district, index) => {
+      if (district.value === initialDistrictValue) {
+        indices.push(index);
+      }
+      return indices;
+    }, []),
+  );
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   // ===== 현재 위치 텍스트 (역지오코딩) =====
@@ -110,7 +120,8 @@ function PlaceGuideMainPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   // ===== 장소 목록 탭 =====
-  const [activeDistricts, setActiveDistricts] = useState<Set<number>>(new Set());
+  // const [activeDistricts, setActiveDistricts] = useState<Set<number>>(new Set());
+  const [activeDistricts, setActiveDistricts] = useState<Set<number>>(initialActiveDistricts);
   const [activePlaceFilters, setActivePlaceFilters] = useState<Set<number>>(new Set());
   const [sortValue, setSortValue] = useState('name');
   const [places, setPlaces] = useState<PlaceSummary[]>([]);

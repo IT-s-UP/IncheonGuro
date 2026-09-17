@@ -1,168 +1,128 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { setStorageMember, clearMemberStorage } from './accountStorage';
+import { Fragment, createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { loginWithPassword, setAccessToken } from './api';
+import { apiFetch, loginWithPassword, setAccessToken } from './api';
 
-type User =
-  | {
-      id: string;
-      provider: 'kakao' | 'google';
-      nickname: string;
-    }
-  | {
-      id: string;
-      provider: 'local';
-      nickname: string;
-    };
-
+type User = { id: string; provider: 'kakao' | 'google' | 'local'; nickname: string };
 type Auth = {
   user: User | null;
+
+  // 로그인 상태 확인 중인지 여부
   isLoading: boolean;
+
   login: (loginId: string, password: string) => Promise<void>;
+
   logout: () => Promise<void>;
+  withdraw: (password: string) => Promise<void>;
 };
-
-const ACCESS_TOKEN_STORAGE_KEY = 'incheonguro.accessToken';
-const USER_STORAGE_KEY = 'incheonguro.user';
-
+const TOKEN = 'incheonguro.accessToken', USER = 'incheonguro.user';
 const AuthContext = createContext<Auth>({
-  user: null,
-  isLoading: true,
-  login: async () => {},
-  logout: async () => {},
+  user: null, isLoading: true, login: async () => {}, logout: async () => {}, withdraw: async () => {},
 });
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [csrfToken, setCsrfToken] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  function accept(data: { user: User; csrfToken?: string; accessToken?: string }) {
-    setUser(data.user);
-
-    if (data.csrfToken) {
-      setCsrfToken(data.csrfToken);
-    }
-
-    if (data.accessToken) {
-      setAccessToken(data.accessToken);
-    }
+  const version = useRef(0);
+  function clear() {
+    version.current++;
+    localStorage.removeItem(TOKEN);
+    localStorage.removeItem(USER);
+    setAccessToken('');
+    setStorageMember(null);
+    setUser(null);
   }
-
   useEffect(() => {
-    const storedToken = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
-
-    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-
-    // 로그인 정보가 localStorage에 있으면
-    // 먼저 복구
-    if (storedToken && storedUser) {
+    let active = true;
+    const current = version.current;
+    const valid = () => active && current === version.current;
+    const controller = new AbortController();
+    async function restore() {
       try {
-        const parsedUser = JSON.parse(storedUser) as User;
-
-        setAccessToken(storedToken);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('저장된 사용자 정보 복구 실패:', error);
-
-        localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
-
-        localStorage.removeItem(USER_STORAGE_KEY);
-
-        setAccessToken('');
-        setUser(null);
-      } finally {
+        const token = localStorage.getItem(TOKEN), saved = localStorage.getItem(USER);
+        if (token && saved) {
+          const response = await fetch('/api/mypage', {
+            headers: { Authorization: 'Bearer ' + token }, signal: controller.signal,
+          });
+          if (!valid()) return;
+          if (response.ok) {
+            const profile = await response.json();
+            if (!valid()) return;
+            const local = JSON.parse(saved) as User;
+            setStorageMember(local.id);
+            setAccessToken(token);
+            setUser({ ...local, nickname: profile.data.nickname });
+            return;
+          }
+          if (response.status !== 401) return;
+          localStorage.removeItem(TOKEN);
+          localStorage.removeItem(USER);
+        }
+        const response = await fetch('/api/auth/me', { credentials: 'same-origin', signal: controller.signal });
+        if (response.ok) {
+          const data = await response.json();
+          if (valid()) { setStorageMember(data.user.id); setAccessToken(data.accessToken); setUser(data.user); }
+        }
+      } catch { /* Keep the screen signed out when restoration cannot be verified. */ }
+      finally { if (valid()) setIsLoading(false); }
+    }
+    void restore();
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'incheonguro.signedOut') {
+        clear();
         setIsLoading(false);
       }
-
-      return;
-    }
-
-    // 저장된 로그인 정보가 없는 경우
-    // 기존 세션 확인
-    const controller = new AbortController();
-
-    void fetch('/api/auth/me', {
-      credentials: 'same-origin',
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          return;
-        }
-
-        const data = await response.json();
-
-        accept(data);
-      })
-      .catch((error) => {
-        if (error.name !== 'AbortError') {
-          console.error('로그인 상태 확인 실패:', error);
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-
-    return () => controller.abort();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => { active = false; controller.abort(); window.removeEventListener('storage', onStorage); };
   }, []);
-
+  function signedOut() {
+    clear();
+    localStorage.setItem('incheonguro.signedOut', String(Date.now()));
+  }
   async function login(loginId: string, password: string) {
     const member = await loginWithPassword(loginId, password);
-
-    const nextUser: User = {
-      id: String(member.memberId),
-      provider: 'local',
-      nickname: member.nickname,
-    };
-
-    // 메모리에 저장
+    version.current++;
+    const nextUser: User = { id: String(member.memberId), provider: 'local', nickname: member.nickname };
+    setStorageMember(nextUser.id);
     setAccessToken(member.accessToken);
+
+    /*
+     * 사용자 정보 저장
+     */
     setUser(nextUser);
-
-    // 새로고침 후 복구할 수 있도록 저장
-    localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, member.accessToken);
-
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+    localStorage.setItem(TOKEN, member.accessToken);
+    localStorage.setItem(USER, JSON.stringify(nextUser));
+    setIsLoading(false);
   }
-
+  
   async function logout() {
-    if (csrfToken) {
+    // Resolve the session independently of local password-login state.
+    const session = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    if (session.ok) {
+      const data = await session.json();
       const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'X-CSRF-Token': csrfToken,
-        },
+        method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': data.csrfToken },
       });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
+      if (!response.ok) throw new Error('로그아웃에 실패했습니다. 다시 시도해 주세요.');
+    } else if (session.status !== 401) {
+      throw new Error('서버에 연결할 수 없습니다. 다시 시도해 주세요.');
     }
-
-    localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
-
-    localStorage.removeItem(USER_STORAGE_KEY);
-
-    setUser(null);
-    setCsrfToken('');
-    setAccessToken('');
+    signedOut();
   }
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  
+  async function withdraw(password: string) {
+    const response = await apiFetch('/api/mypage', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmed: true, password }),
+    });
+    if (!response.ok) {
+      throw new Error(response.status === 400 ? '현재 비밀번호를 확인해 주세요.' :
+        response.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해 주세요.' :
+        '탈퇴를 완료하지 못했습니다. 다시 시도해 주세요.');
+    }
+    clearMemberStorage();
+    signedOut();
+  }
+  return <AuthContext.Provider value={{ user, isLoading, login, logout, withdraw }}><Fragment key={user?.id ?? "guest"}>{children}</Fragment></AuthContext.Provider>;
 }
-
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export function useAuth() { return useContext(AuthContext); }

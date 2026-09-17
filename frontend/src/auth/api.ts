@@ -2,6 +2,9 @@ let accessToken = '';
 export function setAccessToken(token: string) {
   accessToken = token;
 }
+export function getAccessToken() {
+  return accessToken;
+}
 export function apiFetch(path: string, options: RequestInit = {}) {
   if (!path.startsWith('/api/') && !path.startsWith('/stamp/')) {
     throw new Error('Invalid API path');
@@ -107,4 +110,39 @@ export async function signup(payload: SignupPayload) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.message ?? '회원가입에 실패했습니다.');
   }
+}
+
+export type RegionRecommendRequest = {
+  placeType: string;
+  transport: string;
+  mood: string;
+  companion: string;
+  interestedRegion?: string;
+};
+
+export type RegionRecommendResponse = {
+  regionName: string;
+  description: string;
+  imageUrl: string;
+  score: number;
+};
+
+export async function recommendRegion(
+  request: RegionRecommendRequest,
+): Promise<RegionRecommendResponse> {
+  const response = await apiFetch('/api/region/recommend', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+
+    throw new Error(body?.message ?? `지역 추천에 실패했습니다. (${response.status})`);
+  }
+
+  return response.json();
 }
