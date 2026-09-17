@@ -286,6 +286,25 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
     setIsCostDetailOpen(false);
   };
 
+  const deleteSelectedDay = () => {
+    if (days.length === 1) {
+      window.alert('DAY 1은 최소 한 개 필요합니다.');
+      return;
+    }
+
+    const deletedDayIndex = days.findIndex((courseDay) => courseDay.id === selectedDay.id);
+    const remainingDays = days
+      .filter((courseDay) => courseDay.id !== selectedDay.id)
+      .map((courseDay, index) => ({ ...courseDay, day: index + 1 }));
+    const nextSelectedDay = remainingDays[Math.min(deletedDayIndex, remainingDays.length - 1)];
+
+    setDays(remainingDays);
+    setSelectedDayId(nextSelectedDay.id);
+    setActionMenuPlaceId(null);
+    setEditingPlaceId(null);
+    setIsCostDetailOpen(false);
+  };
+
   const changeTransport = (transport: Transport) => {
     updateSelectedDay((currentDay) => ({
       ...currentDay,
@@ -443,6 +462,15 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
 
         <button className="course-edit-page__day-add" type="button" onClick={addDay}>
           ＋ DAY 추가
+        </button>
+
+        <button
+          className="course-edit-page__day-delete"
+          type="button"
+          onClick={deleteSelectedDay}
+          disabled={days.length === 1}
+        >
+          DAY 삭제
         </button>
       </div>
 

@@ -35,7 +35,7 @@ function createEmptyDay(day: number): CourseDay {
 }
 
 function createInitialDays(): CourseDay[] {
-  return [1, 2, 3].map((day) => createEmptyDay(day));
+  return [createEmptyDay(1)];
 }
 
 function SearchIcon() {

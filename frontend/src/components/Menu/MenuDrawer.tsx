@@ -274,18 +274,6 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
             );
           })}
         </nav>
-        {isLoggedIn && (
-          <button
-            type="button"
-            onClick={() => {
-              void logout()
-                .then(() => handleNavigate('/login'))
-                .catch(() => alert('로그아웃에 실패했어요. 다시 시도해 주세요.'));
-            }}
-          >
-            로그아웃
-          </button>
-        )}
       </aside>
     </div>
   );
