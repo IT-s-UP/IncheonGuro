@@ -37,7 +37,6 @@ const START_POINT = {
 };
 
 const FIRST_STAMP_GAP = 160;
-
 const STAMP_GAP = 170;
 
 const LEFT_X = 60;
@@ -45,9 +44,7 @@ const CENTER_X = 160;
 const RIGHT_X = 290;
 
 const CURVE_STEP_Y = 170;
-
 const CURVE_RESOLUTION = 20;
-
 const CURVE_TENSION = 0.9;
 
 /* =========================
@@ -85,6 +82,11 @@ const STAMP_IMAGE_MAP: Record<string, string> = {
 /* =========================
    API Response
 ========================= */
+
+interface RegionResponse {
+  id: number;
+  regionName: string;
+}
 
 interface MyStampResponse {
   regionId: number;
@@ -234,7 +236,6 @@ function createStampPoints(curve: PathPoint[], stampCount: number): PathPoint[] 
   const stamps: PathPoint[] = [];
 
   let accumulatedDistance = 0;
-
   let targetDistance = FIRST_STAMP_GAP;
 
   for (let index = 1; index < curve.length && stamps.length < stampCount; index += 1) {
@@ -291,6 +292,66 @@ function createPath(points: PathPoint[]) {
 }
 
 /* =========================
+   GPS 위치 가져오기
+========================= */
+
+function getCurrentPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('이 브라우저에서는 위치 정보를 사용할 수 없습니다.'));
+
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  });
+}
+
+/* =========================
+   서버 오류 메시지 추출
+========================= */
+
+async function getErrorMessage(response: Response, defaultMessage: string): Promise<string> {
+  try {
+    const responseText = await response.text();
+
+    if (!responseText) {
+      return defaultMessage;
+    }
+
+    /*
+     * 서버가 JSON 형태로 내려주는 경우
+     *
+     * {
+     *   "status": 400,
+     *   "message": "현재 위치에서는 해당 스탬프를 획득할 수 없습니다."
+     * }
+     *
+     * 여기서 message만 추출
+     */
+    try {
+      const json = JSON.parse(responseText);
+
+      if (json && typeof json === 'object' && typeof json.message === 'string') {
+        return json.message;
+      }
+    } catch {
+      /*
+       * JSON이 아니면 응답 문자열 자체를 사용
+       */
+    }
+
+    return responseText;
+  } catch {
+    return defaultMessage;
+  }
+}
+
+/* =========================
    Page
 ========================= */
 
@@ -299,30 +360,61 @@ function StampTourPage() {
 
   const { user, isLoading: authLoading } = useAuth();
 
-  /* =========================
-     스탬프 상태
-  ========================= */
-
   const [stamps, setStamps] = useState<Stamp[]>([]);
 
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState('');
 
+  const [claimingRegionId, setClaimingRegionId] = useState<number | null>(null);
+
+  /*
+   * /api/region에서 실제 지역 ID를 가져옴
+   */
+  const [regions, setRegions] = useState<RegionResponse[]>([]);
+
+  /* =========================
+     지역 목록 조회
+  ========================= */
+
+  useEffect(() => {
+    const fetchRegions = async () => {
+      try {
+        const response = await fetch('/api/region');
+
+        if (!response.ok) {
+          throw new Error(`지역 목록 조회 실패 (${response.status})`);
+        }
+
+        const data = (await response.json()) as RegionResponse[];
+
+        setRegions(data);
+      } catch (error) {
+        console.error('지역 목록 조회 실패:', error);
+
+        setError('지역 정보를 불러오지 못했습니다.');
+      }
+    };
+
+    void fetchRegions();
+  }, []);
+
   /* =========================
      내 스탬프 조회
   ========================= */
 
   useEffect(() => {
-    // AuthContext에서 로그인 상태 확인이 끝날 때까지 기다림
     if (authLoading) {
       return;
     }
 
-    // 로그인하지 않은 상태라면 API 호출하지 않음
     if (!user) {
       setLoading(false);
       setStamps([]);
+      return;
+    }
+
+    if (regions.length === 0) {
       return;
     }
 
@@ -339,13 +431,21 @@ function StampTourPage() {
 
         const data = (await response.json()) as MyStampResponse[];
 
-        const nextStamps: Stamp[] = STAMP_REGIONS.map((regionName, index) => {
+        /*
+         * /api/region에서 받은 실제 DB ID 사용
+         */
+        const nextStamps: Stamp[] = STAMP_REGIONS.map((regionName) => {
+          const region = regions.find((item) => item.regionName === regionName);
+
           const ownedStamp = data.find((stamp) => stamp.regionName === regionName);
 
           return {
-            id: ownedStamp?.regionId ?? index + 1,
+            id: region?.id ?? ownedStamp?.regionId ?? -1,
+
             region: regionName,
+
             owned: ownedStamp !== undefined,
+
             imageSrc: STAMP_IMAGE_MAP[regionName],
           };
         });
@@ -361,7 +461,170 @@ function StampTourPage() {
     };
 
     void fetchMyStamps();
-  }, [authLoading, user]);
+  }, [authLoading, user, regions]);
+
+  /* =========================
+     스탬프 획득
+  ========================= */
+
+  const handleClaim = async (stamp: Stamp) => {
+    if (!user) {
+      alert('로그인 후 스탬프를 획득할 수 있습니다.');
+
+      return;
+    }
+
+    if (stamp.owned) {
+      return;
+    }
+
+    /*
+     * /api/region에서 받은 실제 DB ID
+     */
+    const regionId = stamp.id;
+
+    if (regionId <= 0) {
+      alert('지역 정보를 불러오지 못했습니다. 다시 시도해주세요.');
+
+      return;
+    }
+
+    try {
+      setClaimingRegionId(regionId);
+
+      /*
+       * 스탬프 클릭 순간 현재 GPS 조회
+       */
+      const position = await getCurrentPosition();
+
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      /*
+       * 스탬프 획득 API
+       */
+      const response = await apiFetch(`/stamp/${regionId}/claim`, {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          latitude,
+          longitude,
+        }),
+      });
+
+      /* =========================
+         409
+         이미 획득
+      ========================= */
+
+      if (response.status === 409) {
+        alert('이미 획득한 스탬프예요!');
+
+        return;
+      }
+
+      /* =========================
+         401
+         인증 실패
+      ========================= */
+
+      if (response.status === 401) {
+        alert('로그인이 만료되었습니다. 다시 로그인해주세요.');
+
+        return;
+      }
+
+      /* =========================
+         400
+         위치 불일치
+      ========================= */
+
+      if (response.status === 400) {
+        const message = await getErrorMessage(
+          response,
+          '현재 위치에서는 해당 스탬프를 획득할 수 없습니다.',
+        );
+
+        alert(message);
+
+        return;
+      }
+
+      /* =========================
+         그 외 오류
+      ========================= */
+
+      if (!response.ok) {
+        const message = await getErrorMessage(response, '스탬프 획득에 실패했습니다.');
+
+        throw new Error(message);
+      }
+
+      /* =========================
+         획득 성공
+      ========================= */
+
+      alert(`${stamp.region} 스탬프를 획득했습니다!`);
+
+      /*
+       * 획득 후 서버에서 최신 목록 재조회
+       */
+      const stampResponse = await apiFetch('/stamp/my');
+
+      if (!stampResponse.ok) {
+        throw new Error('스탬프 목록을 다시 불러오지 못했습니다.');
+      }
+
+      const data = (await stampResponse.json()) as MyStampResponse[];
+
+      const nextStamps: Stamp[] = STAMP_REGIONS.map((regionName) => {
+        const region = regions.find((item) => item.regionName === regionName);
+
+        const ownedStamp = data.find((item) => item.regionName === regionName);
+
+        return {
+          id: region?.id ?? ownedStamp?.regionId ?? -1,
+
+          region: regionName,
+
+          owned: ownedStamp !== undefined,
+
+          imageSrc: STAMP_IMAGE_MAP[regionName],
+        };
+      });
+
+      setStamps(nextStamps);
+    } catch (error) {
+      console.error('스탬프 획득 실패:', error);
+
+      /*
+       * 위치 권한 오류
+       */
+      if (error instanceof GeolocationPositionError) {
+        if (error.code === GeolocationPositionError.PERMISSION_DENIED) {
+          alert('스탬프를 획득하려면 위치 정보 권한을 허용해주세요.');
+        } else if (error.code === GeolocationPositionError.POSITION_UNAVAILABLE) {
+          alert('현재 위치를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        } else if (error.code === GeolocationPositionError.TIMEOUT) {
+          alert('위치 확인 시간이 초과되었습니다. 다시 시도해주세요.');
+        }
+
+        return;
+      }
+
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('스탬프 획득에 실패했습니다.');
+      }
+    } finally {
+      setClaimingRegionId(null);
+    }
+  };
 
   /* =========================
      획득한 스탬프 개수
@@ -463,13 +726,14 @@ function StampTourPage() {
               )}
 
               {/* =========================
-    시작점
-========================= */}
+                  시작점
+              ========================= */}
 
               <div
                 className="stamp-tour-start"
                 style={{
                   left: `${(START_POINT.x / PATH_WIDTH) * 100}%`,
+
                   top: `${START_POINT.y}px`,
                 }}
               >
@@ -491,21 +755,41 @@ function StampTourPage() {
                   return null;
                 }
 
+                const isClaiming = claimingRegionId === stamp.id;
+
                 return (
-                  <div
-                    key={stamp.id}
+                  <button
+                    key={stamp.region}
+                    type="button"
                     className={[
                       'stamp-tour-stamp',
 
                       stamp.owned ? 'stamp-tour-stamp--owned' : 'stamp-tour-stamp--locked',
+
+                      !stamp.owned ? 'stamp-tour-stamp--clickable' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}
+
                     style={{
                       left: `${(point.x / PATH_WIDTH) * 100}%`,
 
                       top: `${point.y}px`,
                     }}
+
+                    onClick={() => {
+                      if (!stamp.owned && !isClaiming) {
+                        void handleClaim(stamp);
+                      }
+                    }}
+
+                    disabled={stamp.owned || claimingRegionId !== null}
+
+                    aria-label={
+                      stamp.owned
+                        ? `${stamp.region} 스탬프 획득 완료`
+                        : `${stamp.region} 스탬프 획득하기`
+                    }
                   >
                     <div className="stamp-tour-stamp__mark">
                       <img
@@ -514,7 +798,7 @@ function StampTourPage() {
                         className="stamp-tour-stamp__image"
                       />
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>

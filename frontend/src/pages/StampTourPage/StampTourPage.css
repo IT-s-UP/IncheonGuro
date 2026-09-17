@@ -198,6 +198,32 @@
   align-items: center;
 
   gap: 7px;
+
+  /* button 기본 디자인 제거 */
+  padding: 0;
+  border: none;
+  background: transparent;
+
+  font: inherit;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* =========================
+   클릭 가능한 스탬프
+========================= */
+
+.stamp-tour-stamp--clickable {
+  cursor: pointer;
+}
+
+.stamp-tour-stamp--clickable:hover {
+  transform: translate(-50%, -52px) scale(1.05);
+}
+
+.stamp-tour-stamp--clickable:active {
+  transform: translate(-50%, -52px) scale(0.97);
 }
 
 /* =========================
@@ -227,6 +253,11 @@
   height: 104px;
 
   object-fit: contain;
+
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease,
+    transform 0.2s ease;
 }
 
 /* =========================
