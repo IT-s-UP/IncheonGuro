@@ -4,6 +4,7 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react';
 
 import Button from '@/components/Button/Button';
@@ -23,6 +24,8 @@ interface CourseEditPageProps {
   course: Course;
   onBack: () => void;
   onSave: (course: Course) => void;
+  intro?: ReactNode;
+  secondaryAction?: { label: string; onClick: () => void };
 }
 
 interface DragInformation {
@@ -130,7 +133,7 @@ function formatPrice(price: number) {
   return `${price.toLocaleString('ko-KR')}원`;
 }
 
-function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
+function CourseEditPage({ course, onBack, onSave, intro, secondaryAction }: CourseEditPageProps) {
   const isNewCourse = course.name === '새 코스';
 
   const initialDays = course.days.length > 0 ? course.days : [createEmptyDay(1)];
@@ -405,6 +408,8 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
       <div className="course-edit-page__title-bar" onPointerUp={handleTitleBarClick}>
         <BackHeader title={displayedCourseName} onBack={onBack} />
       </div>
+
+      {intro && <div className="course-edit-page__intro">{intro}</div>}
 
       {isEditingCourseName && (
         <div className="course-edit-page__name-editor">
@@ -731,12 +736,18 @@ function CourseEditPage({ course, onBack, onSave }: CourseEditPageProps) {
         </div>
 
         <div className="course-edit-page__actions">
-          <Button size="sub" variant="primary" onClick={addPlace}>
-            <span className="course-edit-page__button-content">
-              <CircleIcon type="plus" />
-              <span>장소 추가하기</span>
-            </span>
-          </Button>
+          {secondaryAction ? (
+            <Button size="sub" variant="primary" onClick={secondaryAction.onClick}>
+              {secondaryAction.label}
+            </Button>
+          ) : (
+            <Button size="sub" variant="primary" onClick={addPlace}>
+              <span className="course-edit-page__button-content">
+                <CircleIcon type="plus" />
+                <span>장소 추가하기</span>
+              </span>
+            </Button>
+          )}
 
           <Button size="sub" variant="primary" onClick={saveCourse}>
             <span className="course-edit-page__button-content">
