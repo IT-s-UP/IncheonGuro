@@ -1,3 +1,4 @@
+import { accountStorage } from '@/auth/accountStorage';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -72,23 +73,7 @@ function createInitialDays(includeSamplePlaces = false): CourseDay[] {
   return [1, 2, 3].map((day) => createCourseDay(day, includeSamplePlaces && day === 1));
 }
 
-const defaultCourses: Course[] = [
-  {
-    id: 1,
-    name: '내 코스 1',
-    days: createInitialDays(true),
-  },
-  {
-    id: 2,
-    name: '내 코스 2',
-    days: createInitialDays(false),
-  },
-  {
-    id: 3,
-    name: '내 코스 3',
-    days: createInitialDays(false),
-  },
-];
+const defaultCourses: Course[] = [];
 
 function normalizeCourse(storedCourse: LegacyCourse, index: number): Course {
   const courseId = typeof storedCourse.id === 'number' ? storedCourse.id : Date.now() + index;
@@ -130,7 +115,7 @@ function normalizeCourse(storedCourse: LegacyCourse, index: number): Course {
 }
 
 function loadCourses(): Course[] {
-  const savedCourses = localStorage.getItem(STORAGE_KEY);
+  const savedCourses = accountStorage.getItem(STORAGE_KEY);
 
   if (!savedCourses) {
     return defaultCourses;
@@ -209,7 +194,7 @@ function MyCoursesPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
+    accountStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
   }, [courses]);
 
   const filteredCourses = useMemo(() => {

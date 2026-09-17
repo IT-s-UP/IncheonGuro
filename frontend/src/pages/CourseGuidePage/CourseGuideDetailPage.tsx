@@ -1,3 +1,4 @@
+import { accountStorage } from '@/auth/accountStorage';
 import {
   useEffect,
   useRef,
@@ -26,6 +27,7 @@ import type {
 import './CourseGuideDetailPage.css';
 
 const MY_COURSES_STORAGE_KEY = 'incheonguro-my-courses';
+const BOOKMARKED_COURSE_IDS_KEY = 'incheonguro-bookmarked-course-ids';
 
 interface DragInformation {
   startY: number;
@@ -47,7 +49,7 @@ function createEmptyCosts(): CourseCost {
 }
 
 function loadMyCourses(): Course[] {
-  const raw = localStorage.getItem(MY_COURSES_STORAGE_KEY);
+  const raw = accountStorage.getItem(MY_COURSES_STORAGE_KEY);
 
   if (!raw) {
     return [];
@@ -59,6 +61,27 @@ function loadMyCourses(): Course[] {
   } catch {
     return [];
   }
+}
+
+// 북마크된 courseId 목록을 읽어옴
+function loadBookmarkedCourseIds(): number[] {
+  const raw = accountStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as number[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+// 북마크된 courseId 목록을 저장
+function saveBookmarkedCourseIds(courseIds: number[]) {
+  accountStorage.setItem(BOOKMARKED_COURSE_IDS_KEY, JSON.stringify(courseIds));
 }
 
 function CourseGuideDetailPage() {
@@ -384,7 +407,7 @@ function CourseGuideDetailPage() {
 
     const existingCourses = loadMyCourses();
 
-    localStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify([...existingCourses, newCourse]));
+    accountStorage.setItem(MY_COURSES_STORAGE_KEY, JSON.stringify([...existingCourses, newCourse]));
 
     navigate('/my-courses');
   };

@@ -44,11 +44,21 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(SecretKey jwtSecretKey) {
+    public JwtDecoder jwtDecoder(SecretKey jwtSecretKey, com.itsup.incheonguro.Auth.repository.MemberRepository members) {
 
-        return NimbusJwtDecoder
-                .withSecretKey(jwtSecretKey)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
+        var decoder = NimbusJwtDecoder.withSecretKey(jwtSecretKey)
+                .macAlgorithm(MacAlgorithm.HS256).build();
+        decoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+            org.springframework.security.oauth2.jwt.JwtValidators.createDefault(),
+            token -> {
+                try {
+                    var member = members.findById(Long.valueOf(token.getSubject()));
+                    if (member.isPresent() && member.get().getLoginId().equals(token.getClaimAsString("loginId")))
+                        return org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.success();
+                } catch (NumberFormatException ignored) {}
+                return org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.failure(
+                    new org.springframework.security.oauth2.core.OAuth2Error("invalid_token", "Account is unavailable", null));
+            }));
+        return decoder;
     }
 }

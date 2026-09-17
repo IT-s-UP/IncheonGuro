@@ -16,6 +16,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class KakaoAuthController {
     @org.springframework.beans.factory.annotation.Autowired
     private SocialLoginService socialLogin;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.itsup.incheonguro.Auth.repository.MemberRepository members;
     private static final String FLOW = "kakao.flow", USER = "auth.user", CSRF = "auth.csrf";
     private final KakaoClient kakao;
     private final String clientId, redirectUri, frontend;
@@ -76,6 +78,11 @@ public class KakaoAuthController {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(USER) == null)
             return ResponseEntity.status(401).header("Cache-Control", "no-store").build();
+        AuthUser user = (AuthUser) session.getAttribute(USER);
+        if (!members.existsById(Long.valueOf(user.id()))) {
+            session.invalidate();
+            return ResponseEntity.status(401).header("Cache-Control", "no-store").build();
+        }
         return ResponseEntity.ok().header("Cache-Control", "no-store")
             .body(Map.of("user", session.getAttribute(USER), "csrfToken", session.getAttribute(CSRF), "accessToken", session.getAttribute("auth.token")));
     }

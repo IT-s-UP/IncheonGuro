@@ -1,3 +1,4 @@
+import { accountStorage } from '@/auth/accountStorage';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -11,7 +12,7 @@ import './PlaceGuideAddToCoursePage.css';
 const STORAGE_KEY = 'incheonguro-my-courses';
 
 function loadMyCourses(): Course[] {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = accountStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -22,7 +23,7 @@ function loadMyCourses(): Course[] {
 }
 
 function saveMyCourses(courses: Course[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
+  accountStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
 }
 
 // 상세 페이지에서 넘어오는 최소 정보. state로 못 받으면 API로 재조회해서 채움

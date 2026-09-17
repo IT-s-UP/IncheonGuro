@@ -4,6 +4,8 @@ import com.itsup.incheonguro.course.dto.CourseRequest;
 import com.itsup.incheonguro.course.dto.CourseResponse;
 import com.itsup.incheonguro.course.service.CourseService;
 
+import com.itsup.incheonguro.Auth.entity.Member;
+import com.itsup.incheonguro.Auth.support.CurrentMember;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -28,30 +30,30 @@ public class CourseController {
     private final CourseService courseService;
 
     @GetMapping
-    public List<CourseResponse> findAll() {
-        return courseService.findAll();
+    public List<CourseResponse> findAll(@CurrentMember Member member) {
+        return courseService.findAll(member.getId());
     }
 
     @GetMapping("/{courseId}")
-    public CourseResponse findById(@PathVariable @Positive Long courseId) {
-        return courseService.findById(courseId);
+    public CourseResponse findById(@CurrentMember Member member, @PathVariable @Positive Long courseId) {
+        return courseService.findById(member.getId(), courseId);
     }
 
     @PostMapping
-    public ResponseEntity<CourseResponse> create(@Valid @RequestBody CourseRequest request) {
-        CourseResponse created = courseService.create(request);
+    public ResponseEntity<CourseResponse> create(@CurrentMember Member member, @Valid @RequestBody CourseRequest request) {
+        CourseResponse created = courseService.create(member.getId(), request);
         return ResponseEntity.created(URI.create("/api/courses/" + created.id())).body(created);
     }
 
     @PutMapping("/{courseId}")
-    public CourseResponse update(@PathVariable @Positive Long courseId,
+    public CourseResponse update(@CurrentMember Member member, @PathVariable @Positive Long courseId,
             @Valid @RequestBody CourseRequest request) {
-        return courseService.update(courseId, request);
+        return courseService.update(member.getId(), courseId, request);
     }
 
     @DeleteMapping("/{courseId}")
-    public ResponseEntity<Void> delete(@PathVariable @Positive Long courseId) {
-        courseService.delete(courseId);
+    public ResponseEntity<Void> delete(@CurrentMember Member member, @PathVariable @Positive Long courseId) {
+        courseService.delete(member.getId(), courseId);
         return ResponseEntity.noContent().build();
     }
 }
