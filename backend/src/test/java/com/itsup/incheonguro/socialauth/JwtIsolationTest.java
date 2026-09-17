@@ -26,12 +26,15 @@ class JwtIsolationTest {
         var claims = JwtClaimsSet.builder().subject("1").claim("loginId", "same-id-different-db")
                 .issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(60)).build();
         var parameters = JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims);
+        var members = org.mockito.Mockito.mock(com.itsup.incheonguro.Auth.repository.MemberRepository.class);
+        var member = new com.itsup.incheonguro.Auth.entity.Member("same-id-different-db", "encoded", null, "Test", null, null, null, "Test", null);
+        org.mockito.Mockito.when(members.findById(1L)).thenReturn(java.util.Optional.of(member));
         var sharedToken = config.jwtEncoder(shared).encode(parameters).getTokenValue();
         var localToken = config.jwtEncoder(local).encode(parameters).getTokenValue();
-        assertEquals("1", config.jwtDecoder(shared).decode(sharedToken).getSubject());
-        assertEquals("1", config.jwtDecoder(local).decode(localToken).getSubject());
-        assertThrows(JwtException.class, () -> config.jwtDecoder(shared).decode(localToken));
-        assertThrows(JwtException.class, () -> config.jwtDecoder(local).decode(sharedToken));
+        assertEquals("1", config.jwtDecoder(shared, members).decode(sharedToken).getSubject());
+        assertEquals("1", config.jwtDecoder(local, members).decode(localToken).getSubject());
+        assertThrows(JwtException.class, () -> config.jwtDecoder(shared, members).decode(localToken));
+        assertThrows(JwtException.class, () -> config.jwtDecoder(local, members).decode(sharedToken));
     }
     @Test void sharedSecretIsRequiredOnlyOutsideLocalProfile() {
         var config = config("");

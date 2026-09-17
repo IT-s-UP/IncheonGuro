@@ -64,7 +64,7 @@ interface MyPageStats {
 }
 
 function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isLoggedIn = user !== null;
   const navigate = useNavigate();
 

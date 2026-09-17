@@ -1,9 +1,27 @@
+import { accountStorage } from '@/auth/accountStorage';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark } from 'lucide-react';
 import { getCourses } from '@/api/courseGuide';
 import type { CourseSummary } from '@/api/courseGuide';
 import './CourseGuideCourseList.css';
+
+const BOOKMARKED_COURSE_IDS_KEY = 'incheonguro-bookmarked-course-ids';
+
+function loadBookmarkedCourseIds(): number[] {
+  const raw = accountStorage.getItem(BOOKMARKED_COURSE_IDS_KEY);
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as number[]) : [];
+  } catch {
+    return [];
+  }
+} // 👈 닫는 중괄호를 추가했습니다.
 
 interface CourseGuideCourseListProps {
   keyword: string; // 빈 문자열이면 인천 전체 코스, 값 있으면 그 키워드로 검색

@@ -30,6 +30,21 @@ import lombok.RequiredArgsConstructor;
 public class MyPageController {
 
     private final MyPageService myPageService;
+    private final com.itsup.incheonguro.mypage.service.AccountWithdrawalService withdrawal;
+
+    public record WithdrawalRequest(
+        @jakarta.validation.constraints.AssertTrue boolean confirmed,
+        @jakarta.validation.constraints.Size(max = 200) String password) {}
+
+    @DeleteMapping
+    public ResponseEntity<Void> withdraw(@CurrentMember Member member,
+            @Valid @RequestBody WithdrawalRequest body,
+            jakarta.servlet.http.HttpServletRequest request) {
+        withdrawal.withdraw(member.getId(), body.password());
+        var session = request.getSession(false);
+        if (session != null) session.invalidate();
+        return ResponseEntity.noContent().header("Cache-Control", "no-store").build();
+    }
 
     // ==========================================
     // 내 정보 조회

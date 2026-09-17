@@ -20,27 +20,34 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class CourseService {
     private final MyCourseRepository courseRepository;
+    private final jakarta.persistence.EntityManager em;
 
-    public List<CourseResponse> findAll() {
-        return courseRepository.findAllByOrderByIdDesc().stream()
+    private void lockOwner(Long id) {
+        if (em.find(com.itsup.incheonguro.Auth.entity.Member.class, id, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE) == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    }
+
+    public List<CourseResponse> findAll(Long memberId) {
+        return courseRepository.findAllByMemberIdOrderByIdDesc(memberId).stream()
                 .map(CourseResponse::from).toList();
     }
 
-    public CourseResponse findById(Long courseId) {
-        return CourseResponse.from(getCourse(courseId));
+    public CourseResponse findById(Long memberId, Long courseId) {
+        return CourseResponse.from(getCourse(memberId, courseId));
     }
 
     @Transactional
-    public CourseResponse create(CourseRequest request) {
+    public CourseResponse create(Long memberId, CourseRequest request) {
+        lockOwner(memberId);
         validateDays(request);
-        MyCourse course = new MyCourse(request.name().trim());
+        MyCourse course = new MyCourse(request.name().trim(), memberId);
         request.days().forEach(day -> course.addDay(toCourseDay(day)));
         return CourseResponse.from(courseRepository.saveAndFlush(course));
     }
 
     @Transactional
-    public CourseResponse update(Long courseId, CourseRequest request) {
-        MyCourse course = getCourse(courseId);
+    public CourseResponse update(Long memberId, Long courseId, CourseRequest request) {
+        MyCourse course = getCourse(memberId, courseId);
         validateDays(request);
         course.update(request.name().trim(), request.days().stream().map(this::toCourseDay).toList());
         courseRepository.flush();
@@ -48,8 +55,8 @@ public class CourseService {
     }
 
     @Transactional
-    public void delete(Long courseId) {
-        courseRepository.delete(getCourse(courseId));
+    public void delete(Long memberId, Long courseId) {
+        courseRepository.delete(getCourse(memberId, courseId));
     }
 
     private void validateDays(CourseRequest request) {
@@ -62,8 +69,8 @@ public class CourseService {
         }
     }
 
-    private MyCourse getCourse(Long courseId) {
-        return courseRepository.findById(courseId).orElseThrow(() ->
+    private MyCourse getCourse(Long memberId, Long courseId) {
+        return courseRepository.findByIdAndMemberId(courseId, memberId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "코스를 찾을 수 없습니다. courseId=" + courseId));
     }
