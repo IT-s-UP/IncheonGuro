@@ -299,7 +299,6 @@ function MyPage() {
         })}
       </nav>
 
-      <AccountActions />
       <div className="my-page__bottom-bar">
         <button type="button" className="my-page__save-btn" onClick={handleSave}>
           <Typography variant="subtitle1" color="#fffbfb">
@@ -307,6 +306,7 @@ function MyPage() {
           </Typography>
         </button>
       </div>
+      <AccountActions />
 
       <BottomSheet open={openField === 'name'} onClose={closeSheet}>
         <NameSheet
