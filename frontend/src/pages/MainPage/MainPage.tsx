@@ -187,11 +187,6 @@ function MainPage() {
      장소 상세
   ========================= */
 
-  // const handleSpotClick = (spotId: number) => {
-  //   navigate(`/places/${spotId}`);
-  // };
-
-  // [수정] spotId: number -> placeId: string (관광공사 contentId는 문자열)
   const handleSpotClick = (placeId: string) => {
     navigate(`/place-guide/${placeId}`); // [수정] '/places/...' -> 실제 라우트 '/place-guide/...'
   };
@@ -199,10 +194,6 @@ function MainPage() {
   /* =========================
      지역별 장소
   ========================= */
-
-  // const handleRegionClick = (regionName: string) => {
-  //   navigate(`/places?region=${encodeURIComponent(regionName)}`);
-  // };
 
   const handleRegionClick = (regionCardName: string) => {
     // [수정] 한글 지역명을 District enum으로 변환해서 실제 쿼리 파라미터로 사용
