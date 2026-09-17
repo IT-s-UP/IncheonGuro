@@ -171,17 +171,75 @@
 
 .login-sns__button {
   width: 100%;
-  height: 54px;
+  height: 52px;
 
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 
-  background-color: #d9d9d9;
+  border-radius: 7px;
 
   font-family: 'Pretendard', sans-serif;
 
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 500;
 
   color: #222222;
 
   cursor: pointer;
+}
+
+.login-sns__button--kakao {
+  border: 1px solid #fee500;
+  background-color: #fee500;
+}
+
+.login-sns__kakao-icon {
+  position: relative;
+
+  width: 18px;
+  height: 15px;
+
+  border-radius: 50%;
+  background-color: #000000;
+}
+
+.login-sns__kakao-icon::after {
+  position: absolute;
+  right: 2px;
+  bottom: -3px;
+
+  width: 6px;
+  height: 6px;
+
+  background-color: #000000;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  content: '';
+}
+
+.login-sns__button--google {
+  border: 1px solid #a9b7b1;
+  background-color: #ffffff;
+}
+
+.login-sns__google-icon {
+  display: inline-block;
+
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+
+  background: conic-gradient(
+    from -40deg,
+    #4285f4 0 25%,
+    #34a853 25% 45%,
+    #fbbc05 45% 68%,
+    #ea4335 68% 83%,
+    #4285f4 83%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

@@ -18,15 +18,19 @@ function LoginPage() {
   const [params] = useSearchParams();
 
   // RequireAuth가 비로그인 접근을 막으며 넘겨준, 원래 가려던 경로
-  const redirectState = location.state as { from?: { pathname: string; search: string; hash: string } } | null;
+  const redirectState = location.state as {
+    from?: { pathname: string; search: string; hash: string };
+  } | null;
   const redirectTo = redirectState?.from ?? '/';
   const error = params.get('error');
   const provider = error?.startsWith('google_') ? '구글' : '카카오';
-  const loginError = !error ? '' : error.endsWith('_cancelled')
-    ? provider + ' 로그인이 취소되었어요.'
-    : error.endsWith('_state')
-      ? '로그인 요청이 만료되었어요. 다시 시도해 주세요.'
-      : provider + ' 로그인에 실패했어요. 다시 시도해 주세요.';
+  const loginError = !error
+    ? ''
+    : error.endsWith('_cancelled')
+      ? provider + ' 로그인이 취소되었어요.'
+      : error.endsWith('_state')
+        ? '로그인 요청이 만료되었어요. 다시 시도해 주세요.'
+        : provider + ' 로그인에 실패했어요. 다시 시도해 주세요.';
 
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
@@ -150,12 +154,24 @@ function LoginPage() {
             SNS 계정으로 로그인
           </Typography>
 
-          <button type="button" className="login-sns__button" onClick={handleKakaoLogin}>
-            카카오톡으로 회원가입/로그인
+          <button
+            type="button"
+            className="login-sns__button login-sns__button--kakao"
+            onClick={handleKakaoLogin}
+          >
+            <span className="login-sns__kakao-icon" aria-hidden="true" />
+            카카오계정 로그인
           </button>
 
-          <button type="button" className="login-sns__button" onClick={handleGoogleLogin}>
-            구글 계정으로 회원가입/로그인
+          <button
+            type="button"
+            className="login-sns__button login-sns__button--google"
+            onClick={handleGoogleLogin}
+          >
+            <span className="login-sns__google-icon" aria-hidden="true">
+              G
+            </span>
+            Google로 시작하기
           </button>
         </section>
       </main>
