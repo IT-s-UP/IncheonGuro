@@ -38,6 +38,7 @@ export interface CourseSummary {
   courseId: string;
   name: string;
   description: string; // 지금은 관광공사 주소(addr1)가 채워져서 옴
+  imageUrl: string;
   isBookmarked: boolean;
 }
 
