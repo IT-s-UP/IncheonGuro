@@ -101,7 +101,43 @@ public class CourseGuideService {
         contentId,
         item.path("title").asText(),
         item.path("addr1").asText(""),
+        resolveCourseImageUrl(item, contentId), // 신규 - 코스 자체 이미지 없으면 정거장 이미지로 폴백
         isBookmarked);
+  }
+
+  // 코스 대표 이미지 결정: 1순위 코스 자체(firstimage), 없으면 2순위 정거장들을 순서대로 뒤져서
+  // 이미지가 있는 첫 번째 정거장의 것을 사용. courseCacheService의
+  // getCourseSubItems/getDetailCommon이
+  // 둘 다 캐싱되어 있어서, 같은 코스에 대해 두 번째 호출부터는 API가 안 나감
+  private String resolveCourseImageUrl(JsonNode item, String contentId) {
+    String courseImage = item.path("firstimage").asText("");
+    if (!courseImage.isBlank()) {
+      return courseImage;
+    }
+
+    try {
+      List<JsonNode> subItems = courseCacheService.getCourseSubItems(contentId);
+      for (JsonNode subItem : subItems) {
+        String subContentId = subItem.path("subcontentid").asText("");
+        if (subContentId.isBlank() || "0".equals(subContentId)) {
+          continue;
+        }
+
+        JsonNode spot = courseCacheService.getDetailCommon(subContentId);
+        if (spot == null) {
+          continue;
+        }
+
+        String spotImage = spot.path("firstimage").asText("");
+        if (!spotImage.isBlank()) {
+          return spotImage;
+        }
+      }
+    } catch (Exception e) {
+      log.warn("코스 대체 이미지 조회 실패: courseId={}", contentId, e);
+    }
+
+    return ""; // 코스도, 정거장도 전부 이미지 없으면 빈 문자열 -> 프론트에서 placeholder 표시
   }
 
   // 코스에 속한 정거장(이름/주소/좌표) 목록을 순서대로 조립

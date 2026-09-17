@@ -14,10 +14,13 @@ import com.itsup.incheonguro.Auth.repository.MemberRepository;
 import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
 import com.itsup.incheonguro.mypage.dto.EmailChangeRequest;
 import com.itsup.incheonguro.mypage.dto.MyPageResponse;
+import com.itsup.incheonguro.mypage.dto.MyPageStatsResponse; // [추가]
 import com.itsup.incheonguro.mypage.dto.MyPageUpdateRequest;
 import com.itsup.incheonguro.mypage.dto.PasswordChangeRequest;
 import com.itsup.incheonguro.mypage.dto.ProfileMascotRequest;
 import com.itsup.incheonguro.emailverification.service.EmailVerificationService;
+import com.itsup.incheonguro.placeguide.repository.PlaceBookmarkRepository; // [추가]
+import com.itsup.incheonguro.courseguide.repository.BookmarkRepository; // [추가]
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +37,8 @@ public class MyPageService {
     private final RegionRepository regionRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final PlaceBookmarkRepository placeBookmarkRepository; // [추가] 장소 북마크 개수 조회용
+    private final BookmarkRepository courseBookmarkRepository; // [추가] 코스 북마크 개수 조회용
 
     // ==========================================
     // 내 정보 조회
@@ -41,6 +46,20 @@ public class MyPageService {
 
     public MyPageResponse getMyPage(Member member) {
         return MyPageResponse.of(member, regionNameOf(member.getInterestedRegion()));
+    }
+
+    // ==========================================
+    // [추가] 마이페이지 통계 조회 (내 코스 / 북마크 / 스탬프 개수)
+    // 메뉴 드로어에서 사용. bookmarkCount만 실제로 집계하고, 나머지는 0 고정
+    // ==========================================
+
+    public MyPageStatsResponse getStats(Member member) {
+        Long userId = member.getId();
+
+        int placeBookmarkCount = placeBookmarkRepository.findByUserId(userId).size();
+        int courseBookmarkCount = courseBookmarkRepository.findByUserId(userId).size();
+
+        return new MyPageStatsResponse(placeBookmarkCount + courseBookmarkCount);
     }
 
     // ==========================================

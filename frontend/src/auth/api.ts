@@ -2,6 +2,9 @@ let accessToken = '';
 export function setAccessToken(token: string) {
   accessToken = token;
 }
+export function getAccessToken() {
+  return accessToken;
+}
 export function apiFetch(path: string, options: RequestInit = {}) {
   if (!path.startsWith('/api/') && !path.startsWith('/stamp/')) {
     throw new Error('Invalid API path');
