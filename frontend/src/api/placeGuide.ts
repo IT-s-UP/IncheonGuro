@@ -1,23 +1,37 @@
 // src/api/placeGuide.ts
-// 장소 안내 페이지 전용 API 호출 함수 모음 (fetch 기반)
+// 장소 안내 페이지 전용 API 호출 함수 모음
 
 import { getAccessToken } from '@/auth/api';
 import type { CourseSummary } from './courseGuide';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // '/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// =========================================================
+// 공통 API 요청
+// =========================================================
 
 async function request<T>(
   path: string,
-  options: { method?: 'GET' | 'POST' | 'DELETE'; body?: unknown } = {},
+  options: {
+    method?: 'GET' | 'POST' | 'DELETE';
+    body?: unknown;
+  } = {},
 ): Promise<T> {
   const token = getAccessToken();
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method ?? 'GET',
+
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {}),
     },
+
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
@@ -26,14 +40,14 @@ async function request<T>(
   }
 
   const text = await response.text();
+
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
-// ==========================================
-// 타입 정의 - 백엔드 DTO와 1:1로 맞춤
-// ==========================================
+// =========================================================
+// 타입 정의
+// =========================================================
 
-// 백엔드 District enum 값과 정확히 동일해야 함
 export type District =
   | 'JEMULPO'
   | 'YEONGJONG'
@@ -47,106 +61,218 @@ export type District =
   | 'GANGHWA'
   | 'ONGJIN';
 
-// 백엔드 PlaceCategory enum 값과 정확히 동일해야 함
-export type PlaceCategory = 'ATTRACTION' | 'CAFE' | 'RESTAURANT' | 'LODGING' | 'SHOPPING';
+export type PlaceCategory =
+  'ATTRACTION' | 'CULTURE' | 'LEISURE' | 'CAFE' | 'RESTAURANT' | 'LODGING' | 'SHOPPING';
 
-// PlaceSummaryResponse.java 와 대응
+// =========================================================
+// 장소 요약
+// =========================================================
+
 export interface PlaceSummary {
-  placeId: string; // 관광공사 contentId - 숫자 아님, 문자열!
+  /*
+   * 한국관광공사 contentId
+   */
+  placeId: string;
+
   title: string;
-  subtitle: string; // 주소
-  district: District | null; // 강화군/옹진군 등 8개 구 밖 지역이면 null
+
+  subtitle: string;
+
+  district: District | null;
+
   category: PlaceCategory;
-  latitude: number;
-  longitude: number;
+
+  latitude: number | null;
+
+  longitude: number | null;
+
   imageUrl: string;
 }
 
-// PlaceDetailResponse.java 와 대응
+// =========================================================
+// 장소 상세
+// =========================================================
+
 export interface PlaceDetail {
   placeId: string;
+
   title: string;
+
   subtitle: string;
+
   description: string;
+
   district: District | null;
+
   category: PlaceCategory;
+
   bookmarked: boolean;
+
   tags: string[];
-  latitude: number;
-  longitude: number;
-  usageTime: string; // 추가 - 이용시간
-  restDate: string; // 추가 - 쉬는날
-  parking: string; // 추가 - 주차시설
-  infoCenter: string; // 추가 - 문의 및 안내
+
+  latitude: number | null;
+
+  longitude: number | null;
+
+  usageTime: string;
+
+  restDate: string;
+
+  parking: string;
+
+  infoCenter: string;
+
   extraInfoTexts: string[];
 }
+
+// =========================================================
+// 장소 이미지
+// =========================================================
 
 export interface PlaceImage {
   imageUrl: string;
 }
 
-// CourseSummary는 courseGuide.ts로 정의를 옮김 (코스가 관광공사 API 기반으로 전환되면서
-// courseId가 number -> string(contentId)으로 바뀌었고, isBookmarked 필드도 추가됨.
-// 정의를 한 곳에 모아서 courseGuide.ts와 placeGuide.ts가 항상 같은 타입을 쓰도록 함)
+// =========================================================
+// 검색 결과
+// =========================================================
+
 export interface PlaceSearchResult {
   places: PlaceSummary[];
+
   courses: CourseSummary[];
 }
 
-// ==========================================
-// API 함수
-// ==========================================
+// =========================================================
+// 장소 목록
+// =========================================================
 
-// GET /api/placeguide?districts=...&categories=... - 주요 장소 안내 필터 조회
 export function getPlaces(districts?: District[], categories?: PlaceCategory[]) {
   const params = new URLSearchParams();
-  if (districts && districts.length > 0) params.set('districts', districts.join(','));
-  if (categories && categories.length > 0) params.set('categories', categories.join(','));
+
+  // =======================================================
+  // 지역
+  // =======================================================
+
+  if (districts && districts.length > 0) {
+    params.set('districts', districts.join(','));
+  }
+
+  // =======================================================
+  // 장소 유형
+  // =======================================================
+
+  if (categories && categories.length > 0) {
+    /*
+     * 프론트에서는
+     *
+     * 음식점 = 하나의 필터
+     *
+     * 로 보여주지만,
+     *
+     * 실제 데이터에서는
+     *
+     * CAFE
+     * RESTAURANT
+     *
+     * 두 종류를 따로 사용함.
+     *
+     * 따라서 음식점 필터가 선택되면
+     * 백엔드에는 두 값을 모두 전달한다.
+     */
+
+    const normalizedCategories = new Set<PlaceCategory>();
+
+    for (const category of categories) {
+      if (category === 'RESTAURANT') {
+        normalizedCategories.add('CAFE');
+
+        normalizedCategories.add('RESTAURANT');
+      } else {
+        normalizedCategories.add(category);
+      }
+    }
+
+    params.set('categories', Array.from(normalizedCategories).join(','));
+  }
+
   const query = params.toString() ? `?${params.toString()}` : '';
+
   return request<PlaceSummary[]>(`/placeguide${query}`);
 }
 
-// GET /api/placeguide/near-me?latitude=...&longitude=... - 내 주변 장소 조회 (좌표 기반)
+// =========================================================
+// 내 주변 장소
+// =========================================================
+
 export function getPlacesNearMe(latitude: number, longitude: number) {
   return request<PlaceSummary[]>(`/placeguide/near-me?latitude=${latitude}&longitude=${longitude}`);
 }
 
-// GET /api/placeguide/bookmarks - 북마크 목록 조회 (로그인 필요)
+// =========================================================
+// 북마크
+// =========================================================
+
 export function getBookmarkedPlaces() {
   return request<PlaceSummary[]>('/placeguide/bookmarks');
 }
 
-// GET /api/placeguide/autocomplete?keyword= - 키워드 자동완성
+// =========================================================
+// 자동완성
+// =========================================================
+
 export function getAutocomplete(keyword: string) {
   return request<string[]>(`/placeguide/autocomplete?keyword=${encodeURIComponent(keyword)}`);
 }
 
-// GET /api/placeguide/search?keyword= - 검색 결과 조회 (장소 + 코스)
+// =========================================================
+// 검색
+// =========================================================
+
 export function getSearchResult(keyword: string) {
   return request<PlaceSearchResult>(`/placeguide/search?keyword=${encodeURIComponent(keyword)}`);
 }
 
-// GET /api/placeguide/{placeId} - 장소 상세 조회
+// =========================================================
+// 장소 상세
+// =========================================================
+
 export function getPlaceDetail(placeId: string) {
   return request<PlaceDetail>(`/placeguide/${placeId}`);
 }
 
-// GET /api/placeguide/{placeId}/images - 장소 이미지 목록 조회
+// =========================================================
+// 장소 이미지
+// =========================================================
+
 export function getPlaceImages(placeId: string) {
   return request<PlaceImage[]>(`/placeguide/${placeId}/images`);
 }
 
-// GET /api/placeguide/{placeId}/nearby - 해당 장소의 주변 장소 조회
+// =========================================================
+// 주변 장소
+// =========================================================
+
 export function getNearbyPlaces(placeId: string) {
   return request<PlaceSummary[]>(`/placeguide/${placeId}/nearby`);
 }
 
-// POST /api/placeguide/{placeId}/bookmark - 북마크 등록 (로그인 필요)
+// =========================================================
+// 북마크 등록
+// =========================================================
+
 export function addBookmark(placeId: string) {
-  return request<void>(`/placeguide/${placeId}/bookmark`, { method: 'POST' });
+  return request<void>(`/placeguide/${placeId}/bookmark`, {
+    method: 'POST',
+  });
 }
 
-// DELETE /api/placeguide/{placeId}/bookmark - 북마크 해제 (로그인 필요)
+// =========================================================
+// 북마크 삭제
+// =========================================================
+
 export function removeBookmark(placeId: string) {
-  return request<void>(`/placeguide/${placeId}/bookmark`, { method: 'DELETE' });
+  return request<void>(`/placeguide/${placeId}/bookmark`, {
+    method: 'DELETE',
+  });
 }
