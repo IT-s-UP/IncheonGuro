@@ -45,6 +45,9 @@ function PlaceGuideAddToCoursePage() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [isCoursesLoading, setIsCoursesLoading] = useState(true);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
+  const [insertIndex, setInsertIndex] = useState<number | null>(null);
 
   useEffect(() => {
     listCourses()
@@ -73,14 +76,25 @@ function PlaceGuideAddToCoursePage() {
       .finally(() => setIsLoading(false));
   }, [placeId, placeInfoFromState?.placeTitle]);
 
-  // 선택한 코스의 "가장 마지막 DAY" 맨 끝에 현재 장소를 추가
-  // address/latitude/longitude를 실제 값으로 채워서, RouteDuration이 지오코딩 없이(또는 정상적으로)
-  // 이동시간을 계산할 수 있도록 함 (기존엔 address가 빈 문자열이라 "장소를 검색해 위치를
-  // 선택해주세요" 에러가 났었음)
-  const handleSelectCourse = async (course: Course) => {
-    if (!placeInfo) return;
+  const selectedCourse = courses.find((course) => course.id === selectedCourseId) ?? null;
+  const selectedDay = selectedCourse?.days.find((day) => day.id === selectedDayId) ?? null;
 
-    const lastDayIndex = course.days.length - 1;
+  const handleSelectCourse = (course: Course) => {
+    setSelectedCourseId(course.id);
+    setSelectedDayId(course.days[0]?.id ?? null);
+    setInsertIndex(course.days[0]?.places.length ?? null);
+  };
+
+  const handleSelectDay = (dayId: number) => {
+    const day = selectedCourse?.days.find((courseDay) => courseDay.id === dayId);
+
+    setSelectedDayId(dayId);
+    setInsertIndex(day?.places.length ?? 0);
+  };
+
+  const handleAddPlace = async () => {
+    if (!placeInfo || !selectedCourse || !selectedDay || insertIndex === null) return;
+
     const newPlace: CoursePlace = {
       id: Date.now(),
       name: placeInfo.title,
@@ -90,14 +104,23 @@ function PlaceGuideAddToCoursePage() {
     };
 
     const updatedCourse: Course = {
-      ...course,
-      days: course.days.map((day, index) =>
-        index === lastDayIndex ? { ...day, places: [...day.places, newPlace] } : day,
+      ...selectedCourse,
+      days: selectedCourse.days.map((day) =>
+        day.id === selectedDay.id
+          ? {
+              ...day,
+              places: [
+                ...day.places.slice(0, insertIndex),
+                newPlace,
+                ...day.places.slice(insertIndex),
+              ],
+            }
+          : day,
       ),
     };
 
     try {
-      await updateCourse(course.id, updatedCourse);
+      await updateCourse(selectedCourse.id, updatedCourse);
     } catch (err) {
       alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
       return;
@@ -118,13 +141,22 @@ function PlaceGuideAddToCoursePage() {
       ) : courses.length === 0 ? (
         <p className="place-guide-add-to-course-page__empty">저장된 코스가 없습니다.</p>
       ) : (
-        <ul className="place-guide-add-to-course-page__list">
+        <>
+          <ul className="place-guide-add-to-course-page__list">
           {courses.map((course) => (
             <li key={course.id}>
               <button
                 type="button"
-                className="place-guide-add-to-course-page__course-btn"
+                className={[
+                  'place-guide-add-to-course-page__course-btn',
+                  course.id === selectedCourseId
+                    ? 'place-guide-add-to-course-page__course-btn--selected'
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 onClick={() => handleSelectCourse(course)}
+                aria-pressed={course.id === selectedCourseId}
               >
                 <span className="place-guide-add-to-course-page__course-name">{course.name}</span>
                 <span className="place-guide-add-to-course-page__day-count">
@@ -133,7 +165,63 @@ function PlaceGuideAddToCoursePage() {
               </button>
             </li>
           ))}
-        </ul>
+          </ul>
+
+          {selectedCourse && selectedDay && (
+            <section className="place-guide-add-to-course-page__selection" aria-label="추가 위치 선택">
+            <div className="place-guide-add-to-course-page__selection-group">
+              <strong>추가할 DAY</strong>
+              <div className="place-guide-add-to-course-page__choices">
+                {selectedCourse.days.map((day) => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    className={day.id === selectedDay.id ? 'is-selected' : ''}
+                    onClick={() => handleSelectDay(day.id)}
+                    aria-pressed={day.id === selectedDay.id}
+                  >
+                    DAY {day.day}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="place-guide-add-to-course-page__selection-group">
+              <strong>추가 위치</strong>
+              <div className="place-guide-add-to-course-page__choices place-guide-add-to-course-page__choices--positions">
+                {Array.from({ length: selectedDay.places.length + 1 }, (_, index) => {
+                  const label =
+                    index === 0
+                      ? '맨 앞'
+                      : index === selectedDay.places.length
+                        ? '맨 뒤'
+                        : `${selectedDay.places[index - 1].name} 뒤`;
+
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      className={index === insertIndex ? 'is-selected' : ''}
+                      onClick={() => setInsertIndex(index)}
+                      aria-pressed={index === insertIndex}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="place-guide-add-to-course-page__confirm-btn"
+              onClick={() => void handleAddPlace()}
+            >
+              이 위치에 추가하기
+            </button>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
