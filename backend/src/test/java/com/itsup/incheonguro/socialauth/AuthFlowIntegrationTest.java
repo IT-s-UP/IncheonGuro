@@ -145,7 +145,6 @@ class AuthFlowIntegrationTest {
         String token = tokens.createAccessToken(target);
         for (Long id : java.util.List.of(target.getId(), other.getId())) {
             jdbc.update("insert into member_stamp (member_id, region_id, achieved_at) values (?, 1, CURRENT_TIMESTAMP)", id);
-            jdbc.update("insert into member_region_stay (member_id, region_id, entered_at, activated) values (?, 1, CURRENT_TIMESTAMP, false)", id);
             jdbc.update("insert into bookmark (user_id, content_id) values (?, '67890')", id);
             jdbc.update("insert into place_bookmark (user_id, content_id) values (?, '12345')", id);
         }
@@ -162,7 +161,7 @@ class AuthFlowIntegrationTest {
                 HttpRequest.BodyPublishers.ofString("{\"confirmed\":true,\"password\":\"Test1234!\"}"))).statusCode());
         assertFalse(members.existsById(target.getId()));
         assertTrue(members.existsById(other.getId()));
-        for (String table : new String[]{"member_stamp", "member_region_stay", "bookmark", "place_bookmark"}) {
+        for (String table : new String[]{"member_stamp", "bookmark", "place_bookmark"}) {
             String key = table.startsWith("member_") ? "member_id" : "user_id";
             assertEquals(0, jdbc.queryForObject("select count(*) from " + table + " where " + key + "=?", Integer.class, target.getId()));
             assertEquals(1, jdbc.queryForObject("select count(*) from " + table + " where " + key + "=?", Integer.class, other.getId()));
