@@ -286,7 +286,8 @@ function MyPage() {
 
       <nav className="my-page__group">
         {FIELDS_GROUP_2.map((field) => {
-          const isEmailLocked = field.key === 'email' && profile.socialAccount;
+          const isSocialLocked =
+            (field.key === 'email' || field.key === 'password') && profile.socialAccount;
 
           return (
             <button
@@ -294,13 +295,13 @@ function MyPage() {
               type="button"
               className="my-page__row"
               onClick={() => {
-                if (!isEmailLocked) setOpenField(field.key);
+                if (!isSocialLocked) setOpenField(field.key);
               }}
-              disabled={isEmailLocked}
+              disabled={isSocialLocked}
             >
               <Typography variant="head3">{field.label}</Typography>
               <Typography variant="p2" color="#878787" className="my-page__row-value">
-                {isEmailLocked ? '소셜 로그인 계정' : getFieldValue(field.key)}
+                {isSocialLocked ? '소셜 로그인 계정' : getFieldValue(field.key)}
               </Typography>
             </button>
           );

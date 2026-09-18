@@ -2,6 +2,7 @@ package com.itsup.incheonguro.socialauth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.Base64;
 import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.repository.MemberRepository;
@@ -26,15 +27,26 @@ public class SocialLoginService {
         this.transaction = new TransactionTemplate(manager);
     }
 
-    public void establish(HttpServletRequest request, String provider, String subject, String nickname) {
+    public Member establish(HttpServletRequest request, String provider, String subject, String nickname) {
+        return establish(request, provider, subject, nickname, null, null);
+    }
+
+    public Member establish(HttpServletRequest request, String provider, String subject, String nickname,
+            String gender, LocalDate birth) {
         String loginId = "oauth:" + provider + ":" + subject;
         if (!(provider.equals("kakao") || provider.equals("google")) || loginId.length() > 255) {
             throw new IllegalArgumentException("Invalid social identity");
         }
         // Finish the DB commit before establishing an authenticated session.
-        Member member = transaction.execute(status -> members.findByLoginId(loginId)
-                .orElseGet(() -> members.saveAndFlush(new Member(loginId,
-                        passwords.encode(randomValue()), null, nickname, null, null, null, nickname, null))));
+        Member member = transaction.execute(status -> {
+            var existing = members.findByLoginId(loginId);
+            if (existing.isPresent()) {
+                existing.get().fillMissingSocialProfile(birth, gender);
+                return members.saveAndFlush(existing.get());
+            }
+            return members.saveAndFlush(new Member(loginId,
+                    passwords.encode(randomValue()), null, nickname, birth, gender, null, nickname, null));
+        });
         String token = jwt.createAccessToken(member);
         var session = request.getSession();
         request.changeSessionId();
@@ -42,6 +54,7 @@ public class SocialLoginService {
         session.setAttribute("auth.user", new AuthUser(String.valueOf(member.getId()), provider, member.getNickname()));
         session.setAttribute("auth.token", token);
         session.setMaxInactiveInterval(1800);
+        return member;
     }
 
     private static String randomValue() {

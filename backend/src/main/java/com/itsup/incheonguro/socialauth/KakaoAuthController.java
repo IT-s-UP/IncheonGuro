@@ -45,7 +45,9 @@ public class KakaoAuthController {
         request.getSession().setAttribute(FLOW, new Flow(state, System.currentTimeMillis() + 300_000));
         return redirect(UriComponentsBuilder.fromUriString("https://kauth.kakao.com/oauth/authorize")
             .queryParam("client_id", clientId).queryParam("redirect_uri", redirectUri)
-            .queryParam("response_type", "code").queryParam("state", state).build().encode().toUriString());
+            .queryParam("response_type", "code").queryParam("state", state)
+            .queryParam("scope", "gender,birthday,birthyear")
+            .build().encode().toUriString());
     }
     @GetMapping("/kakao/callback")
     public ResponseEntity<Void> callback(HttpServletRequest request,
@@ -66,8 +68,9 @@ public class KakaoAuthController {
             return redirect(frontend + "/login?error=kakao_cancelled");
         try {
             KakaoMember identity = kakao.authenticate(code);
-            socialLogin.establish(request, "kakao", String.valueOf(identity.getKakaoId()), identity.getNickname());
-            return redirect(frontend + "/");
+            var member = socialLogin.establish(request, "kakao", String.valueOf(identity.getKakaoId()),
+                    identity.getNickname(), identity.getGender(), identity.getBirth());
+            return redirect(frontend + (member.getInterestedRegion() == null ? "/complete-profile" : "/"));
         } catch (RuntimeException exception) {
             // Do not log provider responses, authorization codes, secrets or access tokens.
             return redirect(frontend + "/login?error=kakao_failed");

@@ -25,6 +25,7 @@ import PlaceGuideDetailPage from '@/pages/PlaceGuidePage/PlaceGuideDetailPage';
 import PlaceGuideAddToCoursePage from '@/pages/PlaceGuidePage/PlaceGuideAddToCoursePage';
 
 import MyPage from '@/pages/MyPage/MyPage';
+import CompleteProfilePage from '@/pages/CompleteProfilePage/CompleteProfilePage';
 
 import { ContactPage, PoliciesPage, PolicyDetailPage } from '@/pages/ServicePages/ServicePages';
 
@@ -76,6 +77,14 @@ function App() {
         <Route path="/policies" element={<PoliciesPage />} />
         <Route path="/policies/:policyId" element={<PolicyDetailPage />} />
         <Route path="/my-page" element={<MyPage />} />
+        <Route
+          path="/complete-profile"
+          element={
+            <RequireAuth>
+              <CompleteProfilePage />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </AuthProvider>
   );
