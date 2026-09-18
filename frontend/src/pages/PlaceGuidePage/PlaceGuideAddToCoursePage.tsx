@@ -41,10 +41,27 @@ function PlaceGuideAddToCoursePage() {
       : null,
   );
 
-  const [isLoading, setIsLoading] = useState(!placeInfoFromState?.placeTitle);
+  const [isLoading, setIsLoading] = useState(
+    !placeInfoFromState?.placeTitle,
+  );
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [isCoursesLoading, setIsCoursesLoading] = useState(true);
+
+  // 선택한 코스
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(
+    null,
+  );
+
+  // 선택한 DAY
+  const [selectedDayId, setSelectedDayId] = useState<number | null>(
+    null,
+  );
+
+  // 장소를 삽입할 위치
+  const [insertIndex, setInsertIndex] = useState<number | null>(
+    null,
+  );
 
   /* =========================
      내 코스 목록 조회
@@ -53,8 +70,13 @@ function PlaceGuideAddToCoursePage() {
   useEffect(() => {
     listCourses()
       .then(setCourses)
-      .catch(() => setCourses([]))
-      .finally(() => setIsCoursesLoading(false));
+      .catch((error) => {
+        console.error('내 코스 목록 조회 실패:', error);
+        setCourses([]);
+      })
+      .finally(() => {
+        setIsCoursesLoading(false);
+      });
   }, []);
 
   /* =========================
@@ -87,11 +109,60 @@ function PlaceGuideAddToCoursePage() {
   }, [placeId, placeInfoFromState?.placeTitle]);
 
   /* =========================
-     코스에 장소 추가
+     현재 선택된 코스
   ========================= */
 
-  const handleSelectCourse = async (course: Course) => {
-    if (!placeInfo) {
+  const selectedCourse =
+    courses.find((course) => course.id === selectedCourseId) ?? null;
+
+  /* =========================
+     현재 선택된 DAY
+  ========================= */
+
+  const selectedDay =
+    selectedCourse?.days.find((day) => day.id === selectedDayId) ?? null;
+
+  /* =========================
+     코스 선택
+  ========================= */
+
+  const handleSelectCourse = (course: Course) => {
+    setSelectedCourseId(course.id);
+
+    const firstDay = course.days[0];
+
+    setSelectedDayId(firstDay?.id ?? null);
+    setInsertIndex(firstDay?.places.length ?? null);
+  };
+
+  /* =========================
+     DAY 선택
+  ========================= */
+
+  const handleSelectDay = (dayId: number) => {
+    if (!selectedCourse) {
+      return;
+    }
+
+    const day = selectedCourse.days.find(
+      (courseDay) => courseDay.id === dayId,
+    );
+
+    setSelectedDayId(dayId);
+    setInsertIndex(day?.places.length ?? 0);
+  };
+
+  /* =========================
+     장소 추가
+  ========================= */
+
+  const handleAddPlace = async () => {
+    if (
+      !placeInfo ||
+      !selectedCourse ||
+      !selectedDay ||
+      insertIndex === null
+    ) {
       return;
     }
 
@@ -99,39 +170,59 @@ function PlaceGuideAddToCoursePage() {
      * 좌표가 없는 장소는 CoursePlace에 넣을 수 없음.
      *
      * CoursePlace의 latitude / longitude가
-     * number 타입이기 때문에 여기서 한 번 검사한다.
+     * number 타입이기 때문에 여기서 검사한다.
      */
-    if (placeInfo.latitude === null || placeInfo.longitude === null) {
-      window.alert('이 장소는 위치 정보가 없어 코스에 추가할 수 없습니다.');
+    if (
+      placeInfo.latitude === null ||
+      placeInfo.longitude === null
+    ) {
+      window.alert(
+        '이 장소는 위치 정보가 없어 코스에 추가할 수 없습니다.',
+      );
       return;
     }
 
-    const lastDayIndex = course.days.length - 1;
+    // null 검사가 끝난 후 별도 변수에 저장
+    // TypeScript에서도 number로 확실하게 인식할 수 있음
+    const latitude = placeInfo.latitude;
+    const longitude = placeInfo.longitude;
 
     const newPlace: CoursePlace = {
       id: Date.now(),
       name: placeInfo.title,
       address: placeInfo.address,
-      latitude: placeInfo.latitude,
-      longitude: placeInfo.longitude,
+      latitude,
+      longitude,
     };
 
     const updatedCourse: Course = {
-      ...course,
-      days: course.days.map((day, index) =>
-        index === lastDayIndex
+      ...selectedCourse,
+
+      days: selectedCourse.days.map((day) =>
+        day.id === selectedDay.id
           ? {
               ...day,
-              places: [...day.places, newPlace],
+              places: [
+                ...day.places.slice(0, insertIndex),
+                newPlace,
+                ...day.places.slice(insertIndex),
+              ],
             }
           : day,
       ),
     };
 
     try {
-      await updateCourse(course.id, updatedCourse);
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
+      await updateCourse(
+        selectedCourse.id,
+        updatedCourse,
+      );
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : '코스 저장에 실패했습니다.',
+      );
       return;
     }
 
@@ -146,32 +237,146 @@ function PlaceGuideAddToCoursePage() {
     <div className="place-guide-add-to-course-page">
       <Header />
 
-      <BackHeader title="내 코스에 추가하기" onBack={() => navigate(`/place-guide/${placeId}`)} />
+      <BackHeader
+        title="내 코스에 추가하기"
+        onBack={() => navigate(`/place-guide/${placeId}`)}
+      />
 
       {isLoading || isCoursesLoading ? (
-        <p className="place-guide-add-to-course-page__empty">불러오는 중...</p>
+        <p className="place-guide-add-to-course-page__empty">
+          불러오는 중...
+        </p>
       ) : !placeInfo ? (
-        <p className="place-guide-add-to-course-page__empty">장소를 찾을 수 없습니다.</p>
+        <p className="place-guide-add-to-course-page__empty">
+          장소를 찾을 수 없습니다.
+        </p>
       ) : courses.length === 0 ? (
-        <p className="place-guide-add-to-course-page__empty">저장된 코스가 없습니다.</p>
+        <p className="place-guide-add-to-course-page__empty">
+          저장된 코스가 없습니다.
+        </p>
       ) : (
-        <ul className="place-guide-add-to-course-page__list">
-          {courses.map((course) => (
-            <li key={course.id}>
+        <>
+          {/* =========================
+              코스 선택
+          ========================= */}
+
+          <ul className="place-guide-add-to-course-page__list">
+            {courses.map((course) => (
+              <li key={course.id}>
+                <button
+                  type="button"
+                  className={[
+                    'place-guide-add-to-course-page__course-btn',
+                    course.id === selectedCourseId
+                      ? 'place-guide-add-to-course-page__course-btn--selected'
+                      : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => handleSelectCourse(course)}
+                  aria-pressed={
+                    course.id === selectedCourseId
+                  }
+                >
+                  <span className="place-guide-add-to-course-page__course-name">
+                    {course.name}
+                  </span>
+
+                  <span className="place-guide-add-to-course-page__day-count">
+                    {course.days.length}일 일정
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {/* =========================
+              DAY / 위치 선택
+          ========================= */}
+
+          {selectedCourse && selectedDay && (
+            <section
+              className="place-guide-add-to-course-page__selection"
+              aria-label="추가 위치 선택"
+            >
+              {/* DAY 선택 */}
+              <div className="place-guide-add-to-course-page__selection-group">
+                <strong>추가할 DAY</strong>
+
+                <div className="place-guide-add-to-course-page__choices">
+                  {selectedCourse.days.map((day) => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      className={
+                        day.id === selectedDay.id
+                          ? 'is-selected'
+                          : ''
+                      }
+                      onClick={() => handleSelectDay(day.id)}
+                      aria-pressed={
+                        day.id === selectedDay.id
+                      }
+                    >
+                      DAY {day.day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 위치 선택 */}
+              <div className="place-guide-add-to-course-page__selection-group">
+                <strong>추가 위치</strong>
+
+                <div className="place-guide-add-to-course-page__choices place-guide-add-to-course-page__choices--positions">
+                  {Array.from(
+                    {
+                      length: selectedDay.places.length + 1,
+                    },
+                    (_, index) => {
+                      const label =
+                        index === 0
+                          ? '맨 앞'
+                          : index ===
+                              selectedDay.places.length
+                            ? '맨 뒤'
+                            : `${selectedDay.places[index - 1].name} 뒤`;
+
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          className={
+                            index === insertIndex
+                              ? 'is-selected'
+                              : ''
+                          }
+                          onClick={() =>
+                            setInsertIndex(index)
+                          }
+                          aria-pressed={
+                            index === insertIndex
+                          }
+                        >
+                          {label}
+                        </button>
+                      );
+                    },
+                  )}
+                </div>
+              </div>
+
+              {/* 추가 버튼 */}
               <button
                 type="button"
-                className="place-guide-add-to-course-page__course-btn"
-                onClick={() => handleSelectCourse(course)}
+                className="place-guide-add-to-course-page__confirm-btn"
+                onClick={() => void handleAddPlace()}
               >
-                <span className="place-guide-add-to-course-page__course-name">{course.name}</span>
-
-                <span className="place-guide-add-to-course-page__day-count">
-                  {course.days.length}일 일정
-                </span>
+                이 위치에 추가하기
               </button>
-            </li>
-          ))}
-        </ul>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
