@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/auth/AuthContext';
 import RequireAuth from '@/auth/RequireAuth';
 import ScrollToTop from '@/components/ScrollToTop';
@@ -29,10 +30,27 @@ import CompleteProfilePage from '@/pages/CompleteProfilePage/CompleteProfilePage
 
 import { ContactPage, PoliciesPage, PolicyDetailPage } from '@/pages/ServicePages/ServicePages';
 
+function HomeResetGuard() {
+  const location = useLocation();
+  const state = location.state as { resetNavigation?: boolean } | null;
+
+  useEffect(() => {
+    if (location.pathname !== '/' || !state?.resetNavigation) return;
+
+    const keepHomeAsRoot = () => window.history.go(1);
+
+    window.addEventListener('popstate', keepHomeAsRoot);
+    return () => window.removeEventListener('popstate', keepHomeAsRoot);
+  }, [location.pathname, state?.resetNavigation]);
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <ScrollToTop />
+      <HomeResetGuard />
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
