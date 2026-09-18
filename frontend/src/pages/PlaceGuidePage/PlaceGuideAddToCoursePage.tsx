@@ -9,12 +9,12 @@ import type { Course, CoursePlace } from '@/pages/MyCourses/types';
 
 import './PlaceGuideAddToCoursePage.css';
 
-// 상세 페이지에서 넘어오는 최소 정보. state로 못 받으면 API로 재조회해서 채움
+// 상세 페이지에서 넘어오는 최소 정보
 interface PlaceSummaryInfo {
   title: string;
   address: string;
-  latitude?: number;
-  longitude?: number;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 function PlaceGuideAddToCoursePage() {
@@ -22,13 +22,12 @@ function PlaceGuideAddToCoursePage() {
   const location = useLocation();
   const { placeId } = useParams();
 
-  // 상세 페이지에서 이미 정보를 들고 넘어왔으면 API 재호출 없이 바로 사용
-  // (기존엔 placeTitle만 받았는데, 코스에 저장할 때 주소/좌표도 같이 필요해져서 함께 받도록 확장)
+  // 상세 페이지에서 넘어오는 정보
   const placeInfoFromState = location.state as {
     placeTitle?: string;
     placeAddress?: string;
-    placeLatitude?: number;
-    placeLongitude?: number;
+    placeLatitude?: number | null;
+    placeLongitude?: number | null;
   } | null;
 
   const [placeInfo, setPlaceInfo] = useState<PlaceSummaryInfo | null>(
@@ -36,15 +35,20 @@ function PlaceGuideAddToCoursePage() {
       ? {
           title: placeInfoFromState.placeTitle,
           address: placeInfoFromState.placeAddress ?? '',
-          latitude: placeInfoFromState.placeLatitude,
-          longitude: placeInfoFromState.placeLongitude,
+          latitude: placeInfoFromState.placeLatitude ?? null,
+          longitude: placeInfoFromState.placeLongitude ?? null,
         }
       : null,
   );
+
   const [isLoading, setIsLoading] = useState(!placeInfoFromState?.placeTitle);
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [isCoursesLoading, setIsCoursesLoading] = useState(true);
+
+  /* =========================
+     내 코스 목록 조회
+  ========================= */
 
   useEffect(() => {
     listCourses()
@@ -53,34 +57,57 @@ function PlaceGuideAddToCoursePage() {
       .finally(() => setIsCoursesLoading(false));
   }, []);
 
-  // state로 넘어온 정보가 없을 때만(예: 새로고침으로 state가 사라진 경우) API 호출
+  /* =========================
+     장소 정보 조회
+
+     state가 없는 경우에만 API 조회
+  ========================= */
+
   useEffect(() => {
-    if (placeInfoFromState?.placeTitle || !placeId) return;
+    if (placeInfoFromState?.placeTitle || !placeId) {
+      return;
+    }
 
     getPlaceDetail(placeId)
-      .then((data) =>
+      .then((data) => {
         setPlaceInfo({
           title: data.title,
           address: data.subtitle,
           latitude: data.latitude,
           longitude: data.longitude,
-        }),
-      )
+        });
+      })
       .catch((error) => {
         console.error('장소 정보 조회 실패:', error);
         setPlaceInfo(null);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [placeId, placeInfoFromState?.placeTitle]);
 
-  // 선택한 코스의 "가장 마지막 DAY" 맨 끝에 현재 장소를 추가
-  // address/latitude/longitude를 실제 값으로 채워서, RouteDuration이 지오코딩 없이(또는 정상적으로)
-  // 이동시간을 계산할 수 있도록 함 (기존엔 address가 빈 문자열이라 "장소를 검색해 위치를
-  // 선택해주세요" 에러가 났었음)
+  /* =========================
+     코스에 장소 추가
+  ========================= */
+
   const handleSelectCourse = async (course: Course) => {
-    if (!placeInfo) return;
+    if (!placeInfo) {
+      return;
+    }
+
+    /*
+     * 좌표가 없는 장소는 CoursePlace에 넣을 수 없음.
+     *
+     * CoursePlace의 latitude / longitude가
+     * number 타입이기 때문에 여기서 한 번 검사한다.
+     */
+    if (placeInfo.latitude === null || placeInfo.longitude === null) {
+      window.alert('이 장소는 위치 정보가 없어 코스에 추가할 수 없습니다.');
+      return;
+    }
 
     const lastDayIndex = course.days.length - 1;
+
     const newPlace: CoursePlace = {
       id: Date.now(),
       name: placeInfo.title,
@@ -92,23 +119,33 @@ function PlaceGuideAddToCoursePage() {
     const updatedCourse: Course = {
       ...course,
       days: course.days.map((day, index) =>
-        index === lastDayIndex ? { ...day, places: [...day.places, newPlace] } : day,
+        index === lastDayIndex
+          ? {
+              ...day,
+              places: [...day.places, newPlace],
+            }
+          : day,
       ),
     };
 
     try {
       await updateCourse(course.id, updatedCourse);
     } catch (err) {
-      alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
+      window.alert(err instanceof Error ? err.message : '코스 저장에 실패했습니다.');
       return;
     }
 
     navigate(`/place-guide/${placeId}`);
   };
 
+  /* =========================
+     화면
+  ========================= */
+
   return (
     <div className="place-guide-add-to-course-page">
       <Header />
+
       <BackHeader title="내 코스에 추가하기" onBack={() => navigate(`/place-guide/${placeId}`)} />
 
       {isLoading || isCoursesLoading ? (
@@ -127,6 +164,7 @@ function PlaceGuideAddToCoursePage() {
                 onClick={() => handleSelectCourse(course)}
               >
                 <span className="place-guide-add-to-course-page__course-name">{course.name}</span>
+
                 <span className="place-guide-add-to-course-page__day-count">
                   {course.days.length}일 일정
                 </span>
