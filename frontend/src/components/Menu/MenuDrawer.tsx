@@ -34,19 +34,22 @@ const MENU_GROUP_1: MenuRowItem[] = [
   {
     key: 'region',
     icon: Compass,
-    label: '지역 추천',
+    label: '나의 GUMBTI',
+    subtitle: '여행 성향 결과 다시 보기',
     to: '/region-recommend',
   },
   {
     key: 'place-recommend',
     icon: MapPin,
-    label: '장소 추천',
+    label: '장소 가이드',
+    subtitle: '인천 곳곳의 장소 둘러보기',
     to: '/place-guide',
   },
   {
     key: 'course-recommend',
     icon: RouteIcon,
     label: '코스 추천',
+    subtitle: '내 취향에 맞는 코스 추천받기',
     to: '/course-recommend',
   },
   {
@@ -70,12 +73,14 @@ const MENU_GROUP_2: MenuRowItem[] = [
     key: 'contact',
     icon: MegaphoneIcon,
     label: '문의하기',
+    subtitle: '궁금한 점 남기기',
     to: '/contact',
   },
   {
     key: 'policies',
     icon: InfoCircleIcon,
     label: '약관 및 정책',
+    subtitle: '이용약관 · 개인정보처리방침',
     to: '/policies',
   },
 ];
@@ -665,6 +670,12 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
                 <span className="menu-drawer__row-text">
                   <Typography variant="head3">{item.label}</Typography>
+
+                  {item.subtitle && (
+                    <Typography variant="subtitle3" color="#666666">
+                      {item.subtitle}
+                    </Typography>
+                  )}
                 </span>
               </button>
             );
