@@ -3,14 +3,24 @@
   margin-bottom: 20px;
 }
 
-.profile-sheet__input {
+.profile-sheet__input-wrap {
+  position: relative;
   width: 100%;
 }
 
-.profile-sheet__counter {
-  display: block;
-  margin-top: 6px;
-  text-align: right;
+.profile-sheet__input-wrap .profile-sheet__input {
+  width: 100% !important;
+  box-sizing: border-box;
+  padding-right: 54px;
+}
+
+.profile-sheet__input-wrap .profile-sheet__counter {
+  position: absolute;
+  top: 50%;
+  right: 100px;
+  margin: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .profile-sheet__error {

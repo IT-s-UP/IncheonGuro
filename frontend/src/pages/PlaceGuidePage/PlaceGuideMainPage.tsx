@@ -536,6 +536,22 @@ function PlaceGuideMainPage() {
             cursor: pointer;
           `;
 
+          markerEl.setAttribute('role', 'button');
+          markerEl.setAttribute('tabindex', '0');
+          markerEl.setAttribute('aria-label', `${place.title} 상세 보기`);
+
+          const openPlaceDetail = () => {
+            navigate(`/place-guide/${place.placeId}`);
+          };
+
+          markerEl.addEventListener('click', openPlaceDetail);
+          markerEl.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              openPlaceDetail();
+            }
+          });
+
           const position = new maps.LatLng(place.latitude, place.longitude);
 
           const placeOverlay = new maps.CustomOverlay({
