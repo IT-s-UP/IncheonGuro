@@ -18,8 +18,13 @@
 
 .place-guide-main-page > .line-tab {
   padding: 0 20px;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 70px;
   border-bottom: 1px solid #eeeeee;
+}
+
+.place-guide-main-page > .line-tab .line-tab__item {
+  text-align: center;
 }
 
 .place-guide-search-box {
