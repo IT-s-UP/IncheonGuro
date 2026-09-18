@@ -96,6 +96,11 @@ public class Member {
         this.interestedRegion = interestedRegion;
     }
 
+    public void fillMissingSocialProfile(LocalDate birth, String gender) {
+        if (this.birth == null) this.birth = birth;
+        if (this.gender == null) this.gender = gender;
+    }
+
     public void updateRecommendedRegion(Region recommendedRegion) {
         this.recommendedRegion = recommendedRegion;
     }

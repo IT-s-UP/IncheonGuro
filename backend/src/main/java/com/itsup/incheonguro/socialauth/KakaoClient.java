@@ -2,6 +2,8 @@ package com.itsup.incheonguro.socialauth;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -43,7 +45,24 @@ public class KakaoClient {
         if (profile.get("properties") instanceof Map<?, ?> properties
                 && properties.get("nickname") instanceof String name && !name.isBlank())
             nickname = name.substring(0, Math.min(200, name.length()));
+        String gender = null;
+        LocalDate birth = null;
+        if (profile.get("kakao_account") instanceof Map<?, ?> account) {
+            if (account.get("gender") instanceof String rawGender) {
+                gender = "male".equals(rawGender) ? "남성" : "female".equals(rawGender) ? "여성" : null;
+            }
+            if (account.get("birthday") instanceof String birthday && birthday.length() == 4
+                    && account.get("birthyear") instanceof String birthyear && birthyear.length() == 4) {
+                try {
+                    birth = LocalDate.of(Integer.parseInt(birthyear),
+                            Integer.parseInt(birthday.substring(0, 2)),
+                            Integer.parseInt(birthday.substring(2, 4)));
+                } catch (NumberFormatException | DateTimeParseException ignored) {
+                    // Leave birth unset if Kakao returns an unexpected format.
+                }
+            }
+        }
         // Provider tokens are never stored or returned to the browser.
-        return new KakaoMember(id.longValue(), nickname);
+        return new KakaoMember(id.longValue(), nickname, gender, birth);
     }
 }
