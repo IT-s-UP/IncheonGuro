@@ -375,7 +375,7 @@ function CourseRecommendPage() {
             <section className="course-intro-section">
               <div className="course-intro-title">
                 <Typography variant="subtitle1">
-                  OOO 님의 취향을 담아
+                  {user?.nickname ?? '게스트'} 님의 취향을 담아
                   <br />
                   여행 코스를 추천드릴게요!
                 </Typography>
@@ -648,7 +648,9 @@ function CourseRecommendPage() {
           <section className="course-result-section">
             {/* 결과 안내 */}
             <div className="course-result-title">
-              <Typography variant="subtitle1">OOO 님을 위한 추천 코스입니다.</Typography>
+              <Typography variant="subtitle1">
+                {user?.nickname ?? '게스트'} 님을 위한 추천 코스입니다.
+              </Typography>
 
               <Typography variant="p2">
                 추천 코스를 저장하시고,
