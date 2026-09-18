@@ -143,12 +143,10 @@ class AuthFlowIntegrationTest {
         var other = members.saveAndFlush(new com.itsup.incheonguro.Auth.entity.Member(
             "withdraw-other", passwords.encode("Test1234!"), null, "Other", null, null, null, "Other", null));
         String token = tokens.createAccessToken(target);
-        jdbc.update("insert into course (name, is_recommended) values ('withdraw-test', false)");
-        Long course = jdbc.queryForObject("select id from course where name='withdraw-test'", Long.class);
         for (Long id : java.util.List.of(target.getId(), other.getId())) {
             jdbc.update("insert into member_stamp (member_id, region_id, achieved_at) values (?, 1, CURRENT_TIMESTAMP)", id);
             jdbc.update("insert into member_region_stay (member_id, region_id, entered_at, activated) values (?, 1, CURRENT_TIMESTAMP, false)", id);
-            jdbc.update("insert into bookmark (user_id, course_id) values (?, ?)", id, course);
+            jdbc.update("insert into bookmark (user_id, content_id) values (?, '67890')", id);
             jdbc.update("insert into place_bookmark (user_id, content_id) values (?, '12345')", id);
         }
         assertEquals(401, send(browser(), request("/api/mypage").header("Content-Type", "application/json")
@@ -169,7 +167,6 @@ class AuthFlowIntegrationTest {
             assertEquals(0, jdbc.queryForObject("select count(*) from " + table + " where " + key + "=?", Integer.class, target.getId()));
             assertEquals(1, jdbc.queryForObject("select count(*) from " + table + " where " + key + "=?", Integer.class, other.getId()));
         }
-        assertEquals(1, jdbc.queryForObject("select count(*) from course where id=?", Integer.class, course));
         assertEquals(401, send(browser(), request("/stamp/my").header("Authorization", "Bearer " + token)).statusCode());
     }
 
