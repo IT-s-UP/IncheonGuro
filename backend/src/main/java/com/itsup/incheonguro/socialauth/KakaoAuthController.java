@@ -43,10 +43,11 @@ public class KakaoAuthController {
         if (clientId.isBlank()) return redirect(frontend + "/login?error=kakao_config");
         String state = random();
         request.getSession().setAttribute(FLOW, new Flow(state, System.currentTimeMillis() + 300_000));
+        // scope는 카카오 콘솔에서 실제로 활성화(검수 통과)된 동의항목만 요청할 수 있음.
+        // 아직 활성화 안 된 항목을 요청하면 카카오가 로그인 자체를 KOE205로 거부함.
         return redirect(UriComponentsBuilder.fromUriString("https://kauth.kakao.com/oauth/authorize")
             .queryParam("client_id", clientId).queryParam("redirect_uri", redirectUri)
             .queryParam("response_type", "code").queryParam("state", state)
-            .queryParam("scope", "gender,birthday,birthyear")
             .build().encode().toUriString());
     }
     @GetMapping("/kakao/callback")
