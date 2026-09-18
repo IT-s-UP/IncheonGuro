@@ -7,6 +7,7 @@ import BackHeader from '@/components/Header/BackHeader';
 import Typography from '@/components/Typography/Typography';
 import BottomSheet from '@/components/BottomSheet/BottomSheet';
 import { apiFetch } from '@/auth/api';
+import { useAuth } from '@/auth/AuthContext';
 import { mascotImageOf, mascotKeyOfRegionName } from '@/assets/mascots';
 import NameSheet from './sheets/NameSheet';
 import NicknameSheet from './sheets/NicknameSheet';
@@ -116,6 +117,7 @@ async function readErrorMessage(response: Response, fallback: string) {
 
 function MyPage() {
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const [profile, setProfile] = useState<ProfileState>(INITIAL_PROFILE);
   const [openField, setOpenField] = useState<FieldKey | null>(null);
   const [mascot, setMascot] = useState<string | null>(null);
@@ -204,6 +206,11 @@ function MyPage() {
       if (!response.ok) {
         throw new Error(await readErrorMessage(response, '내 정보 저장에 실패했습니다.'));
       }
+
+      // DB 저장 성공 후 전역 로그인 사용자 정보도 즉시 갱신
+      updateUser({
+        nickname: profile.nickname,
+      });
 
       navigate(-1);
     } catch (err) {
