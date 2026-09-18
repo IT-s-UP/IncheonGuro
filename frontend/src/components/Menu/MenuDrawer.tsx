@@ -1,14 +1,13 @@
 import { useAuth } from '@/auth/AuthContext';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Compass } from 'lucide-react';
 
 import { apiFetch } from '@/auth/api';
 import { mascotImageOf, mascotKeyOfRegionName } from '@/assets/mascots';
 
 import Typography from '@/components/Typography/Typography';
 import {
-  LocationPinIcon,
   RouteIcon,
   FireworksIcon,
   CourseGuideIcon,
@@ -34,9 +33,15 @@ interface MenuRowItem {
 const MENU_GROUP_1: MenuRowItem[] = [
   {
     key: 'region',
-    icon: LocationPinIcon,
+    icon: Compass,
     label: '지역 추천',
     to: '/region-recommend',
+  },
+  {
+    key: 'place-recommend',
+    icon: MapPin,
+    label: '장소 추천',
+    to: '/place-guide',
   },
   {
     key: 'course-recommend',
