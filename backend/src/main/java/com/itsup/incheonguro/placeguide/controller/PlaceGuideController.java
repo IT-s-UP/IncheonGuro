@@ -8,9 +8,11 @@ import com.itsup.incheonguro.placeguide.entity.District;
 import com.itsup.incheonguro.placeguide.entity.PlaceCategory;
 import com.itsup.incheonguro.placeguide.service.PlaceGuideService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -55,6 +57,7 @@ public class PlaceGuideController {
   // GET /api/placeguide/bookmarks
   @GetMapping("/bookmarks")
   public List<PlaceSummaryResponse> getBookmarkedPlaces(@AuthenticationPrincipal Jwt jwt) {
+    if (jwt == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     Long userId = Long.valueOf(jwt.getSubject());
     return placeGuideService.getBookmarkedPlaces(userId);
   }
