@@ -28,11 +28,16 @@ public class SocialLoginService {
     }
 
     public Member establish(HttpServletRequest request, String provider, String subject, String nickname) {
-        return establish(request, provider, subject, nickname, null, null);
+        return establish(request, provider, subject, nickname, null, null, null);
     }
 
     public Member establish(HttpServletRequest request, String provider, String subject, String nickname,
             String gender, LocalDate birth) {
+        return establish(request, provider, subject, nickname, gender, birth, null);
+    }
+
+    public Member establish(HttpServletRequest request, String provider, String subject, String nickname,
+            String gender, LocalDate birth, String verifiedEmail) {
         String loginId = "oauth:" + provider + ":" + subject;
         if (!(provider.equals("kakao") || provider.equals("google")) || loginId.length() > 255) {
             throw new IllegalArgumentException("Invalid social identity");
@@ -44,8 +49,17 @@ public class SocialLoginService {
                 existing.get().fillMissingSocialProfile(birth, gender);
                 return members.saveAndFlush(existing.get());
             }
+            // 처음 보는 소셜 계정이면, 검증된 이메일이 같은 기존 계정(이메일 가입이든 다른 소셜이든)이
+            // 있는지 먼저 확인해서 새로 만들지 않고 그 계정에 로그인시킴 (동일인 중복가입 방지).
+            if (verifiedEmail != null) {
+                var byEmail = members.findFirstByEmail(verifiedEmail);
+                if (byEmail.isPresent()) {
+                    byEmail.get().fillMissingSocialProfile(birth, gender);
+                    return members.saveAndFlush(byEmail.get());
+                }
+            }
             return members.saveAndFlush(new Member(loginId,
-                    passwords.encode(randomValue()), null, nickname, birth, gender, null, nickname, null));
+                    passwords.encode(randomValue()), null, nickname, birth, gender, verifiedEmail, nickname, null));
         });
         String token = jwt.createAccessToken(member);
         var session = request.getSession();

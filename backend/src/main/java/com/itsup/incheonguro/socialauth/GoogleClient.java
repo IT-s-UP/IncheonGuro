@@ -53,7 +53,12 @@ public class GoogleClient {
         String nickname = "탐험가";
         if (profile.get("name") instanceof String name && !name.isBlank())
             nickname = name.substring(0, Math.min(200, name.length()));
-        // No email-based account merging; no provider tokens persisted or exposed.
-        return new GoogleMember(id, nickname);
+        // 구글이 이메일 소유권을 검증한 경우에만(email_verified) 계정 통합에 사용
+        String email = null;
+        if (Boolean.TRUE.equals(profile.get("email_verified"))
+                && profile.get("email") instanceof String verifiedEmail && !verifiedEmail.isBlank())
+            email = verifiedEmail;
+        // No provider tokens persisted or exposed.
+        return new GoogleMember(id, nickname, email);
     }
 }

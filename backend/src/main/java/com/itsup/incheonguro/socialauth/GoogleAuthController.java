@@ -61,7 +61,7 @@ public class GoogleAuthController {
         request.getSession().setAttribute(FLOW, new Flow(state, verifier, clock.millis() + 300_000));
         return redirect(UriComponentsBuilder.fromUriString("https://accounts.google.com/o/oauth2/v2/auth")
             .queryParam("client_id", clientId).queryParam("redirect_uri", redirectUri)
-            .queryParam("response_type", "code").queryParam("scope", "openid profile")
+            .queryParam("response_type", "code").queryParam("scope", "openid profile email")
             .queryParam("state", state).queryParam("code_challenge", challenge)
             .queryParam("code_challenge_method", "S256").queryParam("prompt", "select_account")
             .build().encode().toUriString());
@@ -85,7 +85,7 @@ public class GoogleAuthController {
         try {
             GoogleMember identity = google.authenticate(code, flow.verifier());
             var member = socialLogin.establish(request, "google", String.valueOf(identity.getGoogleId()),
-                    identity.getNickname());
+                    identity.getNickname(), null, null, identity.getEmail());
             return redirect(frontend + (member.getInterestedRegion() == null ? "/complete-profile" : "/"));
         } catch (RuntimeException exception) {
             // Provider error payloads may contain credentials; never expose or log them.
