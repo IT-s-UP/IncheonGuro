@@ -71,6 +71,11 @@ public class AuthService {
             throw new SignupFailedException();
         }
 
+        // 이메일 중복 확인 (소셜 로그인으로 이미 가입된 경우 포함)
+        if (memberRepository.findFirstByEmail(request.getEmail()).isPresent()) {
+            throw new SignupFailedException("이미 가입된 회원입니다.");
+        }
+
         // 생년월일 변환
         LocalDate birth;
 

@@ -44,7 +44,7 @@ public class Member {
     @Column
     private String gender;
 
-    @Column
+    @Column(unique = true)
     private String email;
 
     @Column(nullable = false)
