@@ -27,11 +27,11 @@ public class SocialLoginService {
         this.transaction = new TransactionTemplate(manager);
     }
 
-    public void establish(HttpServletRequest request, String provider, String subject, String nickname) {
-        establish(request, provider, subject, nickname, null, null);
+    public Member establish(HttpServletRequest request, String provider, String subject, String nickname) {
+        return establish(request, provider, subject, nickname, null, null);
     }
 
-    public void establish(HttpServletRequest request, String provider, String subject, String nickname,
+    public Member establish(HttpServletRequest request, String provider, String subject, String nickname,
             String gender, LocalDate birth) {
         String loginId = "oauth:" + provider + ":" + subject;
         if (!(provider.equals("kakao") || provider.equals("google")) || loginId.length() > 255) {
@@ -54,6 +54,7 @@ public class SocialLoginService {
         session.setAttribute("auth.user", new AuthUser(String.valueOf(member.getId()), provider, member.getNickname()));
         session.setAttribute("auth.token", token);
         session.setMaxInactiveInterval(1800);
+        return member;
     }
 
     private static String randomValue() {

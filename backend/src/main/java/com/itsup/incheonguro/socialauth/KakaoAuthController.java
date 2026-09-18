@@ -68,9 +68,9 @@ public class KakaoAuthController {
             return redirect(frontend + "/login?error=kakao_cancelled");
         try {
             KakaoMember identity = kakao.authenticate(code);
-            socialLogin.establish(request, "kakao", String.valueOf(identity.getKakaoId()), identity.getNickname(),
-                    identity.getGender(), identity.getBirth());
-            return redirect(frontend + "/");
+            var member = socialLogin.establish(request, "kakao", String.valueOf(identity.getKakaoId()),
+                    identity.getNickname(), identity.getGender(), identity.getBirth());
+            return redirect(frontend + (member.getInterestedRegion() == null ? "/complete-profile" : "/"));
         } catch (RuntimeException exception) {
             // Do not log provider responses, authorization codes, secrets or access tokens.
             return redirect(frontend + "/login?error=kakao_failed");

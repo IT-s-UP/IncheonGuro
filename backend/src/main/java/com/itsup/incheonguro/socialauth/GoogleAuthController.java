@@ -84,8 +84,9 @@ public class GoogleAuthController {
             return redirect(frontend + "/login?error=google_cancelled");
         try {
             GoogleMember identity = google.authenticate(code, flow.verifier());
-            socialLogin.establish(request, "google", String.valueOf(identity.getGoogleId()), identity.getNickname());
-            return redirect(frontend + "/");
+            var member = socialLogin.establish(request, "google", String.valueOf(identity.getGoogleId()),
+                    identity.getNickname());
+            return redirect(frontend + (member.getInterestedRegion() == null ? "/complete-profile" : "/"));
         } catch (RuntimeException exception) {
             // Provider error payloads may contain credentials; never expose or log them.
             return redirect(frontend + "/login?error=google_failed");
