@@ -270,7 +270,6 @@ public class PlaceGuideService {
   private String toKoreanCategoryTag(PlaceCategory category) {
     return switch (category) {
       case ATTRACTION -> "관광지";
-      case CAFE -> "카페";
       case RESTAURANT -> "식당";
       case LODGING -> "숙소";
       case SHOPPING -> "쇼핑";

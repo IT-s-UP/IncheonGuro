@@ -44,7 +44,6 @@ const DISTRICTS: { label: string; value: District }[] = [
 
 const PLACE_FILTERS: { label: string; value: PlaceCategory }[] = [
   { label: '관광지', value: 'ATTRACTION' },
-  { label: '카페', value: 'CAFE' },
   { label: '식당', value: 'RESTAURANT' },
   { label: '숙소', value: 'LODGING' },
   { label: '쇼핑', value: 'SHOPPING' },

@@ -37,7 +37,7 @@ public class PlaceGuideController {
     return placeGuideService.getSearchResult(keyword);
   }
 
-  // GET /api/placeguide?districts=SEO,JUNG&categories=CAFE
+  // GET /api/placeguide?districts=SEO,JUNG&categories=RESTAURANT
   @GetMapping
   public List<PlaceSummaryResponse> getPlaces(
       @RequestParam(required = false) List<District> districts,

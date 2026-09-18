@@ -57,7 +57,6 @@ interface MyPageApiData {
 function toKoreanCategoryTag(category: string) {
   const labels: Record<string, string> = {
     ATTRACTION: '관광지',
-    CAFE: '카페',
     RESTAURANT: '식당',
     LODGING: '숙소',
     SHOPPING: '쇼핑',

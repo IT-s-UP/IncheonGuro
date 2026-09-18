@@ -75,11 +75,11 @@ public class CourseRecommendService {
 
     // 여행 스타일 → 장소 카테고리 매핑 (테마 카테고리, 식당 제외)
     private static final Map<String, Set<PlaceCategory>> STYLE_TO_CATEGORIES = Map.of(
-            "힐링", EnumSet.of(PlaceCategory.CAFE, PlaceCategory.ATTRACTION),
+            "힐링", EnumSet.of(PlaceCategory.ATTRACTION),
             "맛집 탐방", EnumSet.of(PlaceCategory.RESTAURANT),
             "쇼핑", EnumSet.of(PlaceCategory.SHOPPING),
             "관광", EnumSet.of(PlaceCategory.ATTRACTION),
-            "SNS 핫플레이스", EnumSet.of(PlaceCategory.CAFE, PlaceCategory.SHOPPING),
+            "SNS 핫플레이스", EnumSet.of(PlaceCategory.SHOPPING),
             "체험 / 액티비티", EnumSet.of(PlaceCategory.ATTRACTION),
             "문화 / 예술 / 역사", EnumSet.of(PlaceCategory.ATTRACTION),
             "자연", EnumSet.of(PlaceCategory.ATTRACTION));
@@ -95,8 +95,6 @@ public class CourseRecommendService {
 
     // 동행인별로 여행 스타일 테마에 추가로 고려할 카테고리
     private static final Map<String, PlaceCategory> COMPANION_EXTRA_CATEGORY = Map.of(
-            "혼자", PlaceCategory.CAFE,
-            "연인", PlaceCategory.CAFE,
             "친구", PlaceCategory.SHOPPING);
 
     // 아이/부모님/반려동물과 함께하면 하루 일정 강도를 한 단계 낮춤
@@ -121,21 +119,18 @@ public class CourseRecommendService {
     // 카테고리별 1인 평균 비용 추정치
     private static final Map<PlaceCategory, Integer> CATEGORY_AVG_COST = Map.of(
             PlaceCategory.ATTRACTION, 8000,
-            PlaceCategory.CAFE, 7000,
             PlaceCategory.RESTAURANT, 15000,
             PlaceCategory.SHOPPING, 20000);
 
     // 장소 카드에 표시할 카테고리 한글 라벨
     private static final Map<PlaceCategory, String> CATEGORY_LABEL = Map.of(
             PlaceCategory.ATTRACTION, "관광지",
-            PlaceCategory.CAFE, "카페",
             PlaceCategory.RESTAURANT, "식당",
             PlaceCategory.SHOPPING, "쇼핑");
 
     // 비용 항목에 표시할 카테고리 한글 라벨
     private static final Map<PlaceCategory, String> CATEGORY_COST_LABEL = Map.of(
             PlaceCategory.ATTRACTION, "입장료",
-            PlaceCategory.CAFE, "카페 비용",
             PlaceCategory.RESTAURANT, "식비",
             PlaceCategory.SHOPPING, "쇼핑 비용");
 

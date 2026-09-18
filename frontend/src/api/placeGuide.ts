@@ -48,7 +48,7 @@ export type District =
   | 'ONGJIN';
 
 // 백엔드 PlaceCategory enum 값과 정확히 동일해야 함
-export type PlaceCategory = 'ATTRACTION' | 'CAFE' | 'RESTAURANT' | 'LODGING' | 'SHOPPING';
+export type PlaceCategory = 'ATTRACTION' | 'RESTAURANT' | 'LODGING' | 'SHOPPING';
 
 // PlaceSummaryResponse.java 와 대응
 export interface PlaceSummary {
