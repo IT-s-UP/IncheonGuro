@@ -39,13 +39,6 @@ const MENU_GROUP_1: MenuRowItem[] = [
     to: '/region-recommend',
   },
   {
-    key: 'place-recommend',
-    icon: MapPin,
-    label: '장소 가이드',
-    subtitle: '인천 곳곳의 장소 둘러보기',
-    to: '/place-guide',
-  },
-  {
     key: 'course-recommend',
     icon: RouteIcon,
     label: '코스 추천',
@@ -53,11 +46,11 @@ const MENU_GROUP_1: MenuRowItem[] = [
     to: '/course-recommend',
   },
   {
-    key: 'festival',
-    icon: FireworksIcon,
-    label: '축제 정보',
-    subtitle: '이번 달 축제 모아보기',
-    to: '/festivals',
+    key: 'place-recommend',
+    icon: MapPin,
+    label: '장소 가이드',
+    subtitle: '인천 곳곳의 장소 둘러보기',
+    to: '/place-guide',
   },
   {
     key: 'course-guide',
@@ -65,6 +58,13 @@ const MENU_GROUP_1: MenuRowItem[] = [
     label: '코스 가이드',
     subtitle: '인기 코스 둘러보기',
     to: '/course-guide',
+  },
+  {
+    key: 'festival',
+    icon: FireworksIcon,
+    label: '축제 정보',
+    subtitle: '이번 달 축제 모아보기',
+    to: '/festivals',
   },
 ];
 
