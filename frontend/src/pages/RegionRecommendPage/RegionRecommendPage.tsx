@@ -440,7 +440,7 @@ function RegionRecommendPage() {
   ========================= */
 
   const handleHome = () => {
-    navigate('/');
+    navigate('/', { replace: true, state: { resetNavigation: true } });
   };
 
   /* =========================

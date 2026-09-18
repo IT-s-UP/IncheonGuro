@@ -293,7 +293,7 @@ function CourseRecommendPage() {
   ========================= */
 
   const handleHome = () => {
-    navigate('/');
+    navigate('/', { replace: true, state: { resetNavigation: true } });
   };
 
   const handleSaveCourse = async (course: MyCourse) => {

@@ -15,7 +15,7 @@ function Header({ onNotificationClick, onMenuClick }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogoClick = () => {
-    navigate('/');
+    navigate('/', { replace: true, state: { resetNavigation: true } });
   };
 
   const handleMenuClick = () => {

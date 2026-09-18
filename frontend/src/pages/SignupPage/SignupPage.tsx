@@ -1056,7 +1056,11 @@ function SignupPage() {
             </div>
 
             <div className="signup-bottom-button">
-              <Button size="middle" variant="primary" onClick={() => navigate('/')}>
+              <Button
+                size="middle"
+                variant="primary"
+                onClick={() => navigate('/', { replace: true, state: { resetNavigation: true } })}
+              >
                 홈으로
               </Button>
             </div>
