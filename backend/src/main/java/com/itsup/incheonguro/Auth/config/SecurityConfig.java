@@ -106,9 +106,9 @@ public class SecurityConfig {
 
                 CorsConfiguration configuration = new CorsConfiguration();
 
-                // React 개발 서버
+                // React 개발 서버 + 배포된 프론트엔드
                 configuration.setAllowedOrigins(
-                                List.of("http://localhost:5173"));
+                                List.of("http://localhost:5173", "https://incheon-guro.vercel.app"));
 
                 // 허용할 HTTP Method
                 configuration.setAllowedMethods(
