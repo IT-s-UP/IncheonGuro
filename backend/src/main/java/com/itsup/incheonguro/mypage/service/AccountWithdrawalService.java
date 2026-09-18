@@ -25,10 +25,8 @@ public class AccountWithdrawalService {
         if (!member.isSocialAccount() && (password == null || !passwords.matches(password, member.getPassword())))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.");
         // Delete only rows owned by this member; shared course records have no member ownership.
-        for (String entity : new String[]{"MemberStamp", "MemberRegionStay"}) {
-            em.createQuery("delete from " + entity + " e where e.memberId = :id")
-                .setParameter("id", memberId).executeUpdate();
-        }
+        em.createQuery("delete from MemberStamp e where e.memberId = :id")
+            .setParameter("id", memberId).executeUpdate();
         for (String entity : new String[]{"Bookmark", "PlaceBookmark"}) {
             em.createQuery("delete from " + entity + " e where e.userId = :id")
                 .setParameter("id", memberId).executeUpdate();
