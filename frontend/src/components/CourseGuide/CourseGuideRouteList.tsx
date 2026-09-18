@@ -24,8 +24,6 @@ function CourseGuideRouteList({ places }: CourseGuideRouteListProps) {
                 <p className="course-guide-route-name">{place.name}</p>
                 <p className="course-guide-route-address">{place.address}</p>
               </div>
-              {/* 오른쪽 사진 자리 (실제 연동 전까지 회색 박스) */}
-              <div className="course-guide-route-thumb" />
             </li>
           ))}
         </ul>
