@@ -38,6 +38,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const controller = new AbortController();
     async function restore() {
       try {
+        // 세션 기반 로그인(카카오/구글)을 항상 먼저 확인한다.
+        // 브라우저에 예전 아이디/비번 로그인 토큰이 남아있는 상태로 소셜 로그인을 하면,
+        // 순서가 반대일 경우 그 옛날 토큰이 먼저 검증돼서 전혀 다른 계정 정보가 복원되는 문제가 있었음.
+        const sessionResponse = await fetch('/api/auth/me', {
+          credentials: 'same-origin', signal: controller.signal,
+        });
+        if (!valid()) return;
+        if (sessionResponse.ok) {
+          const data = await sessionResponse.json();
+          if (!valid()) return;
+          localStorage.removeItem(TOKEN);
+          localStorage.removeItem(USER);
+          setStorageMember(data.user.id);
+          setAccessToken(data.accessToken);
+          setUser(data.user);
+          return;
+        }
+
         const token = localStorage.getItem(TOKEN), saved = localStorage.getItem(USER);
         if (token && saved) {
           const response = await fetch('/api/mypage', {
@@ -56,11 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (response.status !== 401) return;
           localStorage.removeItem(TOKEN);
           localStorage.removeItem(USER);
-        }
-        const response = await fetch('/api/auth/me', { credentials: 'same-origin', signal: controller.signal });
-        if (response.ok) {
-          const data = await response.json();
-          if (valid()) { setStorageMember(data.user.id); setAccessToken(data.accessToken); setUser(data.user); }
         }
       } catch { /* Keep the screen signed out when restoration cannot be verified. */ }
       finally { if (valid()) setIsLoading(false); }
@@ -82,6 +95,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(loginId: string, password: string) {
     const member = await loginWithPassword(loginId, password);
     version.current++;
+
+    // 이 브라우저에 남아있을 수 있는 이전 소셜 로그인 세션을 정리한다
+    // (남겨두면 다음 새로고침 때 restore()가 세션을 우선 확인하면서 방금 한 로그인을 덮어씀).
+    try {
+      const session = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (session.ok) {
+        const data = await session.json();
+        await fetch('/api/auth/logout', {
+          method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': data.csrfToken },
+        });
+      }
+    } catch { /* best-effort */ }
+
     const nextUser: User = { id: String(member.memberId), provider: 'local', nickname: member.nickname };
     setStorageMember(nextUser.id);
     setAccessToken(member.accessToken);
