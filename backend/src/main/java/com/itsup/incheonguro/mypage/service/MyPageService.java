@@ -69,11 +69,13 @@ public class MyPageService {
     @Transactional
     public MyPageResponse updateProfile(Member member, MyPageUpdateRequest request) {
 
-        LocalDate birth;
-        try {
-            birth = LocalDate.parse(request.getBirth());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "생년월일 형식이 올바르지 않습니다.");
+        LocalDate birth = null;
+        if (request.getBirth() != null && !request.getBirth().isBlank()) {
+            try {
+                birth = LocalDate.parse(request.getBirth());
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "생년월일 형식이 올바르지 않습니다.");
+            }
         }
 
         if (!regionRepository.existsById(request.getInterestedRegion())) {

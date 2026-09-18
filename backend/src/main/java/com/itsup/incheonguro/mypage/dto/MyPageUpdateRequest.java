@@ -15,13 +15,10 @@ public class MyPageUpdateRequest {
     @NotBlank
     private String nickname;
 
-    @NotBlank
     private String birth;
 
-    @NotBlank
     private String gender;
 
-    @NotBlank
     private String phoneNumber;
 
     @NotNull

@@ -52,7 +52,9 @@ interface ProfileState {
   name: string;
   nickname: string;
   birthdate: Birthdate;
+  hasBirthdate: boolean;
   gender: Gender;
+  hasGender: boolean;
   phone: string;
   interestedRegion: RegionValue;
   email: EmailValue;
@@ -76,7 +78,9 @@ const INITIAL_PROFILE: ProfileState = {
   name: '',
   nickname: '탐험가',
   birthdate: { year: 2000, month: 1, day: 1 },
+  hasBirthdate: false,
   gender: '남성',
+  hasGender: false,
   phone: '',
   interestedRegion: { id: null, name: '없음' },
   email: { id: '', domain: 'gmail.com' },
@@ -129,7 +133,9 @@ function MyPage() {
           name: data.name ?? '',
           nickname: data.nickname,
           birthdate: birthToBirthdate(data.birth),
+          hasBirthdate: Boolean(data.birth),
           gender: (data.gender as Gender) || INITIAL_PROFILE.gender,
+          hasGender: Boolean(data.gender),
           phone: data.phoneNumber ?? '',
           interestedRegion: {
             id: data.interestedRegion,
@@ -157,9 +163,11 @@ function MyPage() {
       case 'nickname':
         return profile.nickname;
       case 'birthdate':
-        return `${profile.birthdate.year}년 ${profile.birthdate.month}월 ${profile.birthdate.day}일`;
+        return profile.hasBirthdate
+          ? `${profile.birthdate.year}년 ${profile.birthdate.month}월 ${profile.birthdate.day}일`
+          : '미입력';
       case 'gender':
-        return profile.gender;
+        return profile.hasGender ? profile.gender : '미입력';
       case 'phone':
         return profile.phone || '미입력';
       case 'region':
@@ -186,8 +194,8 @@ function MyPage() {
         body: JSON.stringify({
           name: profile.name,
           nickname: profile.nickname,
-          birth: birthdateToBirth(profile.birthdate),
-          gender: profile.gender,
+          birth: profile.hasBirthdate ? birthdateToBirth(profile.birthdate) : null,
+          gender: profile.hasGender ? profile.gender : null,
           phoneNumber: profile.phone,
           interestedRegion: profile.interestedRegion.id,
         }),
@@ -332,7 +340,7 @@ function MyPage() {
         <BirthdateSheet
           value={profile.birthdate}
           onSave={(birthdate) => {
-            setProfile((prev) => ({ ...prev, birthdate }));
+            setProfile((prev) => ({ ...prev, birthdate, hasBirthdate: true }));
             closeSheet();
           }}
         />
@@ -342,7 +350,7 @@ function MyPage() {
         <GenderSheet
           value={profile.gender}
           onSave={(gender) => {
-            setProfile((prev) => ({ ...prev, gender }));
+            setProfile((prev) => ({ ...prev, gender, hasGender: true }));
             closeSheet();
           }}
         />
