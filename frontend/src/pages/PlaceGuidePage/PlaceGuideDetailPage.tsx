@@ -107,14 +107,25 @@ function PlaceGuideDetailPage() {
         const center = new maps.LatLng(place.latitude, place.longitude);
         const map = new maps.Map(mapContainerRef.current, { center, level: 4 });
 
-        const markerEl = document.createElement('div');
-        markerEl.style.cssText =
-          'width:16px;height:16px;border-radius:50% 50% 50% 0;background:#78aac3;transform:rotate(-45deg);border:2px solid #ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.3);';
-        new maps.CustomOverlay({ position: center, content: markerEl, yAnchor: 1 });
-
         setTimeout(() => {
+          if (!mapContainerRef.current) return;
+
           map.relayout();
           map.setCenter(center);
+
+          const markerEl = document.createElement('div');
+          markerEl.style.cssText =
+            'width:16px;height:16px;border-radius:50% 50% 50% 0;background:#78aac3;transform:rotate(-45deg);border:2px solid #ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.3);';
+
+          // kakaoMap.ts의 CustomOverlay 타입엔 생성자에 map 옵션이 빠져있어서
+          // (팀원 소유 파일이라 타입은 수정 안 함), 생성 직후 .setMap()을 명시적으로 호출해서
+          // 실제로 지도에 붙여야 함. 이걸 안 하면 오버레이가 만들어지기만 하고 화면엔 안 나타남
+          const overlay = new maps.CustomOverlay({
+            position: center,
+            content: markerEl,
+            yAnchor: 1,
+          });
+          overlay.setMap(map);
         }, 0);
       })
       .catch((error) => console.error('상세 지도 로드 실패:', error));
