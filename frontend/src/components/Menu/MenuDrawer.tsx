@@ -97,7 +97,6 @@ const STAMP_TOTAL = 11;
 
 interface MyPageResponse {
   data?: {
-    nickname?: string;
     interestedRegion?: number | null;
     interestedRegionName?: string | null;
     profileMascot?: string | null;
@@ -116,13 +115,27 @@ interface MyStamp {
 }
 
 function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
+  /*
+   * AuthContext에서 현재 로그인 사용자 정보를 가져옴
+   *
+   * 닉네임은 이제 별도의 nickname state를 사용하지 않고
+   * user.nickname을 사용함.
+   *
+   * 마이페이지에서 updateUser({ nickname })을 호출하면
+   * 이 user.nickname이 즉시 변경되기 때문에
+   * 메뉴도 바로 다시 렌더링됨.
+   */
   const { user } = useAuth();
+
   const isLoggedIn = user !== null;
 
   const navigate = useNavigate();
 
   /* =========================
-     프로필
+     프로필 부가 정보
+
+     닉네임은 AuthContext에서 관리하므로
+     여기에는 저장하지 않음.
   ========================= */
 
   const [profileMascot, setProfileMascot] = useState<string | null>(null);
@@ -130,31 +143,10 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
   const [interestedRegionName, setInterestedRegionName] = useState<string | null>(null);
 
   /* =========================
-     스탬프
-  ========================= */
+     마이페이지 부가 정보 조회
 
-  const [myStamps, setMyStamps] = useState<MyStamp[]>([]);
-
-  /* =========================
-     북마크
-  ========================= */
-
-  const [bookmarkCount, setBookmarkCount] = useState(0);
-
-  /* =========================
-     내 코스
-  ========================= */
-
-  const [courseCount, setCourseCount] = useState(0);
-
-  /* =========================
-     다음 추천 지역
-  ========================= */
-
-  const [nextRegionName, setNextRegionName] = useState<string | null>(null);
-
-  /* =========================
-     마이페이지 정보 조회
+     닉네임은 조회하지 않고,
+     관심 지역 / 프로필 마스코트만 사용
   ========================= */
 
   useEffect(() => {
@@ -181,17 +173,21 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
         const data = body.data;
 
+        /* =========================
+           관심 지역
+        ========================= */
+
         const regionName = data.interestedRegionName ?? null;
 
         setInterestedRegionName(regionName);
 
-        /*
-         * 사용자가 직접 선택한 마스코트가 있으면
-         * 해당 마스코트를 사용합니다.
-         *
-         * 선택한 마스코트가 없다면
-         * 관심 지역에 해당하는 기본 마스코트를 사용합니다.
-         */
+        /* =========================
+           프로필 마스코트
+
+           직접 선택한 마스코트가 있으면 사용하고,
+           없으면 관심 지역의 기본 마스코트 사용
+        ========================= */
+
         const mascot = data.profileMascot ?? mascotKeyOfRegionName(regionName);
 
         setProfileMascot(mascot);
@@ -206,10 +202,35 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isOpen]);
+
+  /* =========================
+     스탬프
+  ========================= */
+
+  const [myStamps, setMyStamps] = useState<MyStamp[]>([]);
+
+  /* =========================
+     북마크
+  ========================= */
+
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+
+  /* =========================
+     내 코스
+  ========================= */
+
+  const [courseCount, setCourseCount] = useState(0);
+
+  /* =========================
+     다음 추천 지역
+  ========================= */
+
+  const [nextRegionName, setNextRegionName] = useState<string | null>(null);
 
   /* =========================
      스탬프 조회
+
      GET /stamp/my
   ========================= */
 
@@ -247,6 +268,7 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
   /* =========================
      북마크 조회
+
      GET /api/mypage/stats
   ========================= */
 
@@ -286,6 +308,7 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
   /* =========================
      내 코스 조회
+
      GET /api/courses
   ========================= */
 
@@ -343,6 +366,7 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
   /* =========================
      아직 안 간 지역 중 랜덤 추천
+
      GET /api/region
   ========================= */
 
@@ -495,7 +519,14 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
           {isLoggedIn ? (
             <span className="menu-drawer__profile-text">
-              <Typography variant="subtitle2">{user?.nickname} 님</Typography>
+              {/*
+               * 닉네임은 AuthContext의 user.nickname 사용
+               *
+               * 마이페이지에서
+               * updateUser({ nickname: 새로운닉네임 })
+               * 을 호출하면 이 값이 즉시 변경됨
+               */}
+              <Typography variant="subtitle2">{user.nickname} 님</Typography>
 
               <Typography variant="subtitle3" color="#666666">
                 {interestedRegionName ?? '관심 지역 없음'}
