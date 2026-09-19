@@ -93,9 +93,9 @@ function MyCoursesPage() {
 
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     listCourses()
@@ -188,7 +188,6 @@ function MyCoursesPage() {
 
       <div className="my-courses-page__title">
         <BackHeader title="내 코스" onBack={() => navigate(-1)} />
-
         <button
           className="my-courses-page__search-button"
           type="button"

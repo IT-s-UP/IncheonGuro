@@ -17,7 +17,7 @@
 .profile-sheet__input-wrap .profile-sheet__counter {
   position: absolute;
   top: 50%;
-  right: 100px;
+  right: 16px;
   margin: 0;
   transform: translateY(-50%);
   pointer-events: none;

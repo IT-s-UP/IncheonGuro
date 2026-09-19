@@ -498,7 +498,11 @@ function CourseEditPage({ course, onBack, onSave, intro, secondaryAction }: Cour
         aria-label={`DAY ${selectedDay.day} 코스 지도`}
         style={{ height: `max(120px, calc(100svh - 220px - ${sheetHeight}px))`, minHeight: 120 }}
       >
-        <MyCourseMap places={selectedDay.places} day={selectedDay.day} />
+        <MyCourseMap
+          places={selectedDay.places}
+          day={selectedDay.day}
+          sheetHeight={sheetHeight}
+        />
       </section>
 
       <section

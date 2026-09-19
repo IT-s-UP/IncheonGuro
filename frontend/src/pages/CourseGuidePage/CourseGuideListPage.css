@@ -13,6 +13,70 @@
   flex-shrink: 0;
 }
 
+.course-guide-list-page__title {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 9px 20px;
+}
+
+.course-guide-list-page__title .course-guide-back-button-wrap {
+  width: auto;
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+}
+
+.course-guide-list-page__search-button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #1b3327;
+  cursor: pointer;
+}
+
+.course-guide-list-page__search-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.course-guide-list-page__search-field {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 20px;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.course-guide-list-page__search-field input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #c2d8dc;
+  border-radius: 5px;
+  outline: none;
+  color: #1b3327;
+  font-size: 13px;
+}
+
+.course-guide-list-page__search-field svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #828585;
+}
+
+.course-guide-list-page__search-field input:focus {
+  border-color: #78aac3;
+}
+
 .course-guide-list-page__content {
   flex: 1;
   min-height: 0;

@@ -428,7 +428,7 @@ function CourseGuideDetailPage() {
         onChange={changeTransport}
       />
 
-      <CourseGuideRouteMap selectedDay={selectedDay} />
+      <CourseGuideRouteMap selectedDay={selectedDay} sheetHeight={sheetHeight} />
 
       <CourseGuidePlaceSheet
         selectedDay={selectedDay}

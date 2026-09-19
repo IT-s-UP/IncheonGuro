@@ -728,7 +728,6 @@ function PlaceGuideMainPage() {
           <Search
             className="place-guide-search-box__icon"
             size={20}
-            color="#000000"
             onClick={handleSearchSubmit}
             style={{
               pointerEvents: 'auto',
