@@ -15,7 +15,7 @@ import './FestivalListPage.css';
    API 설정
 ========================= */
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /* =========================
    축제 타입
@@ -191,19 +191,25 @@ function FestivalListPage() {
             contentId: string;
             title: string;
             imageUrl: string;
+            location: string;
             startDate: string;
             endDate: string;
           }) => ({
             id: item.contentId,
             name: item.title,
             posterUrl: item.imageUrl,
-            address: '',
+            address: item.location,
             startDate: item.startDate,
             endDate: item.endDate,
           }),
         );
 
-        setFeaturedFestivals(festivals);
+        // contentId가 같은 축제는 하나만 남김
+        const uniqueFestivals = Array.from(
+          new Map(festivals.map((festival) => [festival.id, festival])).values(),
+        );
+
+        setFeaturedFestivals(uniqueFestivals);
 
         setActivePosterIndex(0);
       } catch (error) {
@@ -259,20 +265,24 @@ function FestivalListPage() {
             contentId: string;
             title: string;
             imageUrl: string;
-            location: string;
             startDate: string;
             endDate: string;
           }) => ({
             id: item.contentId,
             name: item.title,
             posterUrl: item.imageUrl,
-            address: item.location,
+            address: '',
             startDate: item.startDate,
             endDate: item.endDate,
           }),
         );
 
-        setDistrictFestivals(festivals);
+        // 중복 축제 제거
+        const uniqueFestivals = Array.from(
+          new Map(festivals.map((festival) => [festival.id, festival])).values(),
+        );
+
+        setDistrictFestivals(uniqueFestivals);
       } catch (error) {
         console.error('축제 조회 실패:', error);
 
