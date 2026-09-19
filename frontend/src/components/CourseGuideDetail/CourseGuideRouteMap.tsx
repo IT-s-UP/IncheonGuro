@@ -6,6 +6,7 @@ import './CourseGuideRouteMap.css';
 
 interface CourseGuideRouteMapProps {
   selectedDay: CourseDay;
+  sheetHeight: number;
 }
 
 interface GeocodedPlace {
@@ -13,9 +14,12 @@ interface GeocodedPlace {
   point: Point;
 }
 
-function CourseGuideRouteMap({ selectedDay }: CourseGuideRouteMapProps) {
+function CourseGuideRouteMap({ selectedDay, sheetHeight }: CourseGuideRouteMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const sheetHeightRef = useRef(sheetHeight);
   const [isGeocoding, setIsGeocoding] = useState(false);
+
+  sheetHeightRef.current = sheetHeight;
 
   // 이 배열 자체를 useEffect 의존성으로 못 쓰니(매 렌더마다 새 참조), 주소만 이어붙여서 비교용 키로 사용
   const addressKey = useMemo(
@@ -27,6 +31,7 @@ function CourseGuideRouteMap({ selectedDay }: CourseGuideRouteMapProps) {
     if (selectedDay.places.length === 0 || !mapContainerRef.current) return;
 
     let isCancelled = false;
+    let resizeObserver: ResizeObserver | undefined;
     setIsGeocoding(true);
 
     loadKakaoMap()
@@ -60,27 +65,34 @@ function CourseGuideRouteMap({ selectedDay }: CourseGuideRouteMapProps) {
         setTimeout(() => {
           if (!mapContainerRef.current) return;
 
-          map.relayout();
+          const fitMapToVisibleArea = () => {
+            map.relayout();
 
-          const bounds = new maps.LatLngBounds();
-          geocoded.forEach((item) => bounds.extend(item.point));
+            const bounds = new maps.LatLngBounds();
+            geocoded.forEach((item) => bounds.extend(item.point));
 
-          if (geocoded.length > 1) {
-            const mapWithPadding = map as unknown as {
-              setBounds(
-                bounds: unknown,
-                top: number,
-                right: number,
-                bottom: number,
-                left: number,
-              ): void;
-            };
-            mapWithPadding.setBounds(bounds, 40, 30, 40, 30);
-          } else {
-            map.setCenter(center);
-            const mapWithLevel = map as unknown as { setLevel(level: number): void };
-            mapWithLevel.setLevel(1);
-          }
+            if (geocoded.length > 1) {
+              const mapWithPadding = map as unknown as {
+                setBounds(
+                  bounds: unknown,
+                  top: number,
+                  right: number,
+                  bottom: number,
+                  left: number,
+                ): void;
+              };
+              // 바텀시트가 지도의 아래를 가리므로, 그 높이만큼 안전 여백을 둔다.
+              mapWithPadding.setBounds(bounds, 28, 20, sheetHeightRef.current + 28, 20);
+            } else {
+              map.setCenter(center);
+              const mapWithPan = map as unknown as { panBy(x: number, y: number): void };
+              mapWithPan.panBy(0, -sheetHeightRef.current / 2);
+              const mapWithLevel = map as unknown as { setLevel(level: number): void };
+              mapWithLevel.setLevel(1);
+            }
+          };
+
+          fitMapToVisibleArea();
 
           // relayout + 화면 범위 조정이 끝난 다음에야 마커를 그림
           geocoded.forEach((item, index) => {
@@ -99,6 +111,9 @@ function CourseGuideRouteMap({ selectedDay }: CourseGuideRouteMapProps) {
             });
             overlay.setMap(map);
           });
+
+          resizeObserver = new ResizeObserver(fitMapToVisibleArea);
+          resizeObserver.observe(mapContainerRef.current);
         }, 0);
 
         setIsGeocoding(false);
@@ -110,6 +125,7 @@ function CourseGuideRouteMap({ selectedDay }: CourseGuideRouteMapProps) {
 
     return () => {
       isCancelled = true;
+      resizeObserver?.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addressKey]);
