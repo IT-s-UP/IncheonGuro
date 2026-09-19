@@ -1,6 +1,5 @@
-/* 아래 탭버튼과 20px 간격을 padding-bottom으로 처리 */
 .course-guide-back-button-wrap {
-  padding: 20px 20px 20px;
+  padding: 9px 20px;
   box-sizing: border-box;
 }
 

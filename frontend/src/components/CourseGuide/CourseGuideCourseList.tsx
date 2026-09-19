@@ -9,6 +9,20 @@ interface CourseGuideCourseListProps {
   keyword: string; // 빈 문자열이면 인천 전체 코스, 값 있으면 그 키워드로 검색
 }
 
+function getTravelDuration(name: string) {
+  const overnightMatch = name.match(/(\d+)\s*박\s*(\d+)\s*일/);
+  if (overnightMatch) {
+    return `${overnightMatch[1]}박 ${overnightMatch[2]}일`;
+  }
+
+  const dayMatch = name.match(/(\d+)\s*일/);
+  if (dayMatch) {
+    return `${dayMatch[1]}일 여행`;
+  }
+
+  return '당일 여행';
+}
+
 // "코스 목록" 탭에서 보여지는 컴포넌트 - 관광공사 API 연동
 function CourseGuideCourseList({ keyword }: CourseGuideCourseListProps) {
   const [courses, setCourses] = useState<CourseSummary[]>([]);
@@ -72,14 +86,25 @@ function CourseGuideCourseList({ keyword }: CourseGuideCourseListProps) {
       {courses.map((course) => (
         <li key={course.courseId} className="course-guide-course-item-wrap">
           <Link to={`/course-guide/${course.courseId}`} className="course-guide-course-item">
+            {course.imageUrl ? (
+              <img className="course-guide-course-image" src={course.imageUrl} alt="" />
+            ) : (
+              <div className="course-guide-course-image course-guide-course-image--fallback" />
+            )}
+
+            <div className="course-guide-course-image-overlay" />
+
             {course.isBookmarked && (
               <span className="course-guide-course-bookmark-badge" aria-label="북마크된 코스">
                 <Bookmark size={18} fill="currentColor" />
               </span>
             )}
 
-            <p className="course-guide-course-name">{course.name}</p>
-            <p className="course-guide-course-desc">{course.description}</p>
+            <span className="course-guide-course-duration">{getTravelDuration(course.name)}</span>
+
+            <div className="course-guide-course-item-content">
+              <p className="course-guide-course-name">{course.name}</p>
+            </div>
           </Link>
         </li>
       ))}
