@@ -4,6 +4,7 @@ import com.itsup.incheonguro.Auth.entity.Member;
 import com.itsup.incheonguro.Auth.repository.MemberRepository;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendRequest;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendResponse;
+import com.itsup.incheonguro.RegionRecommendPage.dto.RegionRecommendedResponse;
 import com.itsup.incheonguro.RegionRecommendPage.dto.RegionSummaryResponse;
 import com.itsup.incheonguro.RegionRecommendPage.entity.Region;
 import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
@@ -11,6 +12,7 @@ import com.itsup.incheonguro.RegionRecommendPage.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +20,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RegionRecommendService {
 
     private final RegionRepository regionRepository;
-
     private final MemberRepository memberRepository;
 
     /**
@@ -44,6 +46,7 @@ public class RegionRecommendService {
      * 다시 테스트하면 기존 추천 지역이
      * 새로운 결과로 덮어써집니다.
      */
+    @Transactional
     public RegionRecommendResponse recommend(
             RegionRecommendRequest request,
             Long memberId) {
@@ -51,7 +54,6 @@ public class RegionRecommendService {
         List<Region> regions = regionRepository.findAll();
 
         if (regions.isEmpty()) {
-
             throw new IllegalStateException(
                     "추천할 지역 데이터가 없습니다.");
         }
@@ -102,43 +104,61 @@ public class RegionRecommendService {
          * ==========================================
          * 로그인한 회원의 최신 추천 지역 저장
          * ==========================================
-         *
-         * 기존에 추천 지역이 있으면
-         * 새로운 지역으로 덮어써집니다.
          */
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "회원을 찾을 수 없습니다."));
 
-        System.out.println("===== 추천 결과 저장 시작 =====");
-        System.out.println("회원 ID = " + member.getId());
-        System.out.println("회원 닉네임 = " + member.getNickname());
-        System.out.println("추천 지역 ID = " + region.getId());
-        System.out.println("추천 지역명 = " + region.getRegionName());
-
         member.updateRecommendedRegion(region);
 
-        System.out.println(
-                "Member에 설정된 지역 ID = "
-                        + member.getRecommendedRegion().getId());
-
         memberRepository.saveAndFlush(member);
-
-        System.out.println("===== DB 저장 완료 =====");
 
         /*
          * 프론트에 추천 결과 반환
          */
         return RegionRecommendResponse.builder()
-                .regionName(
-                        region.getRegionName())
-                .description(
-                        region.getDescription())
-                .imageUrl(
-                        region.getImageUrl())
-                .score(
-                        selectedRegion.score())
+                .regionName(region.getRegionName())
+                .description(region.getDescription())
+                .imageUrl(region.getImageUrl())
+                .score(selectedRegion.score())
                 .build();
+    }
+
+    /**
+     * 현재 로그인한 사용자의 GUMBTI 추천 지역 조회
+     *
+     * Service 내부의 트랜잭션 안에서
+     * Region의 이름을 조회한 뒤 DTO로 반환합니다.
+     *
+     * 따라서 Controller에서 Lazy Entity를
+     * 직접 접근하지 않습니다.
+     */
+    @Transactional(readOnly = true)
+    public RegionRecommendedResponse getRecommendedRegion(
+            Long memberId) {
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "회원을 찾을 수 없습니다."));
+
+        Region region = member.getRecommendedRegion();
+
+        /*
+         * 아직 GUMBTI 추천을 받지 않은 경우
+         */
+        if (region == null) {
+            return new RegionRecommendedResponse(
+                    null,
+                    null);
+        }
+
+        /*
+         * 이 부분은 Service의 트랜잭션 안에서 실행되므로
+         * LAZY로 설정된 Region도 정상적으로 조회됩니다.
+         */
+        return new RegionRecommendedResponse(
+                region.getId(),
+                region.getRegionName());
     }
 
     /**
@@ -323,11 +343,8 @@ public class RegionRecommendService {
         String regionName = region.getRegionName();
 
         String placeType = request.getPlaceType();
-
         String transport = request.getTransport();
-
         String mood = request.getMood();
-
         String companion = request.getCompanion();
 
         // ==========================================
