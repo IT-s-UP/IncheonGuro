@@ -622,7 +622,8 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
             className={['menu-drawer__stat', bookmarkCount > 0 ? 'menu-drawer__stat--active' : '']
               .filter(Boolean)
               .join(' ')}
-            onClick={() => handleNavigate('/bookmarks')}
+            // onClick={() => handleNavigate('/bookmarks')}
+            onClick={() => handleNavigate('/place-guide?tab=bookmark')}
           >
             <Typography variant="p1" color={bookmarkCount > 0 ? '#eeab73' : '#123040'}>
               {isLoggedIn ? bookmarkCount : 0}
