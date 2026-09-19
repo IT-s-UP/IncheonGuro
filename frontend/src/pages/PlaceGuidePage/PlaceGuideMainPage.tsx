@@ -166,7 +166,8 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 function PlaceGuideMainPage() {
   const navigate = useNavigate();
 
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams(); // [수정] setSearchParams 추가
 
   /* =========================
      초기 검색어
@@ -194,7 +195,29 @@ function PlaceGuideMainPage() {
      탭
   ========================= */
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const initialTab = searchParams.get('tab');
+  const initialActiveIndex = initialTab === 'bookmark' ? 2 : 0;
+
+  const [activeIndex, setActiveIndex] = useState(initialActiveIndex);
+  // const [activeIndex, setActiveIndex] = useState(0);
+
+  // [추가] 이미 /place-guide 페이지에 떠 있는 상태에서 쿼리(tab)만 바뀌는 경우
+  // (예: 내주변 탭에서 햄버거 메뉴의 북마크 버튼 클릭) 컴포넌트가 재마운트되지 않아
+  // initialActiveIndex가 반영 안 되는 문제를 해결하기 위해, tab 쿼리 변화를 감지해서 갱신
+  useEffect(() => {
+    if (searchParams.get('tab') === 'bookmark') {
+      setActiveIndex(2);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('tab');
+          return next;
+        },
+        { replace: true },
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.get('tab')]);
 
   /* =========================
      현재 위치
