@@ -20,14 +20,37 @@
 }
 
 .place-guide-main-page > .line-tab {
-  padding: 0 20px;
-  justify-content: center;
-  gap: 70px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  height: 44px;
+  padding: 0;
+  gap: 0;
+  overflow: hidden !important;
   border-bottom: 1px solid #eeeeee;
 }
 
 .place-guide-main-page > .line-tab .line-tab__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border-bottom-color: transparent;
   text-align: center;
+}
+
+.place-guide-main-page > .line-tab .line-tab__item--active::after {
+  position: absolute;
+  right: 12px;
+  bottom: 0;
+  left: 12px;
+  height: 4px;
+  background: #f5a281;
+  content: '';
 }
 
 .place-guide-search-box {
@@ -160,6 +183,11 @@
   white-space: nowrap;
 
   padding: 0 14px;
+  height: 38px;
+}
+
+.place-guide-district-grid .option-tab {
+  height: 38px;
 }
 
 /* =========================

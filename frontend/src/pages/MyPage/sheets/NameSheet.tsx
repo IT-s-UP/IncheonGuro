@@ -21,16 +21,18 @@ function NameSheet({ value, onSave }: NameSheetProps) {
         이름
       </Typography>
 
-      <Input
-        className="profile-sheet__input"
-        value={draft}
-        maxLength={MAX_LENGTH}
-        onChange={(event) => setDraft(event.target.value)}
-        placeholder="이름을 입력해주세요"
-      />
-      <Typography as="span" variant="caption1" color="#878787" className="profile-sheet__counter">
-        {draft.length}/{MAX_LENGTH}
-      </Typography>
+      <div className="profile-sheet__input-wrap">
+        <Input
+          className="profile-sheet__input"
+          value={draft}
+          maxLength={MAX_LENGTH}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="이름을 입력해주세요"
+        />
+        <Typography as="span" variant="caption1" color="#878787" className="profile-sheet__counter">
+          {draft.length}/{MAX_LENGTH}
+        </Typography>
+      </div>
 
       <Button
         size="middle"

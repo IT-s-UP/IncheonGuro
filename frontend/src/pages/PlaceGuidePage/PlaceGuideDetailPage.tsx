@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Bookmark, ImageIcon } from 'lucide-react';
+import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import Header from '@/components/Header/Header';
 import BackHeader from '@/components/Header/BackHeader';
-import PlaceGuideDetailImage from '@/components/PlaceGuide/PlaceGuideDetailImage';
 
 import {
   getPlaceDetail,
@@ -52,14 +51,13 @@ function PlaceGuideDetailPage() {
   const [loadError, setLoadError] = useState(false);
 
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [nearbyPlaces, setNearbyPlaces] = useState<PlaceSummary[]>([]);
 
   const [bookmarked, setBookmarked] = useState(false);
 
   const [isBookmarkPending, setIsBookmarkPending] = useState(false);
-
-  const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -120,11 +118,13 @@ function PlaceGuideDetailPage() {
             .map((image) => image.imageUrl)
             .filter((url) => typeof url === 'string' && url.trim() !== ''),
         );
+        setActiveImageIndex(0);
       })
       .catch((error) => {
         console.error('이미지 조회 실패:', error);
 
         setImageUrls([]);
+        setActiveImageIndex(0);
       });
   }, [placeId]);
 
@@ -261,6 +261,14 @@ function PlaceGuideDetailPage() {
     }
   };
 
+  const showPreviousImage = () => {
+    setActiveImageIndex((current) => (current === 0 ? imageUrls.length - 1 : current - 1));
+  };
+
+  const showNextImage = () => {
+    setActiveImageIndex((current) => (current + 1) % imageUrls.length);
+  };
+
   /* =========================================================
      로딩
   ========================================================= */
@@ -332,28 +340,43 @@ function PlaceGuideDetailPage() {
 
       <div className="place-guide-detail-page__image">
         {imageUrls.length > 0 ? (
-          <img
-            src={imageUrls[0]}
-            alt={place.title}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-          />
+          <>
+            <img
+              src={imageUrls[activeImageIndex]}
+              alt={`${place.title} 사진 ${activeImageIndex + 1}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+
+            {imageUrls.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="place-guide-detail-page__image-nav place-guide-detail-page__image-nav--previous"
+                  onClick={showPreviousImage}
+                  aria-label="이전 사진"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  type="button"
+                  className="place-guide-detail-page__image-nav place-guide-detail-page__image-nav--next"
+                  onClick={showNextImage}
+                  aria-label="다음 사진"
+                >
+                  <ChevronRight size={22} />
+                </button>
+                <span className="place-guide-detail-page__image-count" aria-live="polite">
+                  {activeImageIndex + 1} / {imageUrls.length}
+                </span>
+              </>
+            )}
+          </>
         ) : (
           <span>등록된 이미지가 없습니다.</span>
-        )}
-
-        {imageUrls.length > 0 && (
-          <button
-            type="button"
-            className="place-guide-detail-page__image-more"
-            onClick={() => setIsImageSheetOpen(true)}
-          >
-            <ImageIcon size={14} />
-            더보기
-          </button>
         )}
       </div>
 
@@ -468,13 +491,6 @@ function PlaceGuideDetailPage() {
         </>
       )}
 
-      {/* =====================================================
-          이미지 더보기
-      ===================================================== */}
-
-      {isImageSheetOpen && (
-        <PlaceGuideDetailImage imageUrls={imageUrls} onClose={() => setIsImageSheetOpen(false)} />
-      )}
     </div>
   );
 }
