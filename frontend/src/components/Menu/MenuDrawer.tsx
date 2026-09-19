@@ -97,9 +97,8 @@ const STAMP_TOTAL = 11;
 
 interface MyPageResponse {
   data?: {
-    interestedRegion?: number | null;
-    interestedRegionName?: string | null;
     profileMascot?: string | null;
+    interestedRegionName?: string | null;
   };
 }
 
@@ -116,14 +115,13 @@ interface MyStamp {
 
 function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
   /*
-   * AuthContext에서 현재 로그인 사용자 정보를 가져옴
+   * AuthContext에서 현재 로그인 사용자 정보를 가져옴.
    *
-   * 닉네임은 이제 별도의 nickname state를 사용하지 않고
-   * user.nickname을 사용함.
+   * 닉네임은 user.nickname을 직접 사용한다.
    *
-   * 마이페이지에서 updateUser({ nickname })을 호출하면
-   * 이 user.nickname이 즉시 변경되기 때문에
-   * 메뉴도 바로 다시 렌더링됨.
+   * 마이페이지에서 updateUser({ nickname })이 실행되면
+   * AuthContext의 user.nickname이 변경되고
+   * 메뉴도 즉시 다시 렌더링된다.
    */
   const { user } = useAuth();
 
@@ -132,27 +130,24 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
   const navigate = useNavigate();
 
   /* =========================
-     프로필 부가 정보
-
-     닉네임은 AuthContext에서 관리하므로
-     여기에는 저장하지 않음.
+     프로필 마스코트
   ========================= */
 
   const [profileMascot, setProfileMascot] = useState<string | null>(null);
 
-  const [interestedRegionName, setInterestedRegionName] = useState<string | null>(null);
-
   /* =========================
      마이페이지 부가 정보 조회
 
-     닉네임은 조회하지 않고,
-     관심 지역 / 프로필 마스코트만 사용
+     닉네임과 관심 지역은 여기서 관리하지 않는다.
+     닉네임 → AuthContext
+     관심 지역 → 메뉴에서 표시하지 않음
+
+     마스코트만 사용한다.
   ========================= */
 
   useEffect(() => {
     if (!isLoggedIn) {
       setProfileMascot(null);
-      setInterestedRegionName(null);
       return;
     }
 
@@ -173,29 +168,20 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
         const data = body.data;
 
-        /* =========================
-           관심 지역
-        ========================= */
-
-        const regionName = data.interestedRegionName ?? null;
-
-        setInterestedRegionName(regionName);
-
-        /* =========================
-           프로필 마스코트
-
-           직접 선택한 마스코트가 있으면 사용하고,
-           없으면 관심 지역의 기본 마스코트 사용
-        ========================= */
-
-        const mascot = data.profileMascot ?? mascotKeyOfRegionName(regionName);
+        /*
+         * 직접 선택한 마스코트가 있으면 사용.
+         *
+         * 직접 선택한 마스코트가 없을 경우에는
+         * 기존처럼 관심 지역을 기준으로 기본 마스코트를 사용한다.
+         */
+        const mascot =
+          data.profileMascot ?? mascotKeyOfRegionName(data.interestedRegionName ?? null);
 
         setProfileMascot(mascot);
       })
       .catch(() => {
         if (!cancelled) {
           setProfileMascot(null);
-          setInterestedRegionName(null);
         }
       });
 
@@ -519,17 +505,10 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
           {isLoggedIn ? (
             <span className="menu-drawer__profile-text">
-              {/*
-               * 닉네임은 AuthContext의 user.nickname 사용
-               *
-               * 마이페이지에서
-               * updateUser({ nickname: 새로운닉네임 })
-               * 을 호출하면 이 값이 즉시 변경됨
-               */}
-              <Typography variant="subtitle2">{user.nickname} 님</Typography>
+              <Typography variant="subtitle2">{user.nickname}님, 반가워요</Typography>
 
               <Typography variant="subtitle3" color="#666666">
-                {interestedRegionName ?? '관심 지역 없음'}
+                인천구로와 함께 즐거운 여행 되세요!
               </Typography>
             </span>
           ) : (
@@ -574,7 +553,6 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
           </div>
 
           <div className="menu-drawer__progress-bottom">
-            {/* 스탬프 11개 */}
             <div className="menu-drawer__stamp-row">
               {stampSlots.map((filled, index) => (
                 <span
@@ -587,7 +565,6 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
               ))}
             </div>
 
-            {/* 다녀온 지역 + 다음 추천 지역 */}
             <Typography variant="p3" className="menu-drawer__progress-places">
               {isLoggedIn ? `${stampPlaceText}${stampRecommendationText}` : '다녀온 곳 없음'}
             </Typography>
