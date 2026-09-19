@@ -90,6 +90,8 @@ function CourseGuideDetailPage() {
           id: Date.now() + index,
           name: place.name,
           address: place.address,
+          latitude: place.latitude,
+          longitude: place.longitude,
         }));
 
         const initialDay: CourseDay = {

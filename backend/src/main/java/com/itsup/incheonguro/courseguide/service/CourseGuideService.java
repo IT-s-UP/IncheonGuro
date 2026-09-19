@@ -6,8 +6,12 @@ import com.itsup.incheonguro.courseguide.dto.CourseSummaryResponse;
 import com.itsup.incheonguro.courseguide.dto.RouteNodeResponse;
 import com.itsup.incheonguro.courseguide.dto.RouteSegmentResponse;
 import com.itsup.incheonguro.courseguide.entity.Bookmark;
+import com.itsup.incheonguro.courseguide.entity.LocalCourse;
+import com.itsup.incheonguro.courseguide.entity.LocalCoursePlace;
 import com.itsup.incheonguro.courseguide.entity.TransportMode;
 import com.itsup.incheonguro.courseguide.repository.BookmarkRepository;
+import com.itsup.incheonguro.courseguide.repository.LocalCoursePlaceRepository;
+import com.itsup.incheonguro.courseguide.repository.LocalCourseRepository;
 import com.itsup.incheonguro.courseguide.service.CourseRouteAssembler.CoursePlacePoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,41 +37,63 @@ public class CourseGuideService {
   private final KorTourApiCourseClient korTourApiCourseClient; // 키워드 검색은 조건이 매번 달라 캐싱 안 함
   private final BookmarkRepository bookmarkRepository;
   private final CourseRouteCacheService courseRouteCacheService;
+  private final LocalCourseRepository localCourseRepository;
+  private final LocalCoursePlaceRepository localCoursePlaceRepository;
 
-  // 오늘의 추천 코스 5개 (날짜 바뀌면 자동으로 다른 5개)
+  private static final String LOCAL_ID_PREFIX = "local-";
+
+  // 오늘의 추천 코스 5개 (날짜 바뀌면 자동으로 다른 5개) + 우리가 직접 고른 코스 중 추천 표시된 것들
   public List<CourseSummaryResponse> getRecommendedCourses(Long userId) {
+    List<CourseSummaryResponse> result = new ArrayList<>();
+
     try {
       List<String> ids = dailyRecommendationCacheService.getRecommendedCourseIds(LocalDate.now());
-      return ids.stream()
+      ids.stream()
           .map(this::findCourseItem)
           .filter(Optional::isPresent)
           .map(Optional::get)
           .map(item -> toSummary(item, userId))
-          .collect(Collectors.toList());
+          .forEach(result::add);
     } catch (Exception e) {
       log.error("추천 코스 조회 실패", e);
-      return List.of();
     }
+
+    localCourseRepository.findAll().stream()
+        .filter(LocalCourse::isRecommended)
+        .map(course -> toLocalSummary(course, userId))
+        .forEach(result::add);
+
+    return result;
   }
 
-  // 코스 목록 조회 (keyword 없으면 인천 전체, 있으면 검색)
+  // 코스 목록 조회 (keyword 없으면 인천 전체, 있으면 검색) + 우리가 직접 고른 코스
   public List<CourseSummaryResponse> getCourses(String keyword, Long userId) {
+    List<CourseSummaryResponse> result = new ArrayList<>();
+
     try {
       List<JsonNode> items = (keyword == null || keyword.isBlank())
           ? courseCacheService.getCourseList()
           : korTourApiCourseClient.searchCourses(keyword, 100);
 
-      return items.stream()
-          .map(item -> toSummary(item, userId))
-          .collect(Collectors.toList());
+      items.stream().map(item -> toSummary(item, userId)).forEach(result::add);
     } catch (Exception e) {
       log.error("코스 목록 조회 실패: keyword={}", keyword, e);
-      return List.of();
     }
+
+    localCourseRepository.findAll().stream()
+        .filter(course -> keyword == null || keyword.isBlank() || course.getName().contains(keyword))
+        .map(course -> toLocalSummary(course, userId))
+        .forEach(result::add);
+
+    return result;
   }
 
   // 코스 상세 경로 조회
   public CourseDetailResponse getCourseDetail(String contentId, Long userId) {
+    if (contentId.startsWith(LOCAL_ID_PREFIX)) {
+      return getLocalCourseDetail(contentId, userId);
+    }
+
     JsonNode courseItem = findCourseItem(contentId)
         .orElseGet(() -> courseCacheService.getDetailCommon(contentId)); // 목록 캐시에 없으면 개별 조회로 폴백
 
@@ -83,6 +109,33 @@ public class CourseGuideService {
     Map<String, List<RouteNodeResponse>> routes = buildRoutes(contentId, waypoints);
 
     return new CourseDetailResponse(contentId, name, isBookmarked, routes);
+  }
+
+  // 우리가 직접 고른 코스는 위경도를 이미 갖고 있어서, 관광공사 API 호출 없이 바로 경로를 계산함
+  private CourseDetailResponse getLocalCourseDetail(String contentId, Long userId) {
+    Long localId = Long.parseLong(contentId.substring(LOCAL_ID_PREFIX.length()));
+    LocalCourse course = localCourseRepository.findById(localId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 코스입니다. contentId=" + contentId));
+
+    boolean isBookmarked = userId != null
+        && bookmarkRepository.existsByUserIdAndContentId(userId, contentId);
+
+    List<Waypoint> waypoints = localCoursePlaceRepository.findByCourseIdOrderByOrderIndexAsc(localId).stream()
+        .map(place -> new Waypoint(place.getName(), place.getAddress(), place.getLatitude(), place.getLongitude()))
+        .toList();
+
+    Map<String, List<RouteNodeResponse>> routes = buildRoutes(contentId, waypoints);
+
+    return new CourseDetailResponse(contentId, course.getName(), isBookmarked, routes);
+  }
+
+  private CourseSummaryResponse toLocalSummary(LocalCourse course, Long userId) {
+    String contentId = course.toContentId();
+    boolean isBookmarked = userId != null
+        && bookmarkRepository.existsByUserIdAndContentId(userId, contentId);
+
+    return new CourseSummaryResponse(contentId, course.getName(), course.getDescription(),
+        course.getImageUrl(), isBookmarked);
   }
 
   // 캐싱된 코스 목록에서 contentId로 항목 하나 찾기 (추가 API 호출 없이 재사용)
