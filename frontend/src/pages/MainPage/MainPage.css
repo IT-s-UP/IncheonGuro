@@ -175,9 +175,8 @@
   margin-top: 20px;
 
   /*
-   * 위아래에도 공간을 줘서
-   * OptionTab의 border / shadow가
-   * 잘리지 않도록 처리
+   * OptionTab의 위아래 공간
+   * border / shadow가 잘리지 않도록 처리
    */
   padding: 6px var(--page-padding) 7px;
 
@@ -187,6 +186,10 @@
 
   gap: 10px;
 
+  /*
+   * 추천 지역이 여러 개일 경우
+   * 가로 스크롤 가능
+   */
   overflow-x: auto;
   overflow-y: visible;
 
@@ -202,7 +205,7 @@
 }
 
 /*
- * 공용 OptionTab small을 사용하되
+ * 공용 OptionTab small을
  * MainPage 안에서만 크기 조정
  */
 .main-page__region-tabs .option-tab.option-tab--small {
@@ -306,11 +309,15 @@
 
 .main-page__spot-placeholder {
   display: flex;
-  flex-direction: column; /* 아이콘+텍스트를 세로로 */
+
+  flex-direction: column;
+
   align-items: center;
   justify-content: center;
+
   gap: 8px;
-  background-color: #f0f0f0; /* 기존 #d9d9d9보다 살짝 밝게 */
+
+  background-color: #f0f0f0;
 }
 
 /* =========================================================
@@ -680,16 +687,4 @@
   white-space: nowrap;
 
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
-}
-
-.main-page__region-label {
-  display: inline-flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background-color: #78aac3;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
 }

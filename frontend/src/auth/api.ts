@@ -146,3 +146,20 @@ export async function recommendRegion(
 
   return response.json();
 }
+
+export type RecommendedRegionResponse = {
+  regionId: number | null;
+  regionName: string | null;
+};
+
+export async function getRecommendedRegion(): Promise<RecommendedRegionResponse> {
+  const response = await apiFetch('/api/region/recommended');
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+
+    throw new Error(body?.message ?? `추천 지역 조회에 실패했습니다. (${response.status})`);
+  }
+
+  return response.json();
+}
