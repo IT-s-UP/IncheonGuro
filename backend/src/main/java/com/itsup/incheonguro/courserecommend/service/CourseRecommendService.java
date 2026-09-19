@@ -76,7 +76,7 @@ public class CourseRecommendService {
     // 여행 스타일 → 장소 카테고리 매핑 (테마 카테고리, 식당 제외)
     private static final Map<String, Set<PlaceCategory>> STYLE_TO_CATEGORIES = Map.of(
             "힐링", EnumSet.of(PlaceCategory.CAFE, PlaceCategory.ATTRACTION),
-            "맛집 탐방", EnumSet.of(PlaceCategory.RESTAURANT),
+            "맛집 탐방", EnumSet.of(PlaceCategory.RESTAURANT, PlaceCategory.ATTRACTION),
             "쇼핑", EnumSet.of(PlaceCategory.SHOPPING),
             "관광", EnumSet.of(PlaceCategory.ATTRACTION),
             "SNS 핫플레이스", EnumSet.of(PlaceCategory.CAFE, PlaceCategory.SHOPPING),
