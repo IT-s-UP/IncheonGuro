@@ -47,14 +47,16 @@ function RegionSheet({ value, onSave }: RegionSheetProps) {
       </Typography>
 
       <div className="profile-sheet__region-grid">
-        {options.map((option) => (
+        {[...options]
+          .sort((a, b) => a.regionName.localeCompare(b.regionName, 'ko'))
+          .map((option) => (
           <OptionTab
             key={option.id}
             label={option.regionName}
             active={draft.id === option.id}
             onClick={() => setDraft({ id: option.id, name: option.regionName })}
           />
-        ))}
+          ))}
       </div>
 
       <Button

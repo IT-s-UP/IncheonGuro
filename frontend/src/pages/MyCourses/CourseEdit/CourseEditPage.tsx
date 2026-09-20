@@ -40,7 +40,7 @@ interface CircleIconProps {
 type CostKey = keyof CourseCost;
 
 const MIN_SHEET_HEIGHT = 230;
-const DEFAULT_SHEET_HEIGHT = 470;
+const DEFAULT_SHEET_HEIGHT = 350;
 
 const transportOptions: Transport[] = ['도보', '대중교통', '자전거', '자차'];
 
@@ -498,11 +498,7 @@ function CourseEditPage({ course, onBack, onSave, intro, secondaryAction }: Cour
         aria-label={`DAY ${selectedDay.day} 코스 지도`}
         style={{ height: `max(120px, calc(100svh - 220px - ${sheetHeight}px))`, minHeight: 120 }}
       >
-        <MyCourseMap
-          places={selectedDay.places}
-          day={selectedDay.day}
-          sheetHeight={sheetHeight}
-        />
+        <MyCourseMap places={selectedDay.places} day={selectedDay.day} />
       </section>
 
       <section

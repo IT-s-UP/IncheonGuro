@@ -6,7 +6,7 @@ import type { PlaceSummary } from '@/api/placeGuide';
 import './PlaceGuideNearbyPanel.css';
 
 // 패널이 멈출 수 있는 3단계 높이 - 부모(지도 영역) 높이 기준 퍼센트(%)
-const SNAP_POINTS = [20, 55, 90];
+const SNAP_POINTS = [20, 45, 90];
 const CLICK_THRESHOLD = 5;
 
 const SORT_OPTIONS = [

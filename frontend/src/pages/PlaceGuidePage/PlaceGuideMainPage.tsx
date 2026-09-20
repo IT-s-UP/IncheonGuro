@@ -38,50 +38,17 @@ const DISTRICTS: {
   label: string;
   value: District;
 }[] = [
-  {
-    label: '제물포구',
-    value: 'JEMULPO',
-  },
-  {
-    label: '영종구',
-    value: 'YEONGJONG',
-  },
-  {
-    label: '서해구',
-    value: 'SEOHAE',
-  },
-  {
-    label: '검단구',
-    value: 'GEOMDAN',
-  },
-  {
-    label: '계양구',
-    value: 'GYEYANG',
-  },
-  {
-    label: '부평구',
-    value: 'BUPYEONG',
-  },
-  {
-    label: '미추홀구',
-    value: 'MICHUHOL',
-  },
-  {
-    label: '남동구',
-    value: 'NAMDONG',
-  },
-  {
-    label: '연수구',
-    value: 'YEONSU',
-  },
-  {
-    label: '강화군',
-    value: 'GANGHWA',
-  },
-  {
-    label: '옹진군',
-    value: 'ONGJIN',
-  },
+  { label: '강화군', value: 'GANGHWA' },
+  { label: '검단구', value: 'GEOMDAN' },
+  { label: '계양구', value: 'GYEYANG' },
+  { label: '남동구', value: 'NAMDONG' },
+  { label: '미추홀구', value: 'MICHUHOL' },
+  { label: '부평구', value: 'BUPYEONG' },
+  { label: '서해구', value: 'SEOHAE' },
+  { label: '연수구', value: 'YEONSU' },
+  { label: '영종구', value: 'YEONGJONG' },
+  { label: '옹진군', value: 'ONGJIN' },
+  { label: '제물포구', value: 'JEMULPO' },
 ];
 
 /* =========================
