@@ -348,8 +348,13 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 450px;
-  min-height: 450px;
+  height: max(520px, calc(100svh - 300px));
+  min-height: 520px;
+}
+
+.place-guide-nearby-tab .place-guide-map-area {
+  height: calc(100% - 20px);
+  min-height: 0;
 }
 
 .place-guide-kakao-map {

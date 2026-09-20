@@ -6,17 +6,13 @@ import './MyCourseMap.css';
 interface Props {
   places: CoursePlace[];
   day: number;
-  sheetHeight: number;
 }
 
-export default function MyCourseMap({ places, day, sheetHeight }: Props) {
+export default function MyCourseMap({ places, day }: Props) {
   const container = useRef<HTMLDivElement>(null);
-  const sheetHeightRef = useRef(sheetHeight);
   const [message, setMessage] = useState('지도를 불러오는 중입니다.');
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
-
-  sheetHeightRef.current = sheetHeight;
 
   useEffect(() => {
     const node = container.current;
@@ -30,15 +26,13 @@ export default function MyCourseMap({ places, day, sheetHeight }: Props) {
       .then(async (maps) => {
         if (cancelled) return;
         const center = new maps.LatLng(37.4563, 126.7052);
-        const map = new maps.Map(node, { center, level: 7 });
+        const map = new maps.Map(node, { center, level: 5 });
         const overlays: InstanceType<typeof maps.CustomOverlay>[] = [];
         let points: InstanceType<typeof maps.LatLng>[] = [];
         const fit = () => {
           map.relayout();
           if (points.length === 1) {
             map.setCenter(points[0]);
-            const mapWithPan = map as unknown as { panBy(x: number, y: number): void };
-            mapWithPan.panBy(0, -sheetHeightRef.current / 2);
           }
           else if (points.length > 1) {
             const bounds = new maps.LatLngBounds();
@@ -52,10 +46,12 @@ export default function MyCourseMap({ places, day, sheetHeight }: Props) {
                 left: number,
               ): void;
             };
-            mapWithPadding.setBounds(bounds, 28, 20, sheetHeightRef.current + 28, 20);
+            mapWithPadding.setBounds(bounds, 28, 20, 28, 20);
           }
         };
-        const observer = new ResizeObserver(fit);
+        // 아래 패널을 움직일 때는 지도 크기만 다시 계산한다.
+        // 이때 범위까지 다시 맞추면 사용자가 보던 위치가 계속 바뀐다.
+        const observer = new ResizeObserver(() => map.relayout());
         observer.observe(node);
         dispose = () => {
           observer.disconnect();
