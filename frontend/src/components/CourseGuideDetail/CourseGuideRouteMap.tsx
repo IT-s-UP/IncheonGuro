@@ -38,10 +38,20 @@ function CourseGuideRouteMap({ selectedDay, sheetHeight }: CourseGuideRouteMapPr
       .then(async (maps) => {
         if (isCancelled) return;
 
-        // 장소들을 순서대로 지오코딩. 주소를 못 찾는 장소(예: "주소를 입력해주세요.")는 건너뜀
+        // 장소들을 순서대로 좌표 확보. API가 이미 좌표를 준 장소는 그대로 쓰고,
+        // 좌표가 없는 장소만 주소로 지오코딩(못 찾으면 건너뜀. 예: "주소를 입력해주세요.")
         const geocoded: GeocodedPlace[] = [];
         for (const place of selectedDay.places) {
-          const point = await locateAddress(maps, place.address);
+          const hasCoordinates =
+            typeof place.latitude === 'number' &&
+            typeof place.longitude === 'number' &&
+            Number.isFinite(place.latitude) &&
+            Number.isFinite(place.longitude);
+
+          const point = hasCoordinates
+            ? { latitude: place.latitude as number, longitude: place.longitude as number }
+            : await locateAddress(maps, place.address);
+
           if (point && !isCancelled) {
             geocoded.push({
               name: place.name,
@@ -82,7 +92,12 @@ function CourseGuideRouteMap({ selectedDay, sheetHeight }: CourseGuideRouteMapPr
                 ): void;
               };
               // 바텀시트가 지도의 아래를 가리므로, 그 높이만큼 안전 여백을 둔다.
-              mapWithPadding.setBounds(bounds, 28, 20, sheetHeightRef.current + 28, 20);
+              // 단, 시트가 지도 컨테이너 자체보다 큰 경우(바텀시트를 위로 많이 끌어올린 경우)
+              // 여백이 컨테이너 높이를 거의 다 잡아먹어서 장소들이 아주 가까이 붙어있어도
+              // 화면 전체를 줌아웃해버리는 문제가 있었음 - 여백은 컨테이너 높이의 60%로 제한
+              const containerHeight = mapContainerRef.current?.clientHeight ?? 0;
+              const bottomPadding = Math.min(sheetHeightRef.current + 28, containerHeight * 0.6);
+              mapWithPadding.setBounds(bounds, 28, 20, bottomPadding, 20);
             } else {
               map.setCenter(center);
               const mapWithPan = map as unknown as { panBy(x: number, y: number): void };
