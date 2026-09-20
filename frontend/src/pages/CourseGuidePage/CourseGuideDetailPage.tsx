@@ -99,7 +99,7 @@ function CourseGuideDetailPage() {
           day: 1,
           transport: '대중교통',
           places: initialPlaces,
-          costs: createEmptyCosts(),
+          costs: detail.estimatedCost ?? createEmptyCosts(),
         };
 
         setDays([initialDay]);
