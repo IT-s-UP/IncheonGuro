@@ -1,6 +1,9 @@
 .place-search {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   width: 100%;
+  background: #ffffff;
 }
 .place-search__message {
   margin: 6px 0;
@@ -15,6 +18,8 @@
   overflow-y: auto;
   border: 1px solid #c4deee;
   border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 .place-search__results button {
   display: flex;
