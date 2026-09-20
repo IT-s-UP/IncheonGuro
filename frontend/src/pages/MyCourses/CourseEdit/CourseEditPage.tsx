@@ -600,14 +600,16 @@ function CourseEditPage({ course, onBack, onSave, intro, secondaryAction }: Cour
                                 {place.name}
                               </Typography>
                             )}
-                            <Typography
-                              as="p"
-                              variant="caption2"
-                              color="#828585"
-                              className="course-edit-page__address"
-                            >
-                              {place.address}
-                            </Typography>
+                            {editingPlaceId !== place.id && (
+                              <Typography
+                                as="p"
+                                variant="caption2"
+                                color="#828585"
+                                className="course-edit-page__address"
+                              >
+                                {place.address}
+                              </Typography>
+                            )}
                           </div>
 
                           <button

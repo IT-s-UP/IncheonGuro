@@ -129,6 +129,32 @@ function MenuDrawer({ isOpen, onClose }: MenuDrawerProps) {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const { body } = document;
+    const scrollY = window.scrollY;
+    const original = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflowY: body.style.overflowY,
+    };
+
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflowY = 'hidden';
+
+    return () => {
+      body.style.position = original.position;
+      body.style.top = original.top;
+      body.style.width = original.width;
+      body.style.overflowY = original.overflowY;
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
   /* =========================
      프로필 마스코트
   ========================= */
