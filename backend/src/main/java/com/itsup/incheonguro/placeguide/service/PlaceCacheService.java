@@ -3,6 +3,7 @@ package com.itsup.incheonguro.placeguide.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.net.URI;
 // 관광공사 API 원본 응답(JsonNode)을 캐싱하는 전용 서비스
 // PlaceGuideService와 분리한 이유: 같은 클래스 안에서 @Cacheable 메서드를 호출하면
 // Spring 프록시 방식의 한계로 캐싱이 적용되지 않기 때문에, 별도 클래스로 분리함
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlaceCacheService {
@@ -28,7 +30,7 @@ public class PlaceCacheService {
   // detailCommon2(공통정보) 캐싱 - contentId 기준, 같은 장소는 재호출 없이 캐시된 값을 씀
   @Cacheable(value = "detailCommon", key = "#contentId")
   public JsonNode getDetailCommon(String contentId) {
-    System.out.println("[캐시 미스] detailCommon 실제 API 호출: " + contentId); // 임시 로그
+    log.debug("[캐시 미스] detailCommon 실제 API 호출: {}", contentId);
     String url = BASE_URL + "/detailCommon2"
         + "?serviceKey=" + serviceKey
         + "&MobileOS=WEB"
