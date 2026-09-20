@@ -64,12 +64,21 @@ export type RouteNode = RoutePlaceNode | RouteSegmentNode;
 // 이동수단 4종. 백엔드 응답의 routes 객체 키와 동일 (소문자)
 export type TransportMode = 'walk' | 'transit' | 'bike' | 'car';
 
+// EstimatedCostResponse.java 와 대응 - 우리가 직접 고른 코스만 값이 있음
+export interface EstimatedCost {
+  transportation: number;
+  food: number;
+  admission: number;
+  etc: number;
+}
+
 // CourseDetailResponse.java 와 대응
 export interface CourseDetail {
   courseId: string;
   name: string;
   isBookmarked: boolean;
   routes: Record<TransportMode, RouteNode[]>;
+  estimatedCost?: EstimatedCost;
 }
 
 // 장소 하나(출발지/경유지/도착지)를 표현. CourseGuideRouteList 등에서 사용

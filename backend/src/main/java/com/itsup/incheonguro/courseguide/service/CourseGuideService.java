@@ -3,6 +3,7 @@ package com.itsup.incheonguro.courseguide.service;
 import com.itsup.incheonguro.courseguide.dto.CourseDetailResponse;
 import com.itsup.incheonguro.courseguide.dto.CourseRouteResponse;
 import com.itsup.incheonguro.courseguide.dto.CourseSummaryResponse;
+import com.itsup.incheonguro.courseguide.dto.EstimatedCostResponse;
 import com.itsup.incheonguro.courseguide.dto.RouteNodeResponse;
 import com.itsup.incheonguro.courseguide.dto.RouteSegmentResponse;
 import com.itsup.incheonguro.courseguide.entity.Bookmark;
@@ -13,6 +14,7 @@ import com.itsup.incheonguro.courseguide.repository.BookmarkRepository;
 import com.itsup.incheonguro.courseguide.repository.LocalCoursePlaceRepository;
 import com.itsup.incheonguro.courseguide.repository.LocalCourseRepository;
 import com.itsup.incheonguro.courseguide.service.CourseRouteAssembler.CoursePlacePoint;
+import com.itsup.incheonguro.placeguide.entity.PlaceCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,83 @@ public class CourseGuideService {
   private final LocalCoursePlaceRepository localCoursePlaceRepository;
 
   private static final String LOCAL_ID_PREFIX = "local-";
+
+  // "코스 저장하기" 시 예상 비용 초기값 계산에 씀 - courserecommend.CourseRecommendService와 동일한 기준액
+  private static final int TRANSIT_DAILY_COST = 5000;
+  private static final Map<PlaceCategory, Integer> CATEGORY_AVG_COST = Map.of(
+      PlaceCategory.ATTRACTION, 8000,
+      PlaceCategory.CAFE, 7000,
+      PlaceCategory.RESTAURANT, 15000,
+      PlaceCategory.SHOPPING, 20000);
+
+  // 우리가 직접 고른 코스의 정거장은 관광공사 카테고리 코드가 없어서, 장소 이름으로 직접 분류함
+  private static final Map<String, PlaceCategory> LOCAL_PLACE_CATEGORY = Map.<String, PlaceCategory>ofEntries(
+      Map.entry("인천역", PlaceCategory.ATTRACTION),
+      Map.entry("인천차이나타운", PlaceCategory.ATTRACTION),
+      Map.entry("공화춘", PlaceCategory.RESTAURANT),
+      Map.entry("자유공원", PlaceCategory.ATTRACTION),
+      Map.entry("신포국제시장", PlaceCategory.SHOPPING),
+      Map.entry("월미테마파크", PlaceCategory.ATTRACTION),
+      Map.entry("월미문화의거리", PlaceCategory.ATTRACTION),
+      Map.entry("전라도대왕조개구이", PlaceCategory.RESTAURANT),
+      Map.entry("월미공원 전망대", PlaceCategory.ATTRACTION),
+      Map.entry("선녀바위해변", PlaceCategory.ATTRACTION),
+      Map.entry("을왕리해수욕장", PlaceCategory.ATTRACTION),
+      Map.entry("왕산해수욕장", PlaceCategory.ATTRACTION),
+      Map.entry("청춘조개 을왕리직영점", PlaceCategory.RESTAURANT),
+      Map.entry("마시란해변", PlaceCategory.ATTRACTION),
+      Map.entry("실미유원지", PlaceCategory.ATTRACTION),
+      Map.entry("무의도 하나개해수욕장", PlaceCategory.ATTRACTION),
+      Map.entry("호룡곡산산림욕장", PlaceCategory.ATTRACTION),
+      Map.entry("하나개횟집", PlaceCategory.RESTAURANT),
+      Map.entry("청라호수공원", PlaceCategory.ATTRACTION),
+      Map.entry("청라시티타워", PlaceCategory.ATTRACTION),
+      Map.entry("송도어반 청라점", PlaceCategory.CAFE),
+      Map.entry("커널웨이", PlaceCategory.SHOPPING),
+      Map.entry("정서진", PlaceCategory.ATTRACTION),
+      Map.entry("정서진 아라타워", PlaceCategory.ATTRACTION),
+      Map.entry("아르테파인 라운지 인천", PlaceCategory.CAFE),
+      Map.entry("계양산", PlaceCategory.ATTRACTION),
+      Map.entry("계양산성", PlaceCategory.ATTRACTION),
+      Map.entry("계양산장미원", PlaceCategory.ATTRACTION),
+      Map.entry("계양문화회관", PlaceCategory.ATTRACTION),
+      Map.entry("놀부홍두깨칼국수 계양산점", PlaceCategory.RESTAURANT),
+      Map.entry("부평 캠프마켓", PlaceCategory.ATTRACTION),
+      Map.entry("부평공원", PlaceCategory.ATTRACTION),
+      Map.entry("부평문화의거리", PlaceCategory.ATTRACTION),
+      Map.entry("부평역지하상가", PlaceCategory.SHOPPING),
+      Map.entry("수봉공원", PlaceCategory.ATTRACTION),
+      Map.entry("수봉공원 스카이워크전망대", PlaceCategory.ATTRACTION),
+      Map.entry("수봉공원 인천지구전적비", PlaceCategory.ATTRACTION),
+      Map.entry("공원장", PlaceCategory.RESTAURANT),
+      Map.entry("소래포구종합어시장", PlaceCategory.SHOPPING),
+      Map.entry("소래역사관", PlaceCategory.ATTRACTION),
+      Map.entry("소래습지생태공원", PlaceCategory.ATTRACTION),
+      Map.entry("소래철교", PlaceCategory.ATTRACTION),
+      Map.entry("인천대공원 장미원", PlaceCategory.ATTRACTION),
+      Map.entry("인천수목원 온실", PlaceCategory.ATTRACTION),
+      Map.entry("인천대공원 습지원", PlaceCategory.ATTRACTION),
+      Map.entry("인천대공원 동물원", PlaceCategory.ATTRACTION),
+      Map.entry("송도달빛축제공원", PlaceCategory.ATTRACTION),
+      Map.entry("송도 센트럴파크", PlaceCategory.ATTRACTION),
+      Map.entry("G타워 전망대", PlaceCategory.ATTRACTION),
+      Map.entry("트리플스트리트", PlaceCategory.SHOPPING),
+      Map.entry("아암도해안공원", PlaceCategory.ATTRACTION),
+      Map.entry("인천상륙작전기념관", PlaceCategory.ATTRACTION),
+      Map.entry("능허대공원", PlaceCategory.ATTRACTION),
+      Map.entry("바다쏭 인천연수점", PlaceCategory.CAFE),
+      Map.entry("강화고인돌공원", PlaceCategory.ATTRACTION),
+      Map.entry("강화역사박물관", PlaceCategory.ATTRACTION),
+      Map.entry("고려산", PlaceCategory.ATTRACTION),
+      Map.entry("용흥궁식당", PlaceCategory.RESTAURANT),
+      Map.entry("광성보", PlaceCategory.ATTRACTION),
+      Map.entry("덕진진", PlaceCategory.ATTRACTION),
+      Map.entry("초지진", PlaceCategory.ATTRACTION),
+      Map.entry("전등사", PlaceCategory.ATTRACTION),
+      Map.entry("죽림다원", PlaceCategory.CAFE),
+      Map.entry("십리포해수욕장", PlaceCategory.ATTRACTION),
+      Map.entry("국사봉", PlaceCategory.ATTRACTION),
+      Map.entry("영흥수협수산물직판장", PlaceCategory.SHOPPING));
 
   // 오늘의 추천 코스 5개 (날짜 바뀌면 자동으로 다른 5개) + 우리가 직접 고른 코스 중 추천 표시된 것들
   public List<CourseSummaryResponse> getRecommendedCourses(Long userId) {
@@ -120,13 +199,43 @@ public class CourseGuideService {
     boolean isBookmarked = userId != null
         && bookmarkRepository.existsByUserIdAndContentId(userId, contentId);
 
-    List<Waypoint> waypoints = localCoursePlaceRepository.findByCourseIdOrderByOrderIndexAsc(localId).stream()
+    List<LocalCoursePlace> places = localCoursePlaceRepository.findByCourseIdOrderByOrderIndexAsc(localId);
+
+    List<Waypoint> waypoints = places.stream()
         .map(place -> new Waypoint(place.getName(), place.getAddress(), place.getLatitude(), place.getLongitude()))
         .toList();
 
     Map<String, List<RouteNodeResponse>> routes = buildRoutes(contentId, waypoints);
+    EstimatedCostResponse estimatedCost = estimateLocalCourseCost(places);
 
-    return new CourseDetailResponse(contentId, course.getName(), isBookmarked, routes);
+    return new CourseDetailResponse(contentId, course.getName(), isBookmarked, routes, estimatedCost);
+  }
+
+  // courserecommend.CourseRecommendService와 동일한 카테고리별 평균 비용 방식으로 계산.
+  // 정거장 이름을 모르는 카테고리는 비용에 포함하지 않음(0원)
+  private EstimatedCostResponse estimateLocalCourseCost(List<LocalCoursePlace> places) {
+    int food = 0;
+    int admission = 0;
+    int etc = 0;
+
+    for (LocalCoursePlace place : places) {
+      PlaceCategory category = LOCAL_PLACE_CATEGORY.get(place.getName());
+      if (category == null) {
+        continue;
+      }
+
+      int amount = CATEGORY_AVG_COST.getOrDefault(category, 0);
+      switch (category) {
+        case ATTRACTION -> admission += amount;
+        case RESTAURANT, CAFE -> food += amount;
+        case SHOPPING -> etc += amount;
+        default -> {
+          // 그 외 카테고리는 비용 기준이 없어 반영하지 않음
+        }
+      }
+    }
+
+    return new EstimatedCostResponse(TRANSIT_DAILY_COST, food, admission, etc);
   }
 
   private CourseSummaryResponse toLocalSummary(LocalCourse course, Long userId) {
